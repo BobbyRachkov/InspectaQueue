@@ -13,4 +13,6 @@ public interface IQueueProvider
     Task Connect();
 
     Task Disconnect();
+
+    Task<bool> TryAcknowledge(MessageFrame frame);
 }
