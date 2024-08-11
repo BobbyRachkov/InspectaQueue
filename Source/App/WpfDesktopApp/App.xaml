@@ -1,13 +1,23 @@
 ﻿<Application x:Class="Rachkov.InspectaQueue.WpfDesktopApp.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             StartupUri="MainWindow.xaml">
+             xmlns:views="clr-namespace:Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views"
+             xmlns:viewModels="clr-namespace:Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels"
+             xmlns:queueInspector="clr-namespace:Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Blue.xaml" />
+                <ResourceDictionary>
+                    <DataTemplate DataType="{x:Type viewModels:SettingsViewModel}">
+                        <views:SettingsView/>
+                    </DataTemplate>
+                    <DataTemplate DataType="{x:Type queueInspector:QueueInspectorViewModel}">
+                        <views:QueueInspectorView/>
+                    </DataTemplate>
+                </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

@@ -3,5 +3,8 @@
 public record MessageFrame
 {
     public required string Content { get; init; }
+
     public object? Message { get; init; }
+
+    public long? Id { get; init; }
 }

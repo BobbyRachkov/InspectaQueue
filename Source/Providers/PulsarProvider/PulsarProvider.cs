@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text;
 using System.Threading.Channels;
 using Pulsar.Client.Api;
 using Pulsar.Client.Common;
@@ -14,15 +15,24 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
     private readonly PulsarSettings _settings;
     private PulsarClient? _client;
     private IConsumer<byte[]>? _consumer;
+    private Guid _id = Guid.NewGuid();
 
     public PulsarProvider()
     {
+        Debug.WriteLine($"==========> Constructing: {_id}");
+        Console.WriteLine($"==========> Constructing: {_id}");
         _settings = new PulsarSettings();
         _messagesChannel = Channel.CreateUnbounded<MessageFrame>(new UnboundedChannelOptions
         {
             SingleReader = true,
             SingleWriter = true
         });
+    }
+
+    ~PulsarProvider()
+    {
+        Debug.WriteLine($"==========> Destructing: {_id}");
+        Console.WriteLine($"==========> Destructing: {_id}");
     }
 
     public IQueueProviderSettings Settings => _settings;
@@ -96,6 +106,8 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        Debug.WriteLine($"==========> Disposing: {_id}");
+        Console.WriteLine($"==========> Disposing: {_id}");
         if (_cancellationTokenSource is not null)
         {
             await _cancellationTokenSource.CancelAsync();
