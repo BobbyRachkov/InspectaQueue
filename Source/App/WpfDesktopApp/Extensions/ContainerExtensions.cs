@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.WindowManager;
+using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Extensions;
 

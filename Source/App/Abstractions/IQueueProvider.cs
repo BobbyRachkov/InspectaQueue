@@ -4,6 +4,9 @@ namespace Rachkov.InspectaQueue.Abstractions;
 
 public interface IQueueProvider
 {
+    string Name { get; }
+    string PackageVendorName { get; }
+
     IQueueProviderSettings Settings { get; }
 
     Task UpdateSettings(IQueueProviderSettings settings);

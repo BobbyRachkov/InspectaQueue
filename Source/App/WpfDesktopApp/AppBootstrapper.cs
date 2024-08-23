@@ -6,7 +6,7 @@ using Autofac;
 using Rachkov.InspectaQueue.Abstractions;
 using Rachkov.InspectaQueue.WpfDesktopApp.Extensions;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.WindowManager;
-using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels;
+using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp;
 
@@ -20,7 +20,9 @@ public class AppBootstrapper
         builder
             .RegisterQueueProviders()
             .RegisterPresenterViewModels()
-            .RegisterWindowManager();
+            .RegisterWindowManager()
+            .RegisterConfigStore()
+            .RegisterSettingsParser();
 
         _container = builder.Build();
 

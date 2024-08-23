@@ -5,6 +5,8 @@ using System.IO;
 using System.Reflection;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.WindowManager;
+using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
+using Rachkov.InspectaQueue.WpfDesktopApp.Services.SettingsParser;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Extensions;
 
@@ -49,6 +51,24 @@ public static class ContainerBuilderExtensions
     public static ContainerBuilder RegisterWindowManager(this ContainerBuilder builder)
     {
         builder.RegisterType<SimpleMetroWindowManager>()
+            .AsImplementedInterfaces()
+            .SingleInstance();
+
+        return builder;
+    }
+
+    public static ContainerBuilder RegisterConfigStore(this ContainerBuilder builder)
+    {
+        builder.RegisterType<ConfigStoreService>()
+            .AsImplementedInterfaces()
+            .SingleInstance();
+
+        return builder;
+    }
+
+    public static ContainerBuilder RegisterSettingsParser(this ContainerBuilder builder)
+    {
+        builder.RegisterType<ReflectionParser>()
             .AsImplementedInterfaces()
             .SingleInstance();
 

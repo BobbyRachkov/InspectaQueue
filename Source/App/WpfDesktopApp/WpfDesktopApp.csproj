@@ -13,11 +13,16 @@
     <PackageReference Include="Autofac" Version="8.0.0" />
     <PackageReference Include="MahApps.Metro" Version="2.4.10" />
     <PackageReference Include="MahApps.Metro.IconPacks" Version="5.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Providers\PulsarProvider\PulsarProvider.csproj" />
     <ProjectReference Include="..\Abstractions\Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Presentation\Converters\" />
   </ItemGroup>
 
 </Project>

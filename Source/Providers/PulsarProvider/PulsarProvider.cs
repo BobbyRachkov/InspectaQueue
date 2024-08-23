@@ -35,6 +35,9 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
         Console.WriteLine($"==========> Destructing: {_id}");
     }
 
+    public string Name => "Apache Pulsar";
+    public string PackageVendorName => "InspectaQueue";
+
     public IQueueProviderSettings Settings => _settings;
 
     public Task UpdateSettings(IQueueProviderSettings settings)
