@@ -22,7 +22,8 @@ public class AppBootstrapper
             .RegisterPresenterViewModels()
             .RegisterWindowManager()
             .RegisterConfigStore()
-            .RegisterSettingsParser();
+            .RegisterSettingsParser()
+            .RegisterSourceReader();
 
         _container = builder.Build();
 

@@ -17,7 +17,7 @@ public static class SettingsTranslationExtensions
         };
     }
 
-    public static SourceSettingEntryDto[] ToSourceSettingEntries(this List<SettingEntryViewModel> settings)
+    public static SourceSettingEntryDto[] ToSourceSettingEntries(this SettingEntryViewModel[] settings)
     {
         return settings.Select(x => x.ToSourceSettingEntry()).ToArray();
     }

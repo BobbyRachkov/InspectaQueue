@@ -55,62 +55,13 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
         return Task.CompletedTask;
     }
 
-    public Task Disconnect()
+    public async Task Disconnect()
     {
-        _cancellationTokenSource?.Cancel();
-        return Task.CompletedTask;
-    }
-
-    public async Task<bool> TryAcknowledge(MessageFrame frame)
-    {
-        var message = frame.Message as Message<byte[]>;
-        if (message is null || _consumer is null)
+        if (_cancellationTokenSource is not null)
         {
-            return false;
+            await _cancellationTokenSource.CancelAsync();
         }
 
-        await _consumer.AcknowledgeAsync(message.MessageId);
-        return true;
-    }
-
-    private async Task ReadAsync(CancellationToken cancellationToken)
-    {
-        _client = await new PulsarClientBuilder()
-            .ServiceUrl(_settings.ServiceUrl)
-            .Authentication(AuthenticationFactoryOAuth2.ClientCredentials(
-                new Uri(_settings.IssuerUrl),
-                _settings.Audience,
-                new Uri(_settings.FilePath)))
-            .BuildAsync();
-
-        _consumer = await _client.NewConsumer()
-            .Topic(_settings.TopicName)
-            .SubscriptionName(_settings.SubscriptionName)
-            .SubscribeAsync();
-
-        while (!cancellationToken.IsCancellationRequested)
-        {
-            var message = await _consumer.ReceiveAsync(cancellationToken);
-
-            var frame = new MessageFrame
-            {
-                Content = Encoding.UTF8.GetString(message.Data),
-                Message = message
-            };
-
-            _messagesChannel.Writer.TryWrite(frame);
-
-            if (_settings.AcknowledgeOnReceive)
-            {
-                await _consumer.AcknowledgeAsync(message.MessageId);
-            }
-        }
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        Debug.WriteLine($"==========> Disposing: {_id}");
-        Console.WriteLine($"==========> Disposing: {_id}");
         if (_cancellationTokenSource is not null)
         {
             await _cancellationTokenSource.CancelAsync();
@@ -127,5 +78,75 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
         {
             await _client.CloseAsync();
         }
+    }
+
+    public async Task<bool> TryAcknowledge(MessageFrame frame)
+    {
+        var message = frame.Message as Message<byte[]>;
+        if (message is null || _consumer is null)
+        {
+            return false;
+        }
+
+        await _consumer.AcknowledgeAsync(message.MessageId);
+        return true;
+    }
+
+    private async Task ReadAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+
+            _client = await new PulsarClientBuilder()
+                .ServiceUrl(_settings.ServiceUrl)
+                .Authentication(AuthenticationFactoryOAuth2.ClientCredentials(
+                    new Uri(_settings.IssuerUrl),
+                    _settings.Audience,
+                    new Uri(_settings.FilePath)))
+                .BuildAsync();
+
+            _consumer = await _client.NewConsumer()
+                .Topic(_settings.TopicName)
+                .SubscriptionName(_settings.SubscriptionName)
+                .SubscriptionType(SubscriptionType.Exclusive)
+                .SubscribeAsync();
+        }
+        catch
+        {
+            throw;
+        }
+
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                var message = await _consumer.ReceiveAsync(cancellationToken);
+
+                var frame = new MessageFrame
+                {
+                    Content = Encoding.UTF8.GetString(message.Data),
+                    Message = message
+                };
+
+                _messagesChannel.Writer.TryWrite(frame);
+
+                if (_settings.AcknowledgeOnReceive)
+                {
+                    await _consumer.AcknowledgeAsync(message.MessageId);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e);
+                throw;
+            }
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        Debug.WriteLine($"==========> Disposing: {_id}");
+        Console.WriteLine($"==========> Disposing: {_id}");
+        await Disconnect();
     }
 }

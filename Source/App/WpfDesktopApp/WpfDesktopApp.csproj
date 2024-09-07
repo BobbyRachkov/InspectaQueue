@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <Folder Include="Presentation\Converters\" />
+    <Folder Include="Presentation\Views\SourceView\ValueConverters\" />
   </ItemGroup>
 
 </Project>

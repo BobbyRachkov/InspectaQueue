@@ -23,6 +23,7 @@ public class SimpleMetroWindowManager : IWindowManager
 
         viewModel.Show += OnShowInvoked;
         viewModel.Hide += OnHideInvoked;
+        window.Closing += (_,args)=>viewModel.RaiseClosing(args);
         
         _windows.Add(window);
         

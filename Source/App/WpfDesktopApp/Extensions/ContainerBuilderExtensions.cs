@@ -74,4 +74,13 @@ public static class ContainerBuilderExtensions
 
         return builder;
     }
+
+    public static ContainerBuilder RegisterSourceReader(this ContainerBuilder builder)
+    {
+        builder.RegisterType<SourceReader>()
+            .AsImplementedInterfaces()
+            .SingleInstance();
+
+        return builder;
+    }
 }

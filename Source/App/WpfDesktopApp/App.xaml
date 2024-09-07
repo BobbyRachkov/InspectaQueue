@@ -4,13 +4,14 @@
              xmlns:views="clr-namespace:Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views"
              xmlns:viewModels="clr-namespace:Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels"
              xmlns:queueInspector="clr-namespace:Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector"
-             xmlns:settings="clr-namespace:Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings">
+             xmlns:settings="clr-namespace:Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings"
+             xmlns:sourceView="clr-namespace:Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Blue.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/dark.mauve.xaml" />
                 <ResourceDictionary>
                     <DataTemplate DataType="{x:Type settings:SettingsViewModel}">
                         <views:SettingsView/>
@@ -19,7 +20,7 @@
                         <views:QueueInspectorView/>
                     </DataTemplate>
                     <DataTemplate DataType="{x:Type settings:SourceViewModel}">
-                        <views:SourceView/>
+                        <sourceView:SourceView/>
                     </DataTemplate>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>

@@ -1,0 +1,103 @@
+﻿<UserControl x:Class="Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView.SourceView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views"
+             xmlns:settings="clr-namespace:Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings"
+             xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             xmlns:converters="clr-namespace:Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Converters"
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance Type=settings:SourceViewModel}"
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+            <converters:BooleanToVisibilityConverter Invert="True" x:Key="InvertedBooleanToVisibilityConverter"/>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid
+        Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="50"/>
+        </Grid.RowDefinitions>
+        <Grid
+            Margin="50 0 0 0"
+            HorizontalAlignment="Left"
+            Width="300"
+            Grid.Row="0">
+            <Label
+                Margin="35 0 0 0"
+                FontSize="17"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Content="{Binding Name}"/>
+            <TextBox
+                Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                Visibility="{Binding IsChecked,
+                ElementName=EditNameToggle,
+                Converter={StaticResource BooleanToVisibilityConverter}}"
+                Margin="35 0 0 0"
+                VerticalAlignment="Center"/>
+            <ToggleButton
+                Background="Transparent"
+                x:Name="EditNameToggle"
+                Height="25"
+                Width="25"
+                Padding="0"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Left">
+                <Grid>
+                    <iconPacks:PackIconFontAwesome 
+                        Kind="PencilSolid"
+                        Foreground="White"
+                        Visibility="{Binding IsChecked,
+                        RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ToggleButton}},
+                        Converter={StaticResource InvertedBooleanToVisibilityConverter}}"
+                        FontSize="10"/>
+                        <iconPacks:PackIconFontAwesome 
+                        Visibility="{Binding IsChecked,
+                        RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ToggleButton}},
+                        Converter={StaticResource BooleanToVisibilityConverter}}"
+                        Kind="CheckSolid"
+                        Foreground="LawnGreen"
+                        FontSize="10"/>
+                </Grid>
+                <ToggleButton.Style>
+                    <Style TargetType="ToggleButton" BasedOn="{StaticResource MahApps.Styles.ToggleButton.Flat}">
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="BorderBrush" Value="White"/>
+                                <Setter Property="BorderThickness" Value="1"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </ToggleButton.Style>
+            </ToggleButton>
+        </Grid>
+        <ScrollViewer
+            CanContentScroll="False"
+            HorizontalScrollBarVisibility="Disabled"
+            VerticalScrollBarVisibility="Auto"
+            Margin="10 0 0 0"
+            Grid.Row="1">
+            <Grid
+            x:Name="TableGrid">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="2"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <GridSplitter
+                Grid.Row="0"
+                Grid.Column="1"/>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

@@ -14,12 +14,11 @@ public class SourceViewModel : ViewModel
     public SourceViewModel(
         string name,
         IQueueProvider provider,
-        ISettingsParser parser)
+        SettingEntryViewModel[] settings)
     {
-        _name = name;
-        Settings = new();
         _provider = provider;
-        Settings = parser.ParseMembers(provider).ToList();
+        _name = name;
+        Settings = settings;
     }
 
     public string Name
@@ -34,16 +33,28 @@ public class SourceViewModel : ViewModel
 
     public Type ProviderType => _provider.GetType();
 
-    public List<SettingEntryViewModel> Settings { get; }
+    public SettingEntryViewModel[] Settings { get; }
 
     public IQueueProviderSettings UpdateSettings(IQueueProviderSettings settingsObjectToUpdate)
     {
         foreach (var setting in Settings)
         {
-            setting.ReflectedProperty.SetValue(settingsObjectToUpdate, setting.Value);
+            setting.ReflectedProperty.SetValue(settingsObjectToUpdate, EnsureProperValueType(setting));
         }
 
         return settingsObjectToUpdate;
+    }
+
+    private object? EnsureProperValueType(SettingEntryViewModel setting)
+    {
+        if (setting.Value is not null
+            && setting.Type == typeof(int) 
+            && setting.Value.GetType() != typeof(int))
+        {
+            return Convert.ToInt32(setting.Value);
+        }
+
+        return setting.Value;
     }
 
 }
