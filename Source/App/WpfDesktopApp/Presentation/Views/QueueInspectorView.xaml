@@ -12,8 +12,10 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="20"/>
         </Grid.RowDefinitions>
+        
         <Expander
             IsExpanded="True"
             Margin="5">
@@ -48,8 +50,12 @@
                     Header="Id" 
                     Width="Auto"/>
                 <DataGridTextColumn 
-                    Binding="{Binding RawMessageText }" 
-                    Header="Content" />
+                    Binding="{Binding MessageKey}" 
+                    Header="Key"
+                    Width="Auto"/>
+                <DataGridTextColumn 
+                    Binding="{Binding RawMessageText}"
+                    Header="Content"/>
                 <!--<DataGridTextColumn 
                     Binding="{Binding RawMessageText }" 
                     Header="Content" >
@@ -90,6 +96,14 @@
                     </Style.Triggers>
                 </Style>
             </DataGrid.RowStyle>
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Copy row" Command="Copy" CommandParameter="{Binding}" />
+                </ContextMenu>
+            </DataGrid.ContextMenu>
         </DataGrid>
+        <StatusBar Grid.Row="2" VerticalContentAlignment="Center">
+            <StatusBarItem>@Bobi Rachkov</StatusBarItem>
+        </StatusBar>
     </Grid>
 </UserControl>

@@ -15,18 +15,19 @@ public class SimpleMetroWindowManager : IWindowManager
 
     public void Create(IPresenterViewModel viewModel)
     {
-        var window = new MetroWindow()
+        var window = new MainWindow()
         {
             Content = viewModel,
+            DataContext = viewModel,
             Title = viewModel.Name
         };
 
         viewModel.Show += OnShowInvoked;
         viewModel.Hide += OnHideInvoked;
-        window.Closing += (_,args)=>viewModel.RaiseClosing(args);
-        
+        window.Closing += (_, args) => viewModel.RaiseClosing(args);
+
         _windows.Add(window);
-        
+
         if (viewModel.IsVisible)
         {
             viewModel.SetVisibility(true);

@@ -3,6 +3,7 @@ using Autofac;
 using Rachkov.InspectaQueue.Abstractions;
 using Rachkov.InspectaQueue.WpfDesktopApp.Extensions;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
+using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.WindowManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
@@ -16,6 +17,7 @@ public class SettingsViewModel : PresenterViewModel
     private readonly IConfigStoreService _configStoreService;
     private readonly ISettingsParser _settingsParser;
     private readonly ILifetimeScope _lifetimeScope;
+    private readonly IErrorManager _errorManager;
     private IQueueProvider? _selectedProvider;
     private bool _isAddNewSourceWorkflowEnabled;
     private SourceViewModel? _selectedSource;
@@ -27,12 +29,15 @@ public class SettingsViewModel : PresenterViewModel
         IConfigStoreService configStoreService,
         ISettingsParser settingsParser,
         ISourceReader sourceReader,
-        ILifetimeScope lifetimeScope)
+        ILifetimeScope lifetimeScope,
+        IErrorManager errorManager)
+    : base(errorManager)
     {
         _windowManager = windowManager;
         _configStoreService = configStoreService;
         _settingsParser = settingsParser;
         _lifetimeScope = lifetimeScope;
+        _errorManager = errorManager;
         AvailableProviders = availableProviders.ToArray();
 
         if (AvailableProviders.Any())
@@ -108,7 +113,7 @@ public class SettingsViewModel : PresenterViewModel
         _configStoreService.StoreSources(Sources.ToArray());
         var freshProvider = (IQueueProvider)_lifetimeScope.Resolve(SelectedSource.ProviderType);
         SelectedSource.UpdateSettings(freshProvider.Settings);
-        var vm = new QueueInspectorViewModel(freshProvider);
+        var vm = new QueueInspectorViewModel(freshProvider, _errorManager);
         _windowManager.Create(vm);
     }
 

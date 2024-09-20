@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
+using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.WindowManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.SettingsParser;
@@ -78,6 +79,15 @@ public static class ContainerBuilderExtensions
     public static ContainerBuilder RegisterSourceReader(this ContainerBuilder builder)
     {
         builder.RegisterType<SourceReader>()
+            .AsImplementedInterfaces()
+            .SingleInstance();
+
+        return builder;
+    }
+
+    public static ContainerBuilder RegisterErrorManager(this ContainerBuilder builder)
+    {
+        builder.RegisterType<ErrorManager>()
             .AsImplementedInterfaces()
             .SingleInstance();
 

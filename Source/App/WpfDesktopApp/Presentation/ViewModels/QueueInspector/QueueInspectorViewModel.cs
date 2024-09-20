@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using Rachkov.InspectaQueue.Abstractions;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
+using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector;
 
@@ -11,7 +12,10 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable
     private Task? _listenerTask;
     private CancellationTokenSource _cts = new();
 
-    public QueueInspectorViewModel(IQueueProvider queueProvider)
+    public QueueInspectorViewModel(
+        IQueueProvider queueProvider,
+        IErrorManager errorManager)
+        : base(errorManager)
     {
         _queueProvider = queueProvider;
         Entries = new();

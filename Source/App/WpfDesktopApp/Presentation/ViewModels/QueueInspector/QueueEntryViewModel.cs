@@ -13,10 +13,14 @@ public class QueueEntryViewModel : ViewModel
         _message = message;
         RawMessageText = _message.Content;
         MessageId = _message.Id;
+        MessageKey = _message.Key;
         MessageInternalId = number;
     }
 
     public long MessageInternalId { get; }
     public long? MessageId { get; }
+
+    public string? MessageKey { get; }
+
     public string RawMessageText { get; }
 }

@@ -9,6 +9,7 @@ namespace Rachkov.InspectaQueue.Providers.Pulsar;
 
 public class PulsarProvider : IQueueProvider, IAsyncDisposable
 {
+    private readonly IErrorReporter _errorReporter;
     private readonly Channel<MessageFrame> _messagesChannel;
     private Task? _readerTask;
     private CancellationTokenSource? _cancellationTokenSource;
@@ -17,8 +18,9 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
     private IConsumer<byte[]>? _consumer;
     private Guid _id = Guid.NewGuid();
 
-    public PulsarProvider()
+    public PulsarProvider(IErrorReporter errorReporter)
     {
+        _errorReporter = errorReporter;
         Debug.WriteLine($"==========> Constructing: {_id}");
         Console.WriteLine($"==========> Constructing: {_id}");
         _settings = new PulsarSettings();
@@ -89,6 +91,7 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
         }
 
         await _consumer.AcknowledgeAsync(message.MessageId);
+        frame.IsAcknowledged = true;
         return true;
     }
 
@@ -111,9 +114,19 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
                 .SubscriptionType(SubscriptionType.Exclusive)
                 .SubscribeAsync();
         }
-        catch
+        catch (Exception e)
         {
-            throw;
+            if (e is not OperationCanceledException)
+            {
+                _errorReporter.RaiseError(new()
+                {
+                    Text = "Error while initializing Pulsar client",
+                    Source = this,
+                    Exception = e
+                });
+            }
+
+            return;
         }
 
         while (!cancellationToken.IsCancellationRequested)
@@ -122,10 +135,14 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
             {
                 var message = await _consumer.ReceiveAsync(cancellationToken);
 
+                var messageString = Encoding.UTF8.GetString(message.Data);
                 var frame = new MessageFrame
                 {
-                    Content = Encoding.UTF8.GetString(message.Data),
-                    Message = message
+                    Content = messageString,
+                    JsonRepresentation = messageString,
+                    Message = message,
+                    Key = message.Key,
+                    Id = message.MessageId.EntryId
                 };
 
                 _messagesChannel.Writer.TryWrite(frame);
@@ -133,12 +150,20 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
                 if (_settings.AcknowledgeOnReceive)
                 {
                     await _consumer.AcknowledgeAsync(message.MessageId);
+                    frame.IsAcknowledged = true;
                 }
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e);
-                throw;
+                if (e is not OperationCanceledException)
+                {
+                    _errorReporter.RaiseError(new()
+                    {
+                        Text = "Error while reading message",
+                        Source = this,
+                        Exception = e
+                    });
+                }
             }
         }
     }
