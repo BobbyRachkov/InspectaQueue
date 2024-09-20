@@ -83,8 +83,7 @@
             VerticalScrollBarVisibility="Auto"
             Margin="10 0 0 0"
             Grid.Row="1">
-            <Grid
-            x:Name="TableGrid">
+            <Grid x:Name="TableGrid">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="20"/>
                     <RowDefinition Height="*"/>

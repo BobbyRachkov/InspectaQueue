@@ -2,6 +2,7 @@
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
+using System.Windows.Media;
 using MahApps.Metro.Controls;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView.ValueConverters;
@@ -38,7 +39,11 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
                 }},
                 {typeof(int),()=>new PresenterConfig
                 {
-                    Presenter = new NumericUpDown(),
+                    Presenter = new NumericUpDown
+                    {
+                        ButtonsAlignment = ButtonsAlignment.Left,
+                        TextAlignment = TextAlignment.Left
+                    },
                     DependencyPropertyToBind = NumericUpDown.ValueProperty,
                     ValueConverter = new DoubleToIntValueConverter()
                 }},
@@ -67,24 +72,30 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
         {
             double rowHeight = 30;
             double marginTop = index * (rowHeight + 10);
-            var nameMargin = new Thickness(0, marginTop + 2, 10, 0);
-            var valueMargin = new Thickness(10, marginTop, 20, 0);
+            var nameMargin = new Thickness(0, marginTop, 10, 0);
+            var valueMargin = new Thickness(0, marginTop, 20, 0);
+
             var name = new Label
             {
                 Content = settingEntryViewModel.Name,
-                Height = rowHeight,
-                Margin = nameMargin,
-                VerticalAlignment = VerticalAlignment.Top,
+                Margin = new Thickness(0, 0, 10, 0),
+                VerticalAlignment = VerticalAlignment.Center,
                 ToolTip = settingEntryViewModel.ToolTip
             };
-            Grid.SetColumn(name, 0);
-            Grid.SetRow(name, 1);
+
+            var nameGrid = new Grid
+            {
+                Height = rowHeight,
+                VerticalAlignment = VerticalAlignment.Top,
+                Margin = nameMargin
+            };
+            nameGrid.Children.Add(name);
+            Grid.SetColumn(nameGrid, 0);
+            Grid.SetRow(nameGrid, 1);
 
             var presenterConfig = _typeHandlers[settingEntryViewModel.Type]();
-            Grid.SetColumn(presenterConfig.Presenter, 2);
-            Grid.SetRow(presenterConfig.Presenter, 1);
-            presenterConfig.Presenter.Margin = valueMargin;
-            presenterConfig.Presenter.VerticalAlignment = VerticalAlignment.Top;
+            presenterConfig.Presenter.Margin = new Thickness(10, 0, 20, 0);
+            presenterConfig.Presenter.VerticalAlignment = VerticalAlignment.Center;
 
             Binding valueBinding = new Binding
             {
@@ -95,13 +106,31 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
 
             if (presenterConfig.ValueConverter is not null)
             {
-                valueBinding.Converter= presenterConfig.ValueConverter;
+                valueBinding.Converter = presenterConfig.ValueConverter;
             }
 
             presenterConfig.Presenter.SetBinding(presenterConfig.DependencyPropertyToBind, valueBinding);
 
-            TableGrid.Children.Add(name);
-            TableGrid.Children.Add(presenterConfig.Presenter);
+
+            var valueGrid = new Grid
+            {
+                Height = rowHeight,
+                VerticalAlignment = VerticalAlignment.Top,
+                Margin = valueMargin
+            };
+            valueGrid.Children.Add(presenterConfig.Presenter);
+            Grid.SetColumn(valueGrid, 2);
+            Grid.SetRow(valueGrid, 1);
+
+            TableGrid.Children.Add(nameGrid);
+            TableGrid.Children.Add(valueGrid);
+        }
+
+        private static Brush GetRandomColor()
+        {
+            Random r = new Random();
+            return new SolidColorBrush(Color.FromRgb((byte) r.Next(1, 255),
+                (byte) r.Next(1, 255), (byte) r.Next(1, 233)));
         }
     }
 }
