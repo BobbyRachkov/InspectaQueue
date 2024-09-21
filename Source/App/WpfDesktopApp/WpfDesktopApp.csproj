@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RootNamespace>Rachkov.InspectaQueue.WpfDesktopApp</RootNamespace>
+    <DefaultNamespace>Rachkov.InspectaQueue.WpfDesktopApp</DefaultNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>Resources\iq.ico</ApplicationIcon>
+    <Description>A powerful tool for inspecting message queues</Description>
+    <Authors>Bobi Rachkov</Authors>
+    <Product>Inspecta Queue</Product>
+    <PackageProjectUrl>https://github.com/BobbyRachkov/InspectaQueue</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/BobbyRachkov/InspectaQueue</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageId>$(AssemblyFullName)</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\iq.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac" Version="8.0.0" />
+    <PackageReference Include="MahApps.Metro" Version="2.4.10" />
+    <PackageReference Include="MahApps.Metro.IconPacks" Version="5.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Providers\PulsarProvider\PulsarProvider.csproj" />
+    <ProjectReference Include="..\Abstractions\Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Presentation\Views\SourceView\ValueConverters\" />
+  </ItemGroup>
+
+</Project>

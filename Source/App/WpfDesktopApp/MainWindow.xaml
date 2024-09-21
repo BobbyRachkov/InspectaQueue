@@ -1,0 +1,110 @@
+﻿<mah:MetroWindow x:Class="Rachkov.InspectaQueue.WpfDesktopApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+        xmlns:infrastructure="clr-namespace:Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure"
+        xmlns:converters="clr-namespace:Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Converters"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=infrastructure:PresenterViewModel}"
+        Title="{Binding Name}" Height="450" Width="800"
+        Icon="/Resources/iq.ico">
+    <mah:MetroWindow.Resources>
+        <converters:IntegerToVisibilityConverter x:Key="IntegerToVisibilityConverter"/>
+        <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+    </mah:MetroWindow.Resources>
+    <mah:MetroWindow.RightWindowCommands>
+        <mah:WindowCommands ShowLastSeparator="False">
+            <Button
+                Command="{Binding OpenErrorsFlyoutCommand}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Grid.Column="0">Errors</Label>
+                    <Grid
+                        Visibility="{Binding Errors.Count,Converter={StaticResource IntegerToVisibilityConverter}}"
+                        Grid.Column="1">
+                        <Ellipse
+                            Stroke="White"
+                            StrokeThickness="1"
+                            Width="20"
+                            Height="20">
+                        </Ellipse>
+                        <Label 
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center"
+                            Content="{Binding Errors.Count}"/>
+                    </Grid>
+                </Grid>
+            </Button>
+        </mah:WindowCommands>
+    </mah:MetroWindow.RightWindowCommands>
+
+    <mah:MetroWindow.Flyouts>
+        <mah:FlyoutsControl>
+            <mah:Flyout
+                Header="Errors"
+                Width="Auto"
+                MinWidth="300"
+                MaxWidth="850"
+                Position="Right"
+                AreAnimationsEnabled="True"
+                IsOpen="{Binding IsErrorsFlyoutOpen}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Button
+                        Margin="10"
+                        Command="{Binding ClearErrorsCommand}"
+                        MinWidth="100"
+                        MaxWidth="200"
+                        Style="{StaticResource MahApps.Styles.Button.Flat}"
+                        Grid.Row="0">
+                        Clear
+                    </Button>
+                    <ListView
+                        ItemsSource="{Binding Errors}"
+                        Grid.Row="1">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel
+                                    Margin="10"
+                                    Orientation="Vertical">
+                                    <Label
+                                        FontSize="15"
+                                        Content="{Binding Text}"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Label Content="Source: "/>
+                                        <Label Content="{Binding Source}"/>
+                                    </StackPanel>
+                                    <Expander 
+                                        Visibility="{Binding ExceptionHeader,Converter={StaticResource NullToVisibilityConverter}}"
+                                        mah:ControlsHelper.ContentCharacterCasing="Normal"
+                                        MaxWidth="800"
+                                        Header="{Binding ExceptionHeader}">
+                                        <TextBlock
+                                            TextWrapping="Wrap"
+                                            Text="{Binding ExceptionText}"/>
+                                    </Expander>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem" BasedOn="{StaticResource MahApps.Styles.ListViewItem}">
+                                <Setter Property="Focusable" Value="false"/>
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                    </ListView>
+                </Grid>
+            </mah:Flyout>
+        </mah:FlyoutsControl>
+    </mah:MetroWindow.Flyouts>
+    <Grid>
+
+    </Grid>
+</mah:MetroWindow>
