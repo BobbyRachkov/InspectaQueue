@@ -29,7 +29,7 @@ public static class ContainerBuilderExtensions
     private static IEnumerable<Assembly> LoadProviderModules()
     {
         var files = Directory
-            .EnumerateFiles(".\\Providers\\")
+            .EnumerateFiles(".\\Providers\\", "*", SearchOption.AllDirectories)
             .Where(f => f.EndsWith(".dll"))
             .Select(Path.GetFullPath);
 

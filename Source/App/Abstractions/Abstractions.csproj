@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>Rachkov.InspectaQueue.Abstractions</RootNamespace>
+    <DefaultNamespace>Rachkov.InspectaQueue.Abstractions</DefaultNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
