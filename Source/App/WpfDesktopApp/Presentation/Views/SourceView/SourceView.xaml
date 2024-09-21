@@ -57,7 +57,7 @@
                         RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ToggleButton}},
                         Converter={StaticResource InvertedBooleanToVisibilityConverter}}"
                         FontSize="10"/>
-                        <iconPacks:PackIconFontAwesome 
+                    <iconPacks:PackIconFontAwesome 
                         Visibility="{Binding IsChecked,
                         RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ToggleButton}},
                         Converter={StaticResource BooleanToVisibilityConverter}}"
@@ -94,8 +94,8 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <GridSplitter
-                Grid.Row="0"
-                Grid.Column="1"/>
+                    Grid.Row="0"
+                    Grid.Column="1"/>
             </Grid>
         </ScrollViewer>
     </Grid>

@@ -2,22 +2,27 @@
 using Rachkov.InspectaQueue.Abstractions;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
+using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.WindowManager;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector;
 
-public class QueueInspectorViewModel : PresenterViewModel, IDisposable
+public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTopmost
 {
     private readonly IQueueProvider _queueProvider;
+    private readonly IWindowManager _windowManager;
     public override string Name => "Queue Inspector";
-    private Task? _listenerTask;
-    private CancellationTokenSource _cts = new();
+    private readonly Task? _listenerTask;
+    private readonly CancellationTokenSource _cts = new();
+    private bool _topmost;
 
     public QueueInspectorViewModel(
         IQueueProvider queueProvider,
-        IErrorManager errorManager)
+        IErrorManager errorManager,
+        IWindowManager windowManager)
         : base(errorManager)
     {
         _queueProvider = queueProvider;
+        _windowManager = windowManager;
         Entries = new();
         //GenerateFakeData();
         queueProvider.Connect();
@@ -27,7 +32,23 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable
             TaskCreationOptions.LongRunning);
 
         OnClosing += (_, _) => _queueProvider.Disconnect();
+
+        DisconnectCommand = new(() => windowManager.Close(this));
     }
+
+    public bool Topmost
+    {
+        get => _topmost;
+        set
+        {
+            _topmost = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public ObservableCollection<QueueEntryViewModel> Entries { get; }
+
+    public RelayCommand DisconnectCommand { get; }
 
     private void GenerateFakeData()
     {
@@ -58,7 +79,6 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable
         }
     }
 
-    public ObservableCollection<QueueEntryViewModel> Entries { get; }
 
     public void Dispose()
     {

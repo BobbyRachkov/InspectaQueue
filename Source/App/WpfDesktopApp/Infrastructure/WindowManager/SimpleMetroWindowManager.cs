@@ -18,8 +18,7 @@ public class SimpleMetroWindowManager : IWindowManager
         var window = new MainWindow()
         {
             Content = viewModel,
-            DataContext = viewModel,
-            Title = viewModel.Name
+            DataContext = viewModel
         };
 
         viewModel.Show += OnShowInvoked;
@@ -78,7 +77,7 @@ public class SimpleMetroWindowManager : IWindowManager
             return null;
         }
 
-        var window = _windows.FirstOrDefault(x => x.Content == viewModel);
+        var window = _windows.FirstOrDefault(x => x.DataContext == viewModel);
         return window;
     }
 }

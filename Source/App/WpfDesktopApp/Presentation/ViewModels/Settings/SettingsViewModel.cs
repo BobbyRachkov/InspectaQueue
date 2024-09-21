@@ -113,7 +113,7 @@ public class SettingsViewModel : PresenterViewModel
         _configStoreService.StoreSources(Sources.ToArray());
         var freshProvider = (IQueueProvider)_lifetimeScope.Resolve(SelectedSource.ProviderType);
         SelectedSource.UpdateSettings(freshProvider.Settings);
-        var vm = new QueueInspectorViewModel(freshProvider, _errorManager);
+        var vm = new QueueInspectorViewModel(freshProvider, _errorManager, _windowManager);
         _windowManager.Create(vm);
     }
 

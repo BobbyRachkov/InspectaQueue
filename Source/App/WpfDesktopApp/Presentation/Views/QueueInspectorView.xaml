@@ -23,8 +23,9 @@
                 HorizontalAlignment="Right"
                 Orientation="Horizontal">
                 <CheckBox
+                    IsChecked="{Binding Topmost}"
                     Margin="10 0">Topmost</CheckBox>
-                <Button>Disconnect</Button>
+                <Button Command="{Binding DisconnectCommand}">Disconnect</Button>
             </StackPanel>
         </Expander>
         <DataGrid x:Name="MetroDataGrid"
@@ -52,10 +53,11 @@
                 <DataGridTextColumn 
                     Binding="{Binding MessageKey}" 
                     Header="Key"
-                    Width="Auto"/>
+                    Width="250"/>
                 <DataGridTextColumn 
                     Binding="{Binding RawMessageText}"
-                    Header="Content"/>
+                    Header="Content"
+                    Width="700"/>
                 <!--<DataGridTextColumn 
                     Binding="{Binding RawMessageText }" 
                     Header="Content" >

@@ -60,7 +60,7 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
 
         public void RenderSettingsControls(SourceViewModel sourceViewModel)
         {
-            TableGrid.Children.Clear();
+            ResetGridChildren();
 
             for (var i = 0; i < sourceViewModel.Settings.Length; i++)
             {
@@ -68,34 +68,22 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
             }
         }
 
+        private void ResetGridChildren()
+        {
+            TableGrid.Children.Clear();
+
+            var splitter = new GridSplitter();
+            Grid.SetRow(splitter, 0);
+            Grid.SetColumn(splitter, 1);
+            TableGrid.Children.Add(splitter);
+        }
+
         private void RenderSettingRow(SettingEntryViewModel settingEntryViewModel, int index)
         {
             double rowHeight = 30;
             double marginTop = index * (rowHeight + 10);
-            var nameMargin = new Thickness(0, marginTop, 10, 0);
-            var valueMargin = new Thickness(0, marginTop, 20, 0);
-
-            var name = new Label
-            {
-                Content = settingEntryViewModel.Name,
-                Margin = new Thickness(0, 0, 10, 0),
-                VerticalAlignment = VerticalAlignment.Center,
-                ToolTip = settingEntryViewModel.ToolTip
-            };
-
-            var nameGrid = new Grid
-            {
-                Height = rowHeight,
-                VerticalAlignment = VerticalAlignment.Top,
-                Margin = nameMargin
-            };
-            nameGrid.Children.Add(name);
-            Grid.SetColumn(nameGrid, 0);
-            Grid.SetRow(nameGrid, 1);
-
-            var presenterConfig = _typeHandlers[settingEntryViewModel.Type]();
-            presenterConfig.Presenter.Margin = new Thickness(10, 0, 20, 0);
-            presenterConfig.Presenter.VerticalAlignment = VerticalAlignment.Center;
+            var nameMargin = new Thickness(0, marginTop, 5, 0);
+            var valueMargin = new Thickness(5, marginTop, 20, 0);
 
             Binding valueBinding = new Binding
             {
@@ -103,6 +91,16 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
                 Path = new PropertyPath(nameof(settingEntryViewModel.Value)),
                 Mode = BindingMode.TwoWay
             };
+
+            var name = new Label
+            {
+                Content = settingEntryViewModel.Name,
+                VerticalAlignment = VerticalAlignment.Center,
+                ToolTip = settingEntryViewModel.ToolTip
+            };
+
+            var presenterConfig = _typeHandlers[settingEntryViewModel.Type]();
+            presenterConfig.Presenter.VerticalAlignment = VerticalAlignment.Center;
 
             if (presenterConfig.ValueConverter is not null)
             {
@@ -112,25 +110,39 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
             presenterConfig.Presenter.SetBinding(presenterConfig.DependencyPropertyToBind, valueBinding);
 
 
-            var valueGrid = new Grid
-            {
-                Height = rowHeight,
-                VerticalAlignment = VerticalAlignment.Top,
-                Margin = valueMargin
-            };
-            valueGrid.Children.Add(presenterConfig.Presenter);
-            Grid.SetColumn(valueGrid, 2);
-            Grid.SetRow(valueGrid, 1);
+            var nameGrid = CreateGridWrapper(name, rowHeight, 1, 0, nameMargin);
+            var valueGrid = CreateGridWrapper(presenterConfig.Presenter, rowHeight, 1, 2, valueMargin);
+
 
             TableGrid.Children.Add(nameGrid);
             TableGrid.Children.Add(valueGrid);
         }
 
+        private Grid CreateGridWrapper(
+            FrameworkElement content,
+            double rowHeight,
+            int parentGridRow,
+            int parentGridColumn,
+            Thickness margin)
+        {
+            var grid = new Grid
+            {
+                Height = rowHeight,
+                VerticalAlignment = VerticalAlignment.Top,
+                Margin = margin
+            };
+            grid.Children.Add(content);
+            Grid.SetColumn(grid, parentGridColumn);
+            Grid.SetRow(grid, parentGridRow);
+
+            return grid;
+        }
+
         private static Brush GetRandomColor()
         {
             Random r = new Random();
-            return new SolidColorBrush(Color.FromRgb((byte) r.Next(1, 255),
-                (byte) r.Next(1, 255), (byte) r.Next(1, 233)));
+            return new SolidColorBrush(Color.FromRgb((byte)r.Next(1, 255),
+                (byte)r.Next(1, 255), (byte)r.Next(1, 233)));
         }
     }
 }

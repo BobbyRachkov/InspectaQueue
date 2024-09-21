@@ -63,23 +63,6 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
         {
             await _cancellationTokenSource.CancelAsync();
         }
-
-        if (_cancellationTokenSource is not null)
-        {
-            await _cancellationTokenSource.CancelAsync();
-            _cancellationTokenSource?.Dispose();
-        }
-
-        _readerTask?.Dispose();
-        if (_consumer is not null)
-        {
-            await _consumer.DisposeAsync();
-        }
-
-        if (_client is not null)
-        {
-            await _client.CloseAsync();
-        }
     }
 
     public async Task<bool> TryAcknowledge(MessageFrame frame)
@@ -99,7 +82,6 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
     {
         try
         {
-
             _client = await new PulsarClientBuilder()
                 .ServiceUrl(_settings.ServiceUrl)
                 .Authentication(AuthenticationFactoryOAuth2.ClientCredentials(
@@ -113,6 +95,8 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
                 .SubscriptionName(_settings.SubscriptionName)
                 .SubscriptionType(SubscriptionType.Exclusive)
                 .SubscribeAsync();
+
+            cancellationToken.ThrowIfCancellationRequested();
         }
         catch (Exception e)
         {
@@ -126,6 +110,8 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
                 });
             }
 
+            await DisposeConsumerAndClient();
+
             return;
         }
 
@@ -134,7 +120,7 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
             try
             {
                 var message = await _consumer.ReceiveAsync(cancellationToken);
-
+                
                 var messageString = Encoding.UTF8.GetString(message.Data);
                 var frame = new MessageFrame
                 {
@@ -166,6 +152,8 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
                 }
             }
         }
+
+        await DisposeConsumerAndClient();
     }
 
     public async ValueTask DisposeAsync()
@@ -173,5 +161,18 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
         Debug.WriteLine($"==========> Disposing: {_id}");
         Console.WriteLine($"==========> Disposing: {_id}");
         await Disconnect();
+    }
+
+    private async Task DisposeConsumerAndClient()
+    {
+        if (_consumer is not null)
+        {
+            await _consumer.DisposeAsync();
+        }
+
+        if (_client is not null)
+        {
+            await _client.CloseAsync();
+        }
     }
 }
