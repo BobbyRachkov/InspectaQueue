@@ -17,18 +17,18 @@ public sealed class UpdateMigratorService : IUpdateMigratorService
 
     public void MigrateConfig()
     {
-        File.Copy(Constants.Path.Config, Constants.Path.MigratedConfig);
+        File.Copy(Constants.Path.Config, Constants.Path.MigratedConfig,true);
 
         var fileContents = File.ReadAllText(Constants.Path.MigratedConfig);
         var parsedVersion = JsonConvert.DeserializeObject<Base>(fileContents);
 
         if (parsedVersion?.ConfigVersion is null
-            || parsedVersion.ConfigVersion == _versionedContracts.Last().Key)
+            || parsedVersion.ConfigVersion == _versionedContracts.Last().Key
+            || !_migrators.TryGetValue(parsedVersion.ConfigVersion, out var migrator))
         {
             return;
         }
 
-        var migrator = _migrators[parsedVersion.ConfigVersion];
         var migratedJson = migrator.MigrateJson(fileContents);
         File.WriteAllText(Constants.Path.MigratedConfig, migratedJson);
     }

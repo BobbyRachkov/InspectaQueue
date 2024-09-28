@@ -57,7 +57,7 @@ namespace AutoUpdater.Tests
             var release = await _sut.GetLatestVersion(releaseType);
 
             //Assert
-            Assert.That(release, Is.EqualTo(expectedVersion));
+            Assert.That(release.ToString(), Is.EqualTo(expectedVersion));
         }
     }
 }

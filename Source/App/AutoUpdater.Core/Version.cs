@@ -5,26 +5,44 @@ public sealed class Version
     public int Major { get; }
     public int Minor { get; }
     public int Patch { get; }
+    public string? Pre { get; }
 
     public Version(int major, int minor, int patch)
     {
         Major = major;
         Minor = minor;
         Patch = patch;
+        Pre = null;
     }
 
-    public Version(string? version)
+    public Version(string version)
     {
-        var components = version.Split('.', StringSplitOptions.RemoveEmptyEntries);
+        var components = version.Split(['.', '-'], StringSplitOptions.RemoveEmptyEntries);
 
         Major = int.Parse(components[0]);
         Minor = int.Parse(components[1]);
         Patch = int.Parse(components[2]);
+
+        if (components.Length == 4
+            && !int.TryParse(components[3],out _))
+        {
+            Pre = components[3];
+        }
+
+        if (components.Length > 4)
+        {
+            Pre = $"{components[3]}.{components[4]}";
+        }
     }
 
     public override string ToString()
     {
-        return $"{Major}.{Minor}.{Patch}";
+        if (Pre is null)
+        {
+            return $"{Major}.{Minor}.{Patch}";
+        }
+
+        return $"{Major}.{Minor}.{Patch}-{Pre}";
     }
 
     private bool Equals(Version other)

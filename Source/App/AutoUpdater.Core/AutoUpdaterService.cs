@@ -1,8 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿using System.Diagnostics;
+using Newtonsoft.Json;
 using Rachkov.InspectaQueue.Abstractions.Contracts;
 using Rachkov.InspectaQueue.Abstractions.Extensions;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
 
 namespace Rachkov.InspectaQueue.Abstractions;
 
@@ -18,7 +20,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
     public async Task<(Version version, string? downloadUrl)?> GetLatestVersion(ReleaseType releaseType)
     {
         var client = _httpClientFactory.CreateClient();
-        client.BaseAddress = new Uri(Constants.Url.RepositoryApi); 
+        client.BaseAddress = new Uri(Constants.Url.RepositoryApi);
         client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("product", "1"));
 
         try
@@ -47,18 +49,48 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 
             return (new Version(prerelease.TagName), prerelease.GetBrowserDownloadString());
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             return null;
         }
     }
 
-    public async Task DownloadVersion(string downloadUrl, string outputFileLocation)
+    public async Task DownloadVersion(string downloadUrl)
     {
         var client = _httpClientFactory.CreateClient();
         Stream fileStream = await client.GetStreamAsync(downloadUrl);
 
-        await using FileStream outputFileStream = new FileStream(outputFileLocation, FileMode.Create);
+        await using FileStream outputFileStream = new FileStream(Constants.Path.DownloadPath, FileMode.Create);
         await fileStream.CopyToAsync(outputFileStream);
+    }
+
+    public Version GetAppVersion()
+    {
+        Assembly assembly = Assembly.GetExecutingAssembly();
+        FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
+        return new Version(fvi.FileVersion ?? assembly.GetName().Version?.ToString() ?? "0.0.0");
+    }
+
+    public void RunFinalCopyScript()
+    {
+        var scriptPath = "..\\restore.bat";
+        var scriptFullPath = Path.GetFullPath(scriptPath);
+
+        File.WriteAllText(scriptPath, Constants.Script.Finalize2);
+        ProcessStartInfo psi = new ProcessStartInfo
+        {
+            FileName = "cmd.exe",
+            WorkingDirectory = Path.GetDirectoryName(scriptFullPath),
+            Arguments = "/c " + Path.GetFileName(scriptFullPath),
+            UseShellExecute = false,
+            CreateNoWindow = false, //
+            RedirectStandardOutput = false,
+            RedirectStandardError = false,
+            RedirectStandardInput = false,
+            WindowStyle = ProcessWindowStyle.Normal
+        };
+
+        Process cmdProcess = Process.Start(psi);
+        cmdProcess.Dispose();
     }
 }

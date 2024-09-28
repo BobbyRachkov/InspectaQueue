@@ -1,20 +1,19 @@
-﻿using System.Collections.ObjectModel;
-using System.Reflection;
-using System.Windows;
-using Autofac;
+﻿using Autofac;
 using Rachkov.InspectaQueue.Abstractions;
 using Rachkov.InspectaQueue.WpfDesktopApp.Extensions;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
+using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.DialogManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.WindowManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.SettingsParser;
-using Version = Rachkov.InspectaQueue.Abstractions.Version;
+using System.Collections.ObjectModel;
+using System.Windows;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 
-public class SettingsViewModel : PresenterViewModel
+public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
 {
     private readonly IWindowManager _windowManager;
     private readonly IConfigStoreService _configStoreService;
@@ -22,9 +21,12 @@ public class SettingsViewModel : PresenterViewModel
     private readonly ILifetimeScope _lifetimeScope;
     private readonly IErrorManager _errorManager;
     private readonly IAutoUpdaterService _autoUpdater;
+    private readonly IUpdateMigratorService _migratorService;
     private IQueueProvider? _selectedProvider;
     private bool _isAddNewSourceWorkflowEnabled;
     private SourceViewModel? _selectedSource;
+    private DialogManager? _dialogManager;
+    private bool _hasChackedForUpdate = false;
     public override string Name => "Queue Settings";
 
     public SettingsViewModel(
@@ -35,7 +37,8 @@ public class SettingsViewModel : PresenterViewModel
         ISourceReader sourceReader,
         ILifetimeScope lifetimeScope,
         IErrorManager errorManager,
-        IAutoUpdaterService autoUpdater)
+        IAutoUpdaterService autoUpdater,
+        IUpdateMigratorService migratorService)
     : base(errorManager)
     {
         _windowManager = windowManager;
@@ -44,6 +47,7 @@ public class SettingsViewModel : PresenterViewModel
         _lifetimeScope = lifetimeScope;
         _errorManager = errorManager;
         _autoUpdater = autoUpdater;
+        _migratorService = migratorService;
         AvailableProviders = availableProviders.ToArray();
 
         if (AvailableProviders.Any())
@@ -76,6 +80,74 @@ public class SettingsViewModel : PresenterViewModel
     public RelayCommand AddNewSourceCommand { get; }
     public RelayCommand DuplicateSourceCommand { get; }
     public RelayCommand RemoveSourceCommand { get; }
+
+    public DialogManager? DialogManager
+    {
+        get => _dialogManager;
+        set
+        {
+            _dialogManager = value;
+            if (!_hasChackedForUpdate
+                && _configStoreService.GetSettings().IsAutoUpdaterEnabled)
+            {
+                _hasChackedForUpdate = true;
+                CheckForUpdates();
+            }
+        }
+    }
+
+    private void CheckForUpdates()
+    {
+        var updateChannel = _configStoreService.GetSettings().IsAutoUpdaterAlphaReleaseChannel
+            ? ReleaseType.Prerelease
+            : ReleaseType.Official;
+        _autoUpdater.GetLatestVersion(updateChannel).ContinueWith(t =>
+        {
+            if (t.Result is null || DialogManager is null)
+            {
+                return;
+            }
+
+            var (newVersion, downloadUrl) = t.Result.Value;
+            var currentVersion = _autoUpdater.GetAppVersion();
+
+            if (!(newVersion > currentVersion))
+            {
+                return;
+            }
+
+            if (downloadUrl is null)
+            {
+                MessageBox.Show("There is new version, but the download url is corrupted. Contact application author.");
+                return;
+            }
+
+            bool? promptResult = null;
+
+            OnUiThread(() =>
+            {
+                promptResult = DialogManager.ShowNewUpdateDialog(currentVersion.ToString(), newVersion.ToString());
+            });
+
+            if (promptResult is not true)
+            {
+                return;
+            }
+
+            _migratorService.MigrateConfig();
+            _migratorService.MigrateProviders();
+            _autoUpdater.DownloadVersion(downloadUrl).ContinueWith(t2 =>
+            {
+                _autoUpdater.RunFinalCopyScript();
+                Environment.Exit(0);
+            });
+
+            OnUiThread(async () =>
+            {
+                await DialogManager.ShowProgressDialog("Update in progress...", "The program will restart soon...", false, true);
+            });
+        });
+    }
 
     public ObservableCollection<SourceViewModel> Sources { get; private set; }
     public IQueueProvider[] AvailableProviders { get; }
@@ -170,4 +242,5 @@ public class SettingsViewModel : PresenterViewModel
         SelectedSource = source;
         _configStoreService.StoreSources(Sources.ToArray());
     }
+
 }

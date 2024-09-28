@@ -12,6 +12,7 @@ using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
 using Nuke.Common.Tools.DotNet;
+using Nuke.Common.Tools.GitVersion;
 using Nuke.Common.Utilities.Collections;
 using Serilog;
 using static Nuke.Common.EnvironmentInfo;
@@ -36,7 +37,10 @@ public class Build : NukeBuild
     [Solution(GenerateProjects = true)]
     readonly Solution Solution;
 
-    string AppVersion => "0.1.3.0";
+    [GitVersion]
+    readonly GitVersion GitVersion;
+
+    string AppVersion => GitVersion.SemVer;
 
     Dictionary<Project, string> ProviderVersions => new()
     {
@@ -77,7 +81,9 @@ public class Build : NukeBuild
             DotNetTasks.DotNetBuild(_ => _
                 .SetProjectFile(Solution.App.WpfDesktopApp)
                 .SetConfiguration(Configuration)
-                .SetAssemblyVersion(AppVersion)
+                .SetAssemblyVersion(GitVersion.AssemblySemVer)
+                .SetFileVersion(AppVersion)
+                .SetInformationalVersion(AppVersion)
                 .SetAuthors("Bobi Rachkov")
                 .SetOutputDirectory(WpfCompileDirectory)
             );
