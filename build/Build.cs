@@ -36,13 +36,14 @@ public class Build : NukeBuild
     [Solution(GenerateProjects = true)]
     readonly Solution Solution;
 
-    string AppVersion => "0.1.1.0";
+    string AppVersion => "0.1.2.0";
 
     Dictionary<Project, string> ProviderVersions => new()
     {
         {Solution.QueueProviders.PulsarProvider,"0.1.0.0"}
     };
 
+    AbsolutePath ZipDirectory => ArtifactsDirectory / "wpf";
     AbsolutePath WpfCompileDirectory => ArtifactsDirectory / "wpf" / "App";
     AbsolutePath AutoUpdaterCompileDirectory => ArtifactsDirectory / "wpf" / "AutoUpdater";
     AbsolutePath ProvidersCompileDirectory => ArtifactsDirectory / "providers";
@@ -124,6 +125,6 @@ public class Build : NukeBuild
         .DependsOn(CleanPdbs)
         .Executes(() =>
         {
-            WpfCompileDirectory.ZipTo(ProdZipName);
+            ZipDirectory.ZipTo(ProdZipName);
         });
 }
