@@ -2,7 +2,8 @@
 $repoOwner = "BobbyRachkov"
 $repoName = "InspectaQueue"
 $zipName = "release.zip"
-$targetDir = "$env:LOCALAPPDATA\InspectaQueue\App"
+$targetDir = "$env:LOCALAPPDATA\InspectaQueue"
+$appDir = "$env:LOCALAPPDATA\InspectaQueue\App"
 $githubApi = "https://api.github.com/repos/$repoOwner/$repoName/releases/latest"
 $exeName = "InspectaQueue.exe"  # Change this to the name of the executable
 
@@ -41,7 +42,7 @@ if (-not (Test-Path -Path $zipName)) {
 Write-Host "Extracting zip to $targetDir..."
 Expand-Archive -Path $zipName -DestinationPath $targetDir -Force
 
-if (-not (Test-Path -Path "$targetDir\$exeName")) {
+if (-not (Test-Path -Path "$appDir\$exeName")) {
     Write-Host "Failed to extract or locate the executable. Exiting."
     exit 1
 }
@@ -53,12 +54,12 @@ Remove-Item $zipName
 Write-Host "Creating desktop shortcut..."
 $WshShell = New-Object -COMObject WScript.Shell
 $Shortcut = $WshShell.CreateShortcut("$Home\Desktop\InspectaQueue.lnk")
-$Shortcut.TargetPath = "$targetDir\$exeName"
+$Shortcut.TargetPath = "$appDir\$exeName"
 $Shortcut.WorkingDirectory = "$targetDir"
 $Shortcut.Save()
 
 # Run the executable
 Write-Host "Running the executable..."
-Start-Process "$targetDir\$exeName" -WorkingDirectory "$targetDir"
+Start-Process "$appDir\$exeName" -WorkingDirectory "$appDir"
 
 Write-Host "Done."

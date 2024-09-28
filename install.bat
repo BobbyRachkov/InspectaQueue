@@ -31,8 +31,8 @@ echo Downloading release...
 curl -L "%DOWNLOAD_URL%" -o "%ZIP_NAME%"
 
 :: Unzip the file (using PowerShell if tar is not available)
-echo Extracting zip to %DESTINATION_DIR%...
-tar -xf %ZIP_NAME% -C "%DESTINATION_DIR%" 2>nul || powershell -command "Expand-Archive -Path '%CD%\%ZIP_NAME%' -DestinationPath '%DESTINATION_DIR%'"
+echo Extracting zip to %TARGET_DIR%...
+tar -xf %ZIP_NAME% -C "%TARGET_DIR%" 2>nul || powershell -command "Expand-Archive -Path '%CD%\%ZIP_NAME%' -DestinationPath '%TARGET_DIR%'"
 
 :: Clean up
 del latest_release.json
