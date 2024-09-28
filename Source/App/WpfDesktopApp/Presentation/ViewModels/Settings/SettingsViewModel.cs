@@ -1,4 +1,6 @@
 ﻿using System.Collections.ObjectModel;
+using System.Reflection;
+using System.Windows;
 using Autofac;
 using Rachkov.InspectaQueue.Abstractions;
 using Rachkov.InspectaQueue.WpfDesktopApp.Extensions;
@@ -8,6 +10,7 @@ using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.WindowManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.SettingsParser;
+using Version = Rachkov.InspectaQueue.Abstractions.Version;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 
@@ -18,6 +21,7 @@ public class SettingsViewModel : PresenterViewModel
     private readonly ISettingsParser _settingsParser;
     private readonly ILifetimeScope _lifetimeScope;
     private readonly IErrorManager _errorManager;
+    private readonly IAutoUpdaterService _autoUpdater;
     private IQueueProvider? _selectedProvider;
     private bool _isAddNewSourceWorkflowEnabled;
     private SourceViewModel? _selectedSource;
@@ -30,7 +34,8 @@ public class SettingsViewModel : PresenterViewModel
         ISettingsParser settingsParser,
         ISourceReader sourceReader,
         ILifetimeScope lifetimeScope,
-        IErrorManager errorManager)
+        IErrorManager errorManager,
+        IAutoUpdaterService autoUpdater)
     : base(errorManager)
     {
         _windowManager = windowManager;
@@ -38,6 +43,7 @@ public class SettingsViewModel : PresenterViewModel
         _settingsParser = settingsParser;
         _lifetimeScope = lifetimeScope;
         _errorManager = errorManager;
+        _autoUpdater = autoUpdater;
         AvailableProviders = availableProviders.ToArray();
 
         if (AvailableProviders.Any())
@@ -61,6 +67,8 @@ public class SettingsViewModel : PresenterViewModel
         });
         DuplicateSourceCommand = new(DuplicateSource, () => SelectedSource is not null);
         RemoveSourceCommand = new(DeleteSource, () => SelectedSource is not null);
+
+
     }
 
     public RelayCommand ConnectToSourceCommand { get; }

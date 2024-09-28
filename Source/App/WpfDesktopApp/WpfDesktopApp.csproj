@@ -17,6 +17,8 @@
     <RepositoryType>git</RepositoryType>
     <PackageId>$(AssemblyFullName)</PackageId>
     <AssemblyName>InspectaQueue</AssemblyName>
+    <AssemblyVersion></AssemblyVersion>
+    <FileVersion></FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -35,6 +37,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Providers\PulsarProvider\PulsarProvider.csproj" />
     <ProjectReference Include="..\Abstractions\Abstractions.csproj" />
+    <ProjectReference Include="..\AutoUpdater.Core\AutoUpdater.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

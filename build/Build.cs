@@ -36,7 +36,7 @@ public class Build : NukeBuild
     [Solution(GenerateProjects = true)]
     readonly Solution Solution;
 
-    string AppVersion => "0.1.2.0";
+    string AppVersion => "0.1.3.0";
 
     Dictionary<Project, string> ProviderVersions => new()
     {
@@ -57,14 +57,14 @@ public class Build : NukeBuild
         {
             DotNetTasks.DotNetClean(_ => _
                 .SetOutput(WpfCompileDirectory)
-                .SetProject(Solution.WpfDesktopApp));
+                .SetProject(Solution.App.WpfDesktopApp));
         });
 
     Target Restore => _ => _
         .Executes(() =>
         {
             DotNetTasks.DotNetRestore(_ => _
-                .SetProjectFile(Solution.WpfDesktopApp));
+                .SetProjectFile(Solution.App.WpfDesktopApp));
         });
 
     Target Compile => _ => _
@@ -75,7 +75,7 @@ public class Build : NukeBuild
             ArtifactsDirectory.DeleteDirectory();
 
             DotNetTasks.DotNetBuild(_ => _
-                .SetProjectFile(Solution.WpfDesktopApp)
+                .SetProjectFile(Solution.App.WpfDesktopApp)
                 .SetConfiguration(Configuration)
                 .SetAssemblyVersion(AppVersion)
                 .SetAuthors("Bobi Rachkov")

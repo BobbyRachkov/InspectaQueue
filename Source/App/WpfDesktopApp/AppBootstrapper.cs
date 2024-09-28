@@ -24,7 +24,9 @@ public class AppBootstrapper
             .RegisterConfigStore()
             .RegisterSettingsParser()
             .RegisterSourceReader()
-            .RegisterErrorManager();
+            .RegisterErrorManager()
+            .RegisterHttpClientFactory()
+            .RegisterAutoUpdater();
 
         _container = builder.Build();
 
