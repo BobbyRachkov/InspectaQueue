@@ -55,7 +55,7 @@ Write-Host "Creating desktop shortcut..."
 $WshShell = New-Object -COMObject WScript.Shell
 $Shortcut = $WshShell.CreateShortcut("$Home\Desktop\InspectaQueue.lnk")
 $Shortcut.TargetPath = "$appDir\$exeName"
-$Shortcut.WorkingDirectory = "$targetDir"
+$Shortcut.WorkingDirectory = "$appDir"
 $Shortcut.Save()
 
 # Run the executable
