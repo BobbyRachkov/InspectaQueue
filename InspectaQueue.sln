@@ -16,6 +16,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".sln", ".sln", "{30F9BE9D-16BF-48F3-88D3-FEDE638DDABD}"
 	ProjectSection(SolutionItems) = preProject
 		install.bat = install.bat
+		install.ps1 = install.ps1
+		README.md = README.md
 	EndProjectSection
 EndProject
 Global
@@ -44,6 +46,7 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C6A1446C-FE29-4C62-8B6F-E61BFC0B6197} = {9D61BEF0-2863-4BEA-B1DB-348DEB1B4681}
+		{6554A9F6-AFE8-439D-8C1B-E362B91F8CF8} = {30F9BE9D-16BF-48F3-88D3-FEDE638DDABD}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6BE8A64B-6ECF-4A90-8F3D-835B1B9D3153}

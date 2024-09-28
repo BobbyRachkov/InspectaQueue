@@ -82,8 +82,7 @@ public class Build : NukeBuild
                 .SetOutputDirectory(WpfCompileDirectory)
             );
 
-            ProvidersDirectory.CreateDirectory();
-            CompiledAppName.Rename(ProdAppName.Name);
+            ProvidersDirectory.CreateOrCleanDirectory();
         });
 
     Target CompileProviders => _ => _
@@ -96,7 +95,7 @@ public class Build : NukeBuild
             {
                 Log.Information("Compiling project: {projectName}", project.Name);
                 var providerName = project.Name.Replace("Provider", "");
-                var providerDirectory = ProvidersCompileDirectory / providerName;
+                var providerDirectory = ProvidersCompileDirectory / $"{providerName}_{ProviderVersions[project]}";
 
                 DotNetTasks.DotNetBuild(_ => _
                     .SetProjectFile(project)

@@ -38,6 +38,11 @@ tar -xf %ZIP_NAME% -C "%DESTINATION_DIR%" 2>nul || powershell -command "Expand-A
 del latest_release.json
 del %ZIP_NAME%
 
+echo Trying to create desktop shortcut
+set SHORTCUT='%userprofile%\Desktop\InspectaQueue.lnk'
+set PWS=powershell.exe -ExecutionPolicy Bypass -NoLogo -NonInteractive -NoProfile
+%PWS% -Command "$ws = New-Object -ComObject WScript.Shell; $s = $ws.CreateShortcut(%SHORTCUT%); $S.TargetPath = '%DESTINATION_DIR%\%APP_NAME%'; $S.WorkingDirectory = '%DESTINATION_DIR%'; $S.Save()"
+
 echo Done.
 echo You can now close this window
 cd /d %DESTINATION_DIR% && start %APP_NAME%
