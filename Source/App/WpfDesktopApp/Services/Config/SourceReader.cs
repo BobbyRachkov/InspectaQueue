@@ -25,7 +25,7 @@ public class SourceReader : ISourceReader
         foreach (var storedSource in storedSources)
         {
             var provider = activeProvidersArray.FirstOrDefault(x =>
-                x.GetType().FullName == storedSource.ProviderType.FullName);
+                ProviderTypeConverter.GetProviderStringRepresentation(x.GetType()) == storedSource.ProviderType);
 
             if (provider is null)
             {
