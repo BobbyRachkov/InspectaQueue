@@ -26,7 +26,7 @@ public class Build : NukeBuild
     ///   - Microsoft VisualStudio     https://nuke.build/visualstudio
     ///   - Microsoft VSCode           https://nuke.build/vscode
 
-    public static int Main() => Execute<Build>(x => x.Compile, x => x.CleanPdbs);
+    public static int Main() => Execute<Build>(x => x.Zip);
 
     const bool IsRelease = true;
 
@@ -36,19 +36,18 @@ public class Build : NukeBuild
     [Solution(GenerateProjects = true)]
     readonly Solution Solution;
 
-    string AppVersion => "0.1.0.0";
+    string AppVersion => "0.1.1.0";
 
     Dictionary<Project, string> ProviderVersions => new()
     {
         {Solution.QueueProviders.PulsarProvider,"0.1.0.0"}
     };
 
-    AbsolutePath WpfCompileDirectory => ArtifactsDirectory / "wpf";
+    AbsolutePath WpfCompileDirectory => ArtifactsDirectory / "wpf" / "App";
+    AbsolutePath AutoUpdaterCompileDirectory => ArtifactsDirectory / "wpf" / "AutoUpdater";
     AbsolutePath ProvidersCompileDirectory => ArtifactsDirectory / "providers";
     AbsolutePath ArtifactsDirectory => RootDirectory / "artifacts";
     AbsolutePath ProvidersDirectory => WpfCompileDirectory / "Providers";
-    AbsolutePath CompiledAppName => WpfCompileDirectory / "WpfDesktopApp.exe";
-    AbsolutePath ProdAppName => WpfCompileDirectory / "InspectaQueue.exe";
     AbsolutePath ProdZipName => ArtifactsDirectory / $"InspectaQueue_{AppVersion}.zip";
 
     Target Clean => _ => _
@@ -82,8 +81,7 @@ public class Build : NukeBuild
                 .SetOutputDirectory(WpfCompileDirectory)
             );
 
-            ProvidersDirectory.CreateDirectory();
-            CompiledAppName.Rename(ProdAppName.Name);
+            ProvidersDirectory.CreateOrCleanDirectory();
         });
 
     Target CompileProviders => _ => _
@@ -96,7 +94,7 @@ public class Build : NukeBuild
             {
                 Log.Information("Compiling project: {projectName}", project.Name);
                 var providerName = project.Name.Replace("Provider", "");
-                var providerDirectory = ProvidersCompileDirectory / providerName;
+                var providerDirectory = ProvidersCompileDirectory / $"{providerName}_{ProviderVersions[project]}";
 
                 DotNetTasks.DotNetBuild(_ => _
                     .SetProjectFile(project)
@@ -115,7 +113,7 @@ public class Build : NukeBuild
         .After(CompileProviders)
         .Executes(() =>
         {
-            foreach (var file in Directory.GetFiles(WpfCompileDirectory, "*.pdb", SearchOption.AllDirectories))
+            foreach (var file in Directory.GetFiles(ArtifactsDirectory, "*.pdb", SearchOption.AllDirectories))
             {
                 ((AbsolutePath)file).DeleteFile();
             }
