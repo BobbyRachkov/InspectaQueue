@@ -26,7 +26,7 @@ public class Build : NukeBuild
     ///   - Microsoft VisualStudio     https://nuke.build/visualstudio
     ///   - Microsoft VSCode           https://nuke.build/vscode
 
-    public static int Main() => Execute<Build>(x => x.Compile, x => x.CleanPdbs);
+    public static int Main() => Execute<Build>(x => x.Zip);
 
     const bool IsRelease = true;
 
@@ -36,7 +36,7 @@ public class Build : NukeBuild
     [Solution(GenerateProjects = true)]
     readonly Solution Solution;
 
-    string AppVersion => "0.1.0.0";
+    string AppVersion => "0.1.1.0";
 
     Dictionary<Project, string> ProviderVersions => new()
     {
