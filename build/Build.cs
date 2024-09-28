@@ -43,12 +43,11 @@ public class Build : NukeBuild
         {Solution.QueueProviders.PulsarProvider,"0.1.0.0"}
     };
 
-    AbsolutePath WpfCompileDirectory => ArtifactsDirectory / "wpf";
+    AbsolutePath WpfCompileDirectory => ArtifactsDirectory / "wpf" / "App";
+    AbsolutePath AutoUpdaterCompileDirectory => ArtifactsDirectory / "wpf" / "AutoUpdater";
     AbsolutePath ProvidersCompileDirectory => ArtifactsDirectory / "providers";
     AbsolutePath ArtifactsDirectory => RootDirectory / "artifacts";
     AbsolutePath ProvidersDirectory => WpfCompileDirectory / "Providers";
-    AbsolutePath CompiledAppName => WpfCompileDirectory / "WpfDesktopApp.exe";
-    AbsolutePath ProdAppName => WpfCompileDirectory / "InspectaQueue.exe";
     AbsolutePath ProdZipName => ArtifactsDirectory / $"InspectaQueue_{AppVersion}.zip";
 
     Target Clean => _ => _
@@ -114,7 +113,7 @@ public class Build : NukeBuild
         .After(CompileProviders)
         .Executes(() =>
         {
-            foreach (var file in Directory.GetFiles(WpfCompileDirectory, "*.pdb", SearchOption.AllDirectories))
+            foreach (var file in Directory.GetFiles(ArtifactsDirectory, "*.pdb", SearchOption.AllDirectories))
             {
                 ((AbsolutePath)file).DeleteFile();
             }
