@@ -1,0 +1,13 @@
+mode: ContinuousDeployment
+
+assembly-versioning-scheme: MajorMinor
+assembly-file-versioning-scheme: MajorMinorPatch
+
+branches:
+  master:
+    tag: ''
+  develop:
+    tag: 'pre'
+
+ignore:
+  sha: []

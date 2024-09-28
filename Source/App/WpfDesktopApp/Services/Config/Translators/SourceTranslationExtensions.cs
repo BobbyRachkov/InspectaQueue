@@ -10,7 +10,7 @@ public static class SourceTranslationExtensions
         return new SourceDto
         {
             Name = sourceViewModel.Name,
-            ProviderType = sourceViewModel.ProviderType,
+            ProviderType = ProviderTypeConverter.GetProviderStringRepresentation(sourceViewModel.ProviderType),
             Settings = sourceViewModel.Settings.ToSourceSettingEntries()
         };
     }

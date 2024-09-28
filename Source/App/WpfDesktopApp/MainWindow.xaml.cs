@@ -1,9 +1,8 @@
-﻿using System.Windows;
-using System.Windows.Controls;
-using MahApps.Metro.Controls;
+﻿using MahApps.Metro.Controls;
+using MahApps.Metro.Controls.Dialogs;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
-using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector;
-using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views;
+using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.DialogManager;
+using DialogManager = Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.DialogManager.DialogManager;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp
 {
@@ -24,6 +23,11 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp
             if (newContent is PresenterViewModel presenterViewModel)
             {
                 presenterViewModel.PropertyChanged += PresenterViewModel_PropertyChanged;
+            }
+
+            if (newContent is ICanManageDialogs dialogManagerViewModel)
+            {
+                dialogManagerViewModel.DialogManager = new DialogManager(this.ShowModalMessageExternal, this.ShowProgressAsync);
             }
         }
 

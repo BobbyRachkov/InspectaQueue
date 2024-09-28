@@ -1,6 +1,6 @@
-﻿namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.Config.Models;
+﻿namespace Rachkov.InspectaQueue.Abstractions.Config.v1;
 
-public class SettingsDto
+internal class SettingsDto
 {
     public bool IsAutoUpdaterEnabled { get; set; } = true;
     public bool IsAutoUpdaterAlphaReleaseChannel { get; set; } = false;

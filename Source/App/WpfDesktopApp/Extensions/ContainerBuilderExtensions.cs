@@ -2,12 +2,14 @@
 using Rachkov.InspectaQueue.Abstractions;
 using System.Diagnostics;
 using System.IO;
+using System.Net.Http;
 using System.Reflection;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.WindowManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.SettingsParser;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Extensions;
 
@@ -91,6 +93,32 @@ public static class ContainerBuilderExtensions
     public static ContainerBuilder RegisterErrorManager(this ContainerBuilder builder)
     {
         builder.RegisterType<ErrorManager>()
+            .AsImplementedInterfaces()
+            .SingleInstance();
+
+        return builder;
+    }
+
+    public static ContainerBuilder RegisterHttpClientFactory(this ContainerBuilder builder)
+    {
+        builder.Register<IHttpClientFactory>(_ =>
+        {
+            var services = new ServiceCollection();
+            services.AddHttpClient();
+            var provider = services.BuildServiceProvider();
+            return provider.GetRequiredService<IHttpClientFactory>();
+        });
+
+        return builder;
+    }
+
+    public static ContainerBuilder RegisterAutoUpdater(this ContainerBuilder builder)
+    {
+        builder.RegisterType<AutoUpdaterService>()
+            .AsImplementedInterfaces()
+            .SingleInstance();
+
+        builder.RegisterType<UpdateMigratorService>()
             .AsImplementedInterfaces()
             .SingleInstance();
 
