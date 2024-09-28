@@ -1,8 +1,7 @@
-﻿using System.Diagnostics;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Rachkov.InspectaQueue.Abstractions.Contracts;
 using Rachkov.InspectaQueue.Abstractions.Extensions;
-using System.Net.Http;
+using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Reflection;
 
@@ -66,7 +65,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 
     public Version GetAppVersion()
     {
-        Assembly assembly = Assembly.GetExecutingAssembly();
+        Assembly assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
         FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
         return new Version(fvi.FileVersion ?? assembly.GetName().Version?.ToString() ?? "0.0.0");
     }
