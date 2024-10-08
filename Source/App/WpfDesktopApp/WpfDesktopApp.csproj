@@ -36,6 +36,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Providers\PulsarProvider\PulsarProvider.csproj" />
     <ProjectReference Include="..\Abstractions\Abstractions.csproj" />
     <ProjectReference Include="..\AutoUpdater.Core\AutoUpdater.Core.csproj" />
   </ItemGroup>
