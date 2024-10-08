@@ -9,7 +9,6 @@ using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.SettingsParser;
 using System.Collections.ObjectModel;
-using System.Windows;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 
@@ -71,9 +70,8 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         });
         DuplicateSourceCommand = new(DuplicateSource, () => SelectedSource is not null);
         RemoveSourceCommand = new(DeleteSource, () => SelectedSource is not null);
-        CheckForUpdatesCommand = new(CheckForUpdatesManually);
 
-
+        MenuViewModel = new MenuViewModel(configStoreService, autoUpdater, migratorService);
     }
 
     public RelayCommand ConnectToSourceCommand { get; }
@@ -81,7 +79,8 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
     public RelayCommand AddNewSourceCommand { get; }
     public RelayCommand DuplicateSourceCommand { get; }
     public RelayCommand RemoveSourceCommand { get; }
-    public RelayCommand CheckForUpdatesCommand { get; }
+
+    public MenuViewModel MenuViewModel { get; }
 
     public DialogManager? DialogManager
     {
@@ -89,12 +88,7 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         set
         {
             _dialogManager = value;
-            if (!_hasChackedForUpdate
-                && _configStoreService.GetSettings().IsAutoUpdaterEnabled)
-            {
-                _hasChackedForUpdate = true;
-                CheckForUpdates();
-            }
+            MenuViewModel.SetDialogManager(value);
         }
     }
 
@@ -191,63 +185,5 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         Sources.Add(source);
         SelectedSource = source;
         _configStoreService.StoreSources(Sources.ToArray());
-    }
-
-    private void CheckForUpdates()
-    {
-        var updateChannel = _configStoreService.GetSettings().IsAutoUpdaterBetaReleaseChannel
-            ? ReleaseType.Prerelease
-            : ReleaseType.Official;
-        _autoUpdater.GetLatestVersion(updateChannel).ContinueWith(t =>
-        {
-            if (t.Result is null || DialogManager is null)
-            {
-                return;
-            }
-
-            var (newVersion, downloadUrl) = t.Result.Value;
-            var currentVersion = _autoUpdater.GetAppVersion();
-
-            if (!(newVersion > currentVersion))
-            {
-                return;
-            }
-
-            if (downloadUrl is null)
-            {
-                MessageBox.Show("There is new version, but the download url is corrupted. Contact application author.");
-                return;
-            }
-
-            bool? promptResult = null;
-
-            OnUiThread(() =>
-            {
-                promptResult = DialogManager.ShowNewUpdateDialog(currentVersion.ToString(), newVersion.ToString());
-            });
-
-            if (promptResult is not true)
-            {
-                return;
-            }
-
-            _migratorService.MigrateConfig();
-            _migratorService.MigrateProviders();
-            _autoUpdater.DownloadVersion(downloadUrl).ContinueWith(t2 =>
-            {
-                _autoUpdater.RunFinalCopyScript();
-                Environment.Exit(0);
-            });
-
-            OnUiThread(async () =>
-            {
-                await DialogManager.ShowProgressDialog("Update in progress...", "The program will restart soon...", false, true);
-            });
-        });
-    }
-
-    private void CheckForUpdatesManually()
-    {
-
     }
 }

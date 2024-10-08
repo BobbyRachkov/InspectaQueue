@@ -43,8 +43,8 @@ namespace AutoUpdater.Tests
             Assert.That(release, Is.Null);
         }
 
-        [TestCase(ReleaseType.Official,"0.1.2.0")]
-        [TestCase(ReleaseType.Prerelease,"0.1.1.0")]
+        [TestCase(ReleaseType.Official, "0.1.2")]
+        [TestCase(ReleaseType.Prerelease, "0.1.1")]
         public async Task GivenCheckingForLatestVersion_WhenResponseIsCorrectJson_ThenReturnsExpectedVersion(
             ReleaseType releaseType,
             string expectedVersion)
@@ -57,7 +57,7 @@ namespace AutoUpdater.Tests
             var release = await _sut.GetLatestVersion(releaseType);
 
             //Assert
-            Assert.That(release.ToString(), Is.EqualTo(expectedVersion));
+            Assert.That(release.Value.version.ToString(), Is.EqualTo(expectedVersion));
         }
     }
 }

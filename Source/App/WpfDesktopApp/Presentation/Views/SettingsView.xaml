@@ -30,9 +30,15 @@
             HorizontalAlignment="Stretch"
             Grid.Row="0">
             <MenuItem Header="Update">
-                <MenuItem Header="Check for updates now"></MenuItem>
-                <MenuItem Header="Check for updates on launch"></MenuItem>
-                <MenuItem Header="Use update beta channel"></MenuItem>
+                <MenuItem Header="Check for updates now" Command="{Binding MenuViewModel.CheckForUpdatesCommand}"/>
+                <MenuItem Header="Check for updates on launch" 
+                          IsCheckable="True"
+                          IsChecked="{Binding MenuViewModel.IsAutoupdaterEnabled}" />
+                <MenuItem Header="Use update beta channel" 
+                          IsCheckable="True"
+                          IsChecked="{Binding MenuViewModel.IsBetaReleaseChannel}"/>
+                <MenuItem Header="About"
+                          Command="{Binding MenuViewModel.ShowAboutDialogCommand}"/>
             </MenuItem>
         </Menu>
         <Grid
