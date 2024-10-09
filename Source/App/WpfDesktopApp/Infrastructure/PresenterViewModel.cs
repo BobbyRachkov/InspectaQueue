@@ -1,7 +1,8 @@
-﻿using Rachkov.InspectaQueue.Abstractions;
-using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Windows.Threading;
+using Rachkov.InspectaQueue.Abstractions;
+using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 
@@ -14,11 +15,14 @@ public abstract class PresenterViewModel : ViewModel, IPresenterViewModel
 
     public event EventHandler<CancelEventArgs>? OnClosing;
 
+    protected SynchronizationContext? ViewContext;
+
     private bool _isErrorsFlyoutOpen;
 
     protected PresenterViewModel(IErrorManager errorManager)
     {
         _errorManager = errorManager;
+        ViewContext = SynchronizationContext.Current;
         _errorManager.ErrorRaised += OnErrorRaised;
         _errorManager.ErrorsCleared += OnErrorsCleared;
 
@@ -74,6 +78,11 @@ public abstract class PresenterViewModel : ViewModel, IPresenterViewModel
         OnClosing?.Invoke(this, args);
         _errorManager.ErrorRaised -= OnErrorRaised;
         _errorManager.ErrorsCleared -= OnErrorsCleared;
+    }
+
+    protected void OnUiThread(Action action)
+    {
+        ViewContext?.Send(_ => action(), null);
     }
 
     private void OnErrorRaised(object? sender, Abstractions.Error e)

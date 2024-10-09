@@ -8,5 +8,4 @@ public interface IConfigStoreService
     void StoreSources(SourceViewModel[] sources);
     SettingsDto GetSettings();
     void StoreSettings(SettingsDto settings);
-    void UpdateAndStore(Action<SettingsDto> update);
 }
