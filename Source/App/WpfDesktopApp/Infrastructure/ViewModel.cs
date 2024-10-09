@@ -3,9 +3,11 @@ using System.Runtime.CompilerServices;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 
-public class ViewModel:INotifyPropertyChanged
+public class ViewModel : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected SynchronizationContext? ViewContext = SynchronizationContext.Current;
 
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
@@ -18,5 +20,15 @@ public class ViewModel:INotifyPropertyChanged
         field = value;
         OnPropertyChanged(propertyName);
         return true;
+    }
+
+    protected void OnUiThread(Action action)
+    {
+        ViewContext?.Send(_ => action(), null);
+    }
+
+    protected void OnUiThread(Func<Task> action)
+    {
+        ViewContext?.Send(_ => action(), null);
     }
 }

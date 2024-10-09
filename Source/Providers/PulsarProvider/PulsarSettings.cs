@@ -9,19 +9,19 @@ public class PulsarSettings : IQueueProviderSettings
     public string Description => "Pulsar Queue Provider";
 
     [Exposed(DisplayName = "Issuer URL")]
-    public string IssuerUrl { get; set; }
+    public string IssuerUrl { get; set; } = string.Empty;
 
     [Exposed(DisplayName = nameof(Audience))]
-    public string Audience { get; set; }
+    public string Audience { get; set; } = string.Empty;
 
     [Exposed(DisplayName = "Service URL")]
-    public string ServiceUrl { get; set; }
+    public string ServiceUrl { get; set; } = string.Empty;
 
     [Exposed(DisplayName = "Topic name")]
-    public string TopicName { get; set; }
+    public string TopicName { get; set; } = string.Empty;
 
     [Exposed(DisplayName = "Subscription name")]
-    public string SubscriptionName { get; set; }
+    public string SubscriptionName { get; set; } = string.Empty;
 
     [Exposed(DisplayName = "Authentication file path")]
     [FilePath(AllowedExtensions = "*.json")]
@@ -31,9 +31,9 @@ public class PulsarSettings : IQueueProviderSettings
     [Exposed(
         DisplayName = "Max messages to show",
         ToolTip = "Hides the messages after the desired threshold is reached")]
-    public int HideMessagesAfter { get; set; }
+    public int HideMessagesAfter { get; set; } = 3000;
 
     [Exposed(
         DisplayName = "Auto acknowledge on receive")]
-    public bool AcknowledgeOnReceive { get; set; }
+    public bool AcknowledgeOnReceive { get; set; } = false;
 }

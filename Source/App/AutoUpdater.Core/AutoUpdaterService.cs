@@ -39,7 +39,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
                 return (new Version(release.TagName), release.GetBrowserDownloadString());
             }
 
-            var prerelease = allReleases?.FirstOrDefault(x => x.Prerelease is true);
+            var prerelease = allReleases?.FirstOrDefault();
 
             if (prerelease?.TagName is null)
             {
