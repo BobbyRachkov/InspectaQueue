@@ -30,6 +30,30 @@ public class DialogManager
         return result is MessageDialogResult.Affirmative;
     }
 
+    public void ShowVersionUpToDateDialog(string currentVersion)
+    {
+        var result = _simpleDialogHandle(
+            "You are up to date!",
+            $"Current version: {currentVersion}",
+            MessageDialogStyle.Affirmative,
+            new MetroDialogSettings
+            {
+                AffirmativeButtonText = "Nice!",
+            });
+    }
+
+    public void ShowVersionInfoDialog(string currentVersion)
+    {
+        var result = _simpleDialogHandle(
+            "About",
+            $"Current version: {currentVersion}",
+            MessageDialogStyle.Affirmative,
+            new MetroDialogSettings
+            {
+                AffirmativeButtonText = "Close",
+            });
+    }
+
     public async Task ShowProgressDialog(string title, string content, bool isCancellable, bool isIndeterminate)
     {
         var settings = new MetroDialogSettings()
