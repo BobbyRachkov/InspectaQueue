@@ -9,6 +9,7 @@ public static class SourceTranslationExtensions
     {
         return new SourceDto
         {
+            Id = sourceViewModel.Id,
             Name = sourceViewModel.Name,
             ProviderType = ProviderTypeConverter.GetProviderStringRepresentation(sourceViewModel.ProviderType),
             Settings = sourceViewModel.Settings.ToSourceSettingEntries()

@@ -34,7 +34,7 @@ public class SourceReader : ISourceReader
 
             var liveSettings = _settingsParser.ParseMembers(provider).ToArray();
             FillSettings(liveSettings, storedSource.Settings);
-            yield return new SourceViewModel(storedSource.Name, provider, liveSettings);
+            yield return new SourceViewModel(storedSource.Id, storedSource.Name, provider, liveSettings);
         }
     }
 
