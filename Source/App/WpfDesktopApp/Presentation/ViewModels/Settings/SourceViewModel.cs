@@ -12,14 +12,18 @@ public class SourceViewModel : ViewModel
     private string _name;
 
     public SourceViewModel(
+        Guid id,
         string name,
         IQueueProvider provider,
         SettingEntryViewModel[] settings)
     {
+        Id = id;
         _provider = provider;
         _name = name;
         Settings = settings;
     }
+
+    public Guid Id { get; }
 
     public string Name
     {
@@ -48,7 +52,7 @@ public class SourceViewModel : ViewModel
     private object? EnsureProperValueType(SettingEntryViewModel setting)
     {
         if (setting.Value is not null
-            && setting.Type == typeof(int) 
+            && setting.Type == typeof(int)
             && setting.Value.GetType() != typeof(int))
         {
             return Convert.ToInt32(setting.Value);

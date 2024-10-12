@@ -149,7 +149,7 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         }
 
         var settings = _settingsParser.ParseMembers(SelectedProvider);
-        var source = new SourceViewModel(SelectedProvider.Name, SelectedProvider, settings.ToArray());
+        var source = new SourceViewModel(Guid.NewGuid(), SelectedProvider.Name, SelectedProvider, settings.ToArray());
         Sources.Add(source);
         SelectedSource = source;
         _configStoreService.StoreSources(Sources.ToArray());
@@ -181,7 +181,7 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
             return;
         }
 
-        var source = new SourceViewModel(SelectedSource.Name, provider, SelectedSource.Settings.Copy());
+        var source = new SourceViewModel(Guid.NewGuid(), SelectedSource.Name, provider, SelectedSource.Settings.Copy());
         Sources.Add(source);
         SelectedSource = source;
         _configStoreService.StoreSources(Sources.ToArray());

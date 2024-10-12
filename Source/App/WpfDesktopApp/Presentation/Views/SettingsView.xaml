@@ -87,7 +87,7 @@
                     </Button>
                 </StackPanel>
                 <ListView
-                Grid.Row="1"
+                    Grid.Row="1"
                 Margin="5"
                 DisplayMemberPath="Name"
                 SelectedItem="{Binding SelectedSource}"

@@ -9,9 +9,7 @@ public static class SettingsTranslationExtensions
     {
         return new SourceSettingEntryDto
         {
-            Name = settingEntryEntry.Name,
             PropertyName = settingEntryEntry.PropertyName,
-            ToolTip = settingEntryEntry.ToolTip,
             Type = settingEntryEntry.Type,
             Value = settingEntryEntry.Value
         };
