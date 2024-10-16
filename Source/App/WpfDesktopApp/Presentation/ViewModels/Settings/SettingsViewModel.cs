@@ -47,14 +47,15 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         _errorManager = errorManager;
         _autoUpdater = autoUpdater;
         _migratorService = migratorService;
-        AvailableProviders = availableProviders.ToArray();
+        var availableProvidersCollection = availableProviders.ToArray();
+        AvailableProviders = ParseProviders(availableProvidersCollection);
 
         if (AvailableProviders.Any())
         {
             SelectedProvider = AvailableProviders.First();
         }
 
-        Sources = sourceReader.ReadSources(AvailableProviders).ToObservableCollection();
+        Sources = sourceReader.ReadSources(availableProvidersCollection).ToObservableCollection();
 
         if (Sources.Any())
         {
@@ -72,6 +73,20 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         RemoveSourceCommand = new(DeleteSource, () => SelectedSource is not null);
 
         MenuViewModel = new MenuViewModel(configStoreService, autoUpdater, migratorService);
+    }
+
+    private List<ProviderViewModel> ParseProviders(IQueueProvider[] availableProvidersCollection)
+    {
+        var list = new List<ProviderViewModel>();
+        foreach (var providerInstance in availableProvidersCollection)
+        {
+            var providerViewModel = list.FirstOrDefault(x => x.IsMatch(providerInstance))
+                                    ?? new ProviderViewModel(providerInstance);
+
+            providerViewModel.Register(providerInstance);
+        }
+
+        return list;
     }
 
     public RelayCommand ConnectToSourceCommand { get; }
@@ -94,9 +109,9 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
 
     public ObservableCollection<SourceViewModel> Sources { get; private set; }
 
-    public IQueueProvider[] AvailableProviders { get; }
+    public List<ProviderViewModel> AvailableProviders { get; }
 
-    public IQueueProvider? SelectedProvider
+    public ProviderViewModel? SelectedProvider
     {
         get => _selectedProvider;
         set
@@ -143,13 +158,13 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
 
     private void CreateSource()
     {
-        if (SelectedProvider is null)
+        if (SelectedProvider?.SelectedProvider is null)
         {
             return;
         }
 
-        var settings = _settingsParser.ParseMembers(SelectedProvider);
-        var source = new SourceViewModel(Guid.NewGuid(), SelectedProvider.Name, SelectedProvider, settings.ToArray());
+        var settings = _settingsParser.ParseMembers(SelectedProvider.SelectedProvider);
+        var source = new SourceViewModel(Guid.NewGuid(), SelectedProvider.SelectedProvider.Name, SelectedProvider.SelectedProvider, settings.ToArray());
         Sources.Add(source);
         SelectedSource = source;
         _configStoreService.StoreSources(Sources.ToArray());

@@ -65,7 +65,7 @@ public static class ContainerBuilderExtensions
 
     public static ContainerBuilder RegisterConfigStore(this ContainerBuilder builder)
     {
-        builder.RegisterType<ConfigStoreService>()
+        builder.RegisterType<JsonFileConfigStoreService>()
             .AsImplementedInterfaces()
             .SingleInstance();
 

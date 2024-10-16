@@ -114,11 +114,20 @@
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center"
                     Orientation="Vertical">
-                        <ComboBox
-                        Width="200"
-                        DisplayMemberPath="Name"
-                        SelectedItem="{Binding SelectedProvider}"
-                        ItemsSource="{Binding AvailableProviders}"/>
+                        <StackPanel Orientation="Horizontal">
+                            <ComboBox
+                                Width="200"
+                                DisplayMemberPath="Name"
+                                Margin="0 0 10 0"
+                                SelectedItem="{Binding SelectedProvider}"
+                                ItemsSource="{Binding AvailableProviders}"/>
+
+                            <ComboBox
+                                Width="100"
+                                DisplayMemberPath="Name"
+                                SelectedItem="{Binding SelectedProvider.SelectedVersion}"
+                                ItemsSource="{Binding SelectedProvider.DisplayableVersions}"/>
+                        </StackPanel>
                         <Button
                         Command="{Binding CreateNewSourceCommand}"
                         Margin="0 10"
