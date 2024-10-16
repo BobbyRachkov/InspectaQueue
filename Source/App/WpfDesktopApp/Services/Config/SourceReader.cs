@@ -10,7 +10,9 @@ public class SourceReader : ISourceReader
     private readonly IConfigStoreService _configStore;
     private readonly ISettingsParser _settingsParser;
 
-    public SourceReader(IConfigStoreService configStore, ISettingsParser settingsParser)
+    public SourceReader(
+        IConfigStoreService configStore,
+        ISettingsParser settingsParser)
     {
         _configStore = configStore;
         _settingsParser = settingsParser;
