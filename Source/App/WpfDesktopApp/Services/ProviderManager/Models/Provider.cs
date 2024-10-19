@@ -14,15 +14,17 @@ public class Provider
 
     public Type Type => _providerInstance.GetType();
 
-    private Dictionary<string, IQueueProvider> Versions { get; } = new();
+    private Dictionary<string, IQueueProvider> VersionsInternal { get; } = new();
 
     public string ComparableName => GetComparableName(Type);
 
     public string DisplayName => $"{_providerInstance.Settings.Name}";
 
+    public IReadOnlyDictionary<string, IQueueProvider> Versions => VersionsInternal;
+
     public void Register(IQueueProvider provider)
     {
-        if (!Versions.TryAdd(GetVersion(provider.GetType()), provider))
+        if (!VersionsInternal.TryAdd(GetVersion(provider.GetType()), provider))
         {
             return;
         }

@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-
-namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.Config.Models;
+﻿namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.Config.Models;
 
 public class SourceSettingEntryDto
 {

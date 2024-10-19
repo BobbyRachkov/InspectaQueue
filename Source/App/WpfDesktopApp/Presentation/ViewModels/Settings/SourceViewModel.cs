@@ -1,8 +1,5 @@
-﻿using System.Reflection;
-using Rachkov.InspectaQueue.Abstractions;
-using Rachkov.InspectaQueue.Abstractions.Attributes;
+﻿using Rachkov.InspectaQueue.Abstractions;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
-using Rachkov.InspectaQueue.WpfDesktopApp.Services.SettingsParser;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 
@@ -36,29 +33,9 @@ public class SourceViewModel : ViewModel
     }
 
     public Type ProviderType => _provider.GetType();
+    public IQueueProvider ProviderInstance => _provider;
 
     public SettingEntryViewModel[] Settings { get; }
 
-    public IQueueProviderSettings UpdateSettings(IQueueProviderSettings settingsObjectToUpdate)
-    {
-        foreach (var setting in Settings)
-        {
-            setting.ReflectedProperty.SetValue(settingsObjectToUpdate, EnsureProperValueType(setting));
-        }
-
-        return settingsObjectToUpdate;
-    }
-
-    private object? EnsureProperValueType(SettingEntryViewModel setting)
-    {
-        if (setting.Value is not null
-            && setting.Type == typeof(int)
-            && setting.Value.GetType() != typeof(int))
-        {
-            return Convert.ToInt32(setting.Value);
-        }
-
-        return setting.Value;
-    }
 
 }

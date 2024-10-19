@@ -6,7 +6,7 @@ using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.WindowManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
-using Rachkov.InspectaQueue.WpfDesktopApp.Services.SettingsParser;
+using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
 using System.Collections.ObjectModel;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
@@ -15,11 +15,13 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
 {
     private readonly IWindowManager _windowManager;
     private readonly IConfigStoreService _configStoreService;
-    private readonly ISettingsParser _settingsParser;
+    private readonly IProviderManager _providerManager;
+    private readonly ISettingsManager _settingsManager;
     private readonly IErrorManager _errorManager;
     private readonly IAutoUpdaterService _autoUpdater;
     private readonly IUpdateMigratorService _migratorService;
     private ProviderViewModel? _selectedProvider;
+    private ProviderVersionViewModel? _selectedVersion;
     private bool _isAddNewSourceWorkflowEnabled;
     private SourceViewModel? _selectedSource;
     private DialogManager? _dialogManager;
@@ -29,7 +31,8 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
     public SettingsViewModel(
         IWindowManager windowManager,
         IConfigStoreService configStoreService,
-        ISettingsParser settingsParser,
+        IProviderManager providerManager,
+        ISettingsManager settingsManager,
         ISourceReader sourceReader,
         IErrorManager errorManager,
         IAutoUpdaterService autoUpdater,
@@ -38,10 +41,13 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
     {
         _windowManager = windowManager;
         _configStoreService = configStoreService;
-        _settingsParser = settingsParser;
+        _providerManager = providerManager;
         _errorManager = errorManager;
         _autoUpdater = autoUpdater;
         _migratorService = migratorService;
+        _settingsManager = settingsManager;
+
+        AvailableProviders = providerManager.GetProviders().Select(x => new ProviderViewModel(x)).ToArray();
 
         if (AvailableProviders.Any())
         {
@@ -89,7 +95,7 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
 
     public ObservableCollection<SourceViewModel> Sources { get; private set; }
 
-    public List<ProviderViewModel> AvailableProviders { get; }
+    public ProviderViewModel[] AvailableProviders { get; }
 
     public ProviderViewModel? SelectedProvider
     {
@@ -97,6 +103,29 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         set
         {
             _selectedProvider = value;
+            OnPropertyChanged();
+
+            if (value is not null)
+            {
+                AvailableVersions =
+                    value.AssociatedProvider
+                        .Versions
+                        .Select(x => new ProviderVersionViewModel(x))
+                        .OrderByDescending(x => x.Name)
+                        .ToArray();
+                SelectedVersion = AvailableVersions.First();
+            }
+        }
+    }
+
+    public ProviderVersionViewModel[] AvailableVersions { get; set; }
+
+    public ProviderVersionViewModel? SelectedVersion
+    {
+        get => _selectedVersion;
+        set
+        {
+            _selectedVersion = value;
             OnPropertyChanged();
         }
     }
@@ -130,21 +159,29 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         }
 
         _configStoreService.StoreSources(Sources.ToArray());
-        var freshProvider = ;
-        SelectedSource.UpdateSettings(freshProvider.Settings);
+
+        var freshProvider =
+            _providerManager.GetNewInstance(SelectedSource.ProviderType, SelectedSource.Settings.Select(x => x.SettingsInstance));
+
         var vm = new QueueInspectorViewModel(freshProvider, _errorManager, _windowManager);
         _windowManager.Create(vm);
     }
 
     private void CreateSource()
     {
-        if (SelectedProvider?.SelectedInstance is null)
+        if (SelectedProvider is null
+            || SelectedVersion is null)
         {
             return;
         }
 
-        var settings = _settingsParser.ParseMembers(SelectedProvider.SelectedInstance);
-        var source = new SourceViewModel(Guid.NewGuid(), SelectedProvider.SelectedInstance.Name, SelectedProvider.SelectedInstance, settings.ToArray());
+        var settings = _settingsManager.ExtractSettings(SelectedVersion.Instance);
+        var source = new SourceViewModel(
+            Guid.NewGuid(),
+            SelectedVersion.Instance.Name,
+            SelectedVersion.Instance,
+            settings.Select(x => new SettingEntryViewModel(x)).ToArray());
+
         Sources.Add(source);
         SelectedSource = source;
         _configStoreService.StoreSources(Sources.ToArray());
@@ -169,14 +206,12 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
             return;
         }
 
-        var provider = AvailableProviders.FirstOrDefault(x => x.GetType().Name == SelectedSource.ProviderType.Name);
+        var source = new SourceViewModel(
+            Guid.NewGuid(),
+            SelectedSource.Name,
+            SelectedSource.ProviderInstance,
+            SettingsEntryViewModelExtensions.Clone(SelectedSource.Settings));
 
-        if (provider is null)
-        {
-            return;
-        }
-
-        var source = new SourceViewModel(Guid.NewGuid(), SelectedSource.Name, provider.SelectedInstance, SelectedSource.Settings.Copy());
         Sources.Add(source);
         SelectedSource = source;
         _configStoreService.StoreSources(Sources.ToArray());

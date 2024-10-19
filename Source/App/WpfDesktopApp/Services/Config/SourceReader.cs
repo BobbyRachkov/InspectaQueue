@@ -1,27 +1,29 @@
-﻿using Rachkov.InspectaQueue.Abstractions;
-using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
+﻿using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config.Models;
-using Rachkov.InspectaQueue.WpfDesktopApp.Services.SettingsParser;
+using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
 
 public class SourceReader : ISourceReader
 {
     private readonly IConfigStoreService _configStore;
-    private readonly ISettingsParser _settingsParser;
+    private readonly IProviderManager _providerManager;
+    private readonly ISettingsManager _settingsManager;
 
     public SourceReader(
         IConfigStoreService configStore,
-        ISettingsParser settingsParser)
+        IProviderManager providerManager,
+        ISettingsManager settingsManager)
     {
         _configStore = configStore;
-        _settingsParser = settingsParser;
+        _providerManager = providerManager;
+        _settingsManager = settingsManager;
     }
 
-    public IEnumerable<SourceViewModel> ReadSources(IEnumerable<IQueueProvider> activeProviders)
+    public IEnumerable<SourceViewModel> ReadSources()
     {
         var storedSources = _configStore.GetSettings().Sources;
-        var activeProvidersArray = activeProviders.ToArray();
+        var activeProvidersArray = _providerManager.GetAllProviderVersions().ToArray();
 
 
         foreach (var storedSource in storedSources)
@@ -34,8 +36,10 @@ public class SourceReader : ISourceReader
                 continue;
             }
 
-            var liveSettings = _settingsParser.ParseMembers(provider).ToArray();
+            var settings = _settingsManager.ExtractSettings(provider);
+
             FillSettings(liveSettings, storedSource.Settings);
+
             yield return new SourceViewModel(storedSource.Id, storedSource.Name, provider, liveSettings);
         }
     }

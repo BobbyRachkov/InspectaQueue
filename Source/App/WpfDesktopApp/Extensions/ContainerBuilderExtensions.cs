@@ -1,15 +1,15 @@
 ﻿using Autofac;
+using AutoMapper.Contrib.Autofac.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Rachkov.InspectaQueue.Abstractions;
-using System.Diagnostics;
+using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
+using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
+using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.MapperProfiles;
+using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.WindowManager;
+using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
-using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
-using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
-using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.WindowManager;
-using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
-using Rachkov.InspectaQueue.WpfDesktopApp.Services.SettingsParser;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Extensions;
 
@@ -121,6 +121,16 @@ public static class ContainerBuilderExtensions
         builder.RegisterType<UpdateMigratorService>()
             .AsImplementedInterfaces()
             .SingleInstance();
+
+        return builder;
+    }
+
+    public static ContainerBuilder RegisterMapper(this ContainerBuilder builder)
+    {
+        builder.RegisterAutoMapper(cfg => cfg.AddProfiles(
+            [
+                new SettingsProfile()
+            ]));
 
         return builder;
     }
