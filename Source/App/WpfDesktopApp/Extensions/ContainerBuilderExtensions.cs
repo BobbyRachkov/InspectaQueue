@@ -7,6 +7,7 @@ using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.MapperProfiles;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.WindowManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
+using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
@@ -72,9 +73,13 @@ public static class ContainerBuilderExtensions
         return builder;
     }
 
-    public static ContainerBuilder RegisterSettingsParser(this ContainerBuilder builder)
+    public static ContainerBuilder RegisterManagers(this ContainerBuilder builder)
     {
-        builder.RegisterType<ReflectionParser>()
+        builder.RegisterType<ProviderManager>()
+            .AsImplementedInterfaces()
+            .SingleInstance();
+
+        builder.RegisterType<SettingsManager>()
             .AsImplementedInterfaces()
             .SingleInstance();
 

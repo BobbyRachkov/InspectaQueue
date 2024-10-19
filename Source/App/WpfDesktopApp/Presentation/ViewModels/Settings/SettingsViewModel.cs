@@ -54,7 +54,7 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
             SelectedProvider = AvailableProviders.First();
         }
 
-        Sources = sourceReader.ReadSources(availableProvidersCollection).ToObservableCollection();
+        Sources = sourceReader.ReadSources().ToObservableCollection();
 
         if (Sources.Any())
         {

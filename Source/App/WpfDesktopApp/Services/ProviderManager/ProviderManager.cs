@@ -91,8 +91,13 @@ public class ProviderManager : IProviderManager
         var list = new List<Provider>();
         foreach (var providerInstance in availableProvidersCollection)
         {
-            var providerViewModel = list.FirstOrDefault(x => x.IsMatch(providerInstance))
-                                    ?? new Provider(providerInstance);
+            var providerViewModel = list.FirstOrDefault(x => x.IsMatch(providerInstance));
+
+            if (providerViewModel is null)
+            {
+                providerViewModel = new Provider(providerInstance);
+                list.Add(providerViewModel);
+            }
 
             providerViewModel.Register(providerInstance);
         }

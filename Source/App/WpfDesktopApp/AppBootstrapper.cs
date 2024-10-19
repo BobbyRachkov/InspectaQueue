@@ -17,7 +17,7 @@ public class AppBootstrapper
             .RegisterPresenterViewModels()
             .RegisterWindowManager()
             .RegisterConfigStore()
-            .RegisterSettingsParser()
+            .RegisterManagers()
             .RegisterSourceReader()
             .RegisterErrorManager()
             .RegisterHttpClientFactory()

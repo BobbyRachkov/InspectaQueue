@@ -1,6 +1,6 @@
 ﻿using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
-using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config.Models;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
+using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
 
@@ -38,26 +38,20 @@ public class SourceReader : ISourceReader
 
             var settings = _settingsManager.ExtractSettings(provider);
 
-            FillSettings(liveSettings, storedSource.Settings);
+            var mergedSettings =
+                _settingsManager.MergePacks(
+                    settings,
+                    storedSource.Settings.Select(x => new SettingDetachedPack
+                    {
+                        PropertyName = x.PropertyName,
+                        Value = x.Value
+                    }));
 
-            yield return new SourceViewModel(storedSource.Id, storedSource.Name, provider, liveSettings);
-        }
-    }
-
-    private void FillSettings(SettingEntryViewModel[] liveSettings, SourceSettingEntryDto[] storedSourceSettings)
-    {
-        foreach (var storedSetting in storedSourceSettings)
-        {
-            var correspondingLiveSetting = liveSettings.FirstOrDefault(x =>
-                x.PropertyName == storedSetting.PropertyName
-                && x.Type == storedSetting.Type);
-
-            if (correspondingLiveSetting is null)
-            {
-                continue;
-            }
-
-            correspondingLiveSetting.Value = storedSetting.Value;
+            yield return new SourceViewModel(
+                storedSource.Id,
+                storedSource.Name,
+                provider,
+                mergedSettings.Select(x => new SettingEntryViewModel(x)).ToArray());
         }
     }
 }
