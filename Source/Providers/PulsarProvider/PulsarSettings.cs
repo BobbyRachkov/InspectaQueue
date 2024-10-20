@@ -26,7 +26,7 @@ public class PulsarSettings : IQueueProviderSettings
     [Exposed(DisplayName = "Authentication file path")]
     [FilePath(AllowedExtensions = "*.json")]
     [SensitiveData]
-    public string FilePath { get; set; }
+    public string FilePath { get; set; } = string.Empty;
 
     [Exposed(
         DisplayName = "Max messages to show",
