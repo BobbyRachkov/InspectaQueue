@@ -48,6 +48,11 @@ public class ProviderManager : IProviderManager
         return _providers;
     }
 
+    public Provider GetProviderByInstance(IQueueProvider instance)
+    {
+        return _providers.First(x => x.IsMatch(instance));
+    }
+
     public IEnumerable<IQueueProvider> GetAllProviderVersions()
     {
         foreach (var provider in _providers)

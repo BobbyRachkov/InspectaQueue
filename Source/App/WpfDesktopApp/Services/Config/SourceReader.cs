@@ -20,7 +20,7 @@ public class SourceReader : ISourceReader
         _settingsManager = settingsManager;
     }
 
-    public IEnumerable<SourceViewModel> ReadSources()
+    public IEnumerable<SourceViewModel> ReadSources(Action saveSourcesCallback)
     {
         var storedSources = _configStore.GetSettings().Sources;
         var activeProvidersArray = _providerManager.GetAllProviderVersions().ToArray();
@@ -50,8 +50,11 @@ public class SourceReader : ISourceReader
             yield return new SourceViewModel(
                 storedSource.Id,
                 storedSource.Name,
+                _settingsManager,
                 provider,
-                mergedSettings.Select(x => new SettingEntryViewModel(x)).ToArray());
+                _providerManager.GetProviderByInstance(provider).Versions,
+                mergedSettings.Select(x => new SettingEntryViewModel(x)).ToArray(),
+                saveSourcesCallback);
         }
     }
 }

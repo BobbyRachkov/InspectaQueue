@@ -54,7 +54,7 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
             SelectedProvider = AvailableProviders.First();
         }
 
-        Sources = sourceReader.ReadSources().ToObservableCollection();
+        Sources = sourceReader.ReadSources(StoreSources).ToObservableCollection();
 
         if (Sources.Any())
         {
@@ -163,7 +163,7 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         var freshProvider =
             _providerManager.GetNewInstance(SelectedSource.ProviderType, SelectedSource.Settings.Select(x => x.SettingsInstance));
 
-        var vm = new QueueInspectorViewModel(freshProvider, _errorManager, _windowManager);
+        var vm = new QueueInspectorViewModel(SelectedSource.Name, freshProvider, _errorManager, _windowManager);
         _windowManager.Create(vm);
     }
 
@@ -179,12 +179,15 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         var source = new SourceViewModel(
             Guid.NewGuid(),
             SelectedVersion.Instance.Name,
+            _settingsManager,
             SelectedVersion.Instance,
-            settings.Select(x => new SettingEntryViewModel(x)).ToArray());
+            SelectedProvider.AssociatedProvider.Versions,
+            settings.Select(x => new SettingEntryViewModel(x)).ToArray(),
+            StoreSources);
 
         Sources.Add(source);
         SelectedSource = source;
-        _configStoreService.StoreSources(Sources.ToArray());
+        StoreSources();
     }
 
     private void DeleteSource()
@@ -206,14 +209,24 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
             return;
         }
 
+        var provider = _providerManager.GetProviderByInstance(SelectedSource.ProviderInstance);
+
         var source = new SourceViewModel(
             Guid.NewGuid(),
             SelectedSource.Name,
+            _settingsManager,
             SelectedSource.ProviderInstance,
-            SettingsEntryViewModelExtensions.Clone(SelectedSource.Settings));
+            provider.Versions,
+            SettingsEntryViewModelExtensions.Clone(SelectedSource.Settings),
+            StoreSources);
 
         Sources.Add(source);
         SelectedSource = source;
+        StoreSources();
+    }
+
+    private void StoreSources()
+    {
         _configStoreService.StoreSources(Sources.ToArray());
     }
 }

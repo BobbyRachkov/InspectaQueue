@@ -20,8 +20,9 @@
         Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="50"/>
+            <RowDefinition Height="30"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="50"/>
+            <RowDefinition Height="10"/>
         </Grid.RowDefinitions>
         <Grid
             Margin="50 0 0 0"
@@ -77,12 +78,64 @@
                 </ToggleButton.Style>
             </ToggleButton>
         </Grid>
+        <StackPanel
+            Orientation="Horizontal"
+            Margin="10 0 0 0"
+            HorizontalAlignment="Left"
+            Grid.Row="1">
+            <Label
+                Foreground="LightGray"
+                FontSize="13"
+                VerticalAlignment="Center"
+                Content="Provider:"/>
+            <Label
+                Foreground="LightGray"
+                FontSize="13"
+                VerticalAlignment="Center"
+                Content="{Binding ProviderDisplayName}"/>
+            <Label
+                Visibility="{Binding IsChecked,ElementName=ChangeVersionToggle,Converter={StaticResource InvertedBooleanToVisibilityConverter}}"
+                Foreground="LightGray"
+                FontSize="13"
+                VerticalAlignment="Center"
+                Content="{Binding ProviderDisplayVersion}"/>
+            <ToggleButton
+                Visibility="{Binding IsChecked,ElementName=ChangeVersionToggle,Converter={StaticResource InvertedBooleanToVisibilityConverter}}"
+                x:Name="ChangeVersionToggle"
+                Padding="0"
+                VerticalAlignment="Center">
+                <Label>Change version</Label>
+            </ToggleButton>
+            <StackPanel
+                Orientation="Horizontal"
+                Visibility="{Binding IsChecked,ElementName=ChangeVersionToggle,Converter={StaticResource BooleanToVisibilityConverter}}">
+                <ComboBox
+                    VerticalAlignment="Center"
+                    DisplayMemberPath="Key"
+                    SelectedItem="{Binding SelectedProviderVersion}"
+                    ItemsSource="{Binding AvailableProviderVersions}"/>
+                <Button
+                    Margin="5 0"
+                    Command="{Binding ChangeVersionCommand}"
+                    Click="HideVersionChangeGrid"
+                    Padding="0"
+                    VerticalAlignment="Center">
+                    <Label>OK</Label>
+                </Button>
+                <Button
+                    Click="HideVersionChangeGrid"
+                    Padding="0"
+                    VerticalAlignment="Center">
+                    <Label>Cancel</Label>
+                </Button>
+            </StackPanel>
+        </StackPanel>
         <ScrollViewer
             CanContentScroll="False"
             HorizontalScrollBarVisibility="Disabled"
             VerticalScrollBarVisibility="Auto"
             Margin="10 0 0 0"
-            Grid.Row="1">
+            Grid.Row="2">
             <Grid x:Name="TableGrid">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="20"/>

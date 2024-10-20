@@ -4,5 +4,5 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
 
 public interface ISourceReader
 {
-    IEnumerable<SourceViewModel> ReadSources();
+    IEnumerable<SourceViewModel> ReadSources(Action saveSourcesCallback);
 }
