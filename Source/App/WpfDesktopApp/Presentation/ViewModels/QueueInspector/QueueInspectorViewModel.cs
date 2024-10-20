@@ -2,7 +2,11 @@
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.WindowManager;
+using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector.EventArgs;
+using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector.Extensions;
+using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector.Models;
 using System.Collections.ObjectModel;
+using System.Windows.Input;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector;
 
@@ -13,6 +17,7 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
     private readonly Task? _listenerTask;
     private readonly CancellationTokenSource _cts = new();
     private bool _topmost;
+    private bool? _formatJson;
 
     public QueueInspectorViewModel(
         string? nameSuffix,
@@ -25,17 +30,19 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
         _queueProvider = queueProvider;
         _windowManager = windowManager;
         Entries = new();
-        //GenerateFakeData();
-        queueProvider.Connect();
+        GenerateFakeData();
+        //queueProvider.Connect();
 
-        _listenerTask = Task.Factory.StartNew(
-            () => ListenForMessages(_cts.Token),
-            TaskCreationOptions.LongRunning);
+        //_listenerTask = Task.Factory.StartNew(
+        //    () => ListenForMessages(_cts.Token),
+        //    TaskCreationOptions.LongRunning);
 
         OnClosing += (_, _) => _queueProvider.Disconnect();
 
-        DisconnectCommand = new(() => windowManager.Close(this));
+        DisconnectCommand = new RelayCommand(() => windowManager.Close(this));
     }
+
+    public event EventHandler<FeatureStatusUpdatedEventArgs> FeatureStatusUpdated;
 
     public override string Name { get; }
 
@@ -51,18 +58,40 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
 
     public ObservableCollection<QueueEntryViewModel> Entries { get; }
 
-    public RelayCommand DisconnectCommand { get; }
+    public ICommand DisconnectCommand { get; }
+
+    public bool? FormatJson
+    {
+        get => _formatJson;
+        set
+        {
+            _formatJson = value;
+            OnPropertyChanged();
+            FeatureStatusUpdated.Invoke(this, new FormatJsonEventArgs
+            {
+                Feature = Feature.FormatJson,
+                State = true,
+                Formatting = value.ToJsonFormatting()
+            });
+        }
+    }
 
     private void GenerateFakeData()
     {
-        for (int i = 0; i < 10; i++)
+        Task.Run(async () =>
         {
-            Entries.Add(new(i, new MessageFrame
+            for (int i = 0; i < 100; i++)
             {
-                Content = $"Some jibbrish {i}",
-                Id = i
-            }));
-        }
+                AddMessage(new(i, new MessageFrame
+                {
+                    Content =
+                        $"{{\r\n          \"PropertyName\": \"IssuerUrl\",\r\n          \"Type\": \"System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e\",\r\n          \"Value\": \"sdfsdf\"\r\n        }}",
+                    Id = i
+
+                }));
+                await Task.Delay(500);
+            }
+        });
     }
 
     private async Task ListenForMessages(CancellationToken cancellationToken)
@@ -74,14 +103,36 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var entry = new QueueEntryViewModel(sequence++, message);
-                OnUiThread(() =>
-                {
-                    Entries.Insert(0, entry);
-                });
+                AddMessage(entry);
             }
         }
     }
 
+    private void AddMessage(QueueEntryViewModel entry, int index = 0)
+    {
+        entry.FormatJson(FormatJson.ToJsonFormatting());
+        lock (Entries)
+        {
+            OnUiThread(() =>
+            {
+                Entries.Insert(index, entry);
+            });
+            FeatureStatusUpdated += entry.OnFeatureStatusUpdated;
+        }
+    }
+
+    private void RemoveMessage(QueueEntryViewModel entry)
+    {
+        lock (Entries)
+        {
+            OnUiThread(() =>
+            {
+                Entries.Remove(entry);
+            });
+            FeatureStatusUpdated -= entry.OnFeatureStatusUpdated;
+        }
+
+    }
 
     public void Dispose()
     {

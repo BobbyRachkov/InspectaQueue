@@ -19,16 +19,21 @@
         <Expander
             IsExpanded="True"
             Margin="5">
-            <StackPanel
-                HorizontalAlignment="Right"
-                Orientation="Horizontal">
+            <Grid>
                 <CheckBox
-                    IsChecked="{Binding Topmost}"
-                    Margin="10 0">Topmost</CheckBox>
-                <Button Command="{Binding DisconnectCommand}">Disconnect</Button>
-            </StackPanel>
+                    IsChecked="{Binding FormatJson}">Format if valid JSON</CheckBox>
+                <StackPanel
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal">
+                    <CheckBox
+                        IsChecked="{Binding Topmost}"
+                        Margin="10 0">Topmost</CheckBox>
+                    <Button Command="{Binding DisconnectCommand}">Disconnect</Button>
+                </StackPanel>
+            </Grid>
         </Expander>
         <DataGrid x:Name="MetroDataGrid"
+                  ScrollViewer.CanContentScroll="False"
                   Grid.Row="1"
                   Margin="5"
                   AutoGenerateColumns="False"
@@ -55,7 +60,7 @@
                     Header="Key"
                     Width="250"/>
                 <DataGridTextColumn 
-                    Binding="{Binding RawMessageText}"
+                    Binding="{Binding DisplayableMessageText}"
                     Header="Content"
                     Width="700"/>
                 <!--<DataGridTextColumn 
