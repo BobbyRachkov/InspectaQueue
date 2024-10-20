@@ -1,6 +1,6 @@
 ﻿namespace Rachkov.InspectaQueue.Abstractions;
 
-public sealed class Version
+public sealed class Version : IComparable<Version>
 {
     public int Major { get; }
     public int Minor { get; }
@@ -24,7 +24,7 @@ public sealed class Version
         Patch = int.Parse(components[2]);
 
         if (components.Length == 4
-            && !int.TryParse(components[3],out _))
+            && !int.TryParse(components[3], out _))
         {
             Pre = components[3];
         }
@@ -98,5 +98,20 @@ public sealed class Version
     public static bool operator !=(Version a, Version b)
     {
         return !a.Equals(b);
+    }
+
+    public int CompareTo(Version? other)
+    {
+        if (other is null)
+        {
+            return -1;
+        }
+
+        if (this == other)
+        {
+            return 0;
+        }
+
+        return this > other ? 1 : -1;
     }
 }

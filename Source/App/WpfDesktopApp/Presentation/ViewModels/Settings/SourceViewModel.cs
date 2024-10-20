@@ -3,6 +3,7 @@ using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models;
 using System.Windows.Input;
+using Version = Rachkov.InspectaQueue.Abstractions.Version;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 
@@ -30,7 +31,9 @@ public class SourceViewModel : ViewModel
         _provider = provider;
         Settings = settings;
         _saveSourcesCallback = saveSourcesCallback;
-        AvailableProviderVersions = availableProviderVersions;
+        AvailableProviderVersions = availableProviderVersions
+            .OrderByDescending(x => new Version(x.Key))
+            .ToDictionary();
 
         SelectedProviderVersion = AvailableProviderVersions.First(x => x.Value == ProviderInstance);
         ProviderDisplayVersion = SelectedProviderVersion.Key;
