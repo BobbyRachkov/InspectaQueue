@@ -30,12 +30,12 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
         _queueProvider = queueProvider;
         _windowManager = windowManager;
         Entries = new();
-        GenerateFakeData();
-        //queueProvider.Connect();
+        //GenerateFakeData();
+        queueProvider.Connect();
 
-        //_listenerTask = Task.Factory.StartNew(
-        //    () => ListenForMessages(_cts.Token),
-        //    TaskCreationOptions.LongRunning);
+        _listenerTask = Task.Factory.StartNew(
+            () => ListenForMessages(_cts.Token),
+            TaskCreationOptions.LongRunning);
 
         OnClosing += (_, _) => _queueProvider.Disconnect();
 
@@ -80,7 +80,7 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
     {
         Task.Run(async () =>
         {
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < 500; i++)
             {
                 AddMessage(new(i, new MessageFrame
                 {
@@ -118,6 +118,19 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
                 Entries.Insert(index, entry);
             });
             FeatureStatusUpdated += entry.OnFeatureStatusUpdated;
+        }
+
+        RemoveOverflowingMessages();
+    }
+
+    private void RemoveOverflowingMessages()
+    {
+        lock (Entries)
+        {
+            while (Entries.Count >= _queueProvider.Settings.HideMessagesAfter)
+            {
+                RemoveMessage(Entries[^1]);
+            }
         }
     }
 
