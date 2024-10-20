@@ -129,6 +129,14 @@
                     <Label>Cancel</Label>
                 </Button>
             </StackPanel>
+            <iconPacks:PackIconFontAwesome 
+                Margin="5 0"
+                VerticalAlignment="Center"
+                Visibility="{Binding IsNewerVersionAvailable,Converter={StaticResource BooleanToVisibilityConverter}}"
+                Kind="TriangleExclamationSolid"
+                ToolTip="Newer version available. Consider updating!"
+                Foreground="DarkOrange"
+                FontSize="10"/>
         </StackPanel>
         <ScrollViewer
             CanContentScroll="False"

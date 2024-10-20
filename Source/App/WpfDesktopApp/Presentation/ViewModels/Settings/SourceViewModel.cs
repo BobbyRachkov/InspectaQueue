@@ -15,6 +15,7 @@ public class SourceViewModel : ViewModel
     private readonly ISettingsManager _settingsManager;
     private string _providerDisplayVersion;
     private SettingEntryViewModel[] _settings;
+    private bool _isNewerVersionAvailable;
 
     public SourceViewModel(
         Guid id,
@@ -71,6 +72,7 @@ public class SourceViewModel : ViewModel
 
     public IReadOnlyDictionary<string, IQueueProvider> AvailableProviderVersions { get; }
     public KeyValuePair<string, IQueueProvider> SelectedProviderVersion { get; set; }
+    public bool IsNewerVersionAvailable => SelectedProviderVersion.Key != AvailableProviderVersions.First().Key;
 
     public SettingEntryViewModel[] Settings
     {
@@ -107,5 +109,6 @@ public class SourceViewModel : ViewModel
         OnPropertyChanged(nameof(ProviderInstance));
         OnPropertyChanged(nameof(ProviderDisplayName));
         OnPropertyChanged(nameof(ProviderDisplayVersion));
+        OnPropertyChanged(nameof(IsNewerVersionAvailable));
     }
 }
