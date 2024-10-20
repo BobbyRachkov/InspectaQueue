@@ -43,6 +43,13 @@ public class SettingsManager : ISettingsManager
             if (correspondingProp is not null)
             {
                 correspondingProp.Value = overridingPack.Value;
+
+                //For backwards compatibility; remove after few versions
+                if (correspondingProp is { PropertyName: "HideMessagesAfter" }
+                    && correspondingProp.Value?.ToString() == "0")
+                {
+                    correspondingProp.Value = 3000;
+                }
             }
         }
 

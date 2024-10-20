@@ -79,8 +79,8 @@
                                         FontSize="15"
                                         Content="{Binding Text}"/>
                                     <StackPanel Orientation="Horizontal">
-                                        <Label Content="Source: "/>
-                                        <Label Content="{Binding Source}"/>
+                                        <Label VerticalAlignment="Center"  Content="Source: "/>
+                                        <Label Padding="0" VerticalAlignment="Center" Content="{Binding Source}"/>
                                     </StackPanel>
                                     <Expander 
                                         Visibility="{Binding ExceptionHeader,Converter={StaticResource NullToVisibilityConverter}}"
