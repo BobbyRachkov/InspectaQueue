@@ -141,7 +141,7 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
     {
         lock (Entries)
         {
-            while (Entries.Count >= _queueProvider.Settings.HideMessagesAfter)
+            while (Entries.Count > _queueProvider.Settings.HideMessagesAfter)
             {
                 RemoveMessage(Entries[^1]);
             }

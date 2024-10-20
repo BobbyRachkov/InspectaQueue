@@ -31,7 +31,7 @@ public class PulsarSettings : IQueueProviderSettings
     [Exposed(
         DisplayName = "Max messages to show",
         ToolTip = "Hides the messages after the desired threshold is reached")]
-    public int HideMessagesAfter { get; set; } = 3000;
+    public int HideMessagesAfter { get; set; } = 1000;
 
     [Exposed(
         DisplayName = "Auto acknowledge on receive")]

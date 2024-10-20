@@ -48,7 +48,7 @@ public class SettingsManager : ISettingsManager
                 if (correspondingProp is { PropertyName: "HideMessagesAfter" }
                     && correspondingProp.Value?.ToString() == "0")
                 {
-                    correspondingProp.Value = 3000;
+                    correspondingProp.Value = 1000;
                 }
             }
         }
