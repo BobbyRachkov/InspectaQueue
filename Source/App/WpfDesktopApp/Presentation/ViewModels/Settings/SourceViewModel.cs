@@ -1,26 +1,45 @@
-﻿using System.Reflection;
-using Rachkov.InspectaQueue.Abstractions;
-using Rachkov.InspectaQueue.Abstractions.Attributes;
+﻿using Rachkov.InspectaQueue.Abstractions;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
-using Rachkov.InspectaQueue.WpfDesktopApp.Services.SettingsParser;
+using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
+using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models;
+using System.Windows.Input;
+using Version = Rachkov.InspectaQueue.Abstractions.Version;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 
 public class SourceViewModel : ViewModel
 {
-    private readonly IQueueProvider _provider;
+    private IQueueProvider _provider;
+    private readonly Action _saveSourcesCallback;
     private string _name;
+    private readonly ISettingsManager _settingsManager;
+    private string _providerDisplayVersion;
+    private SettingEntryViewModel[] _settings;
+    private bool _isNewerVersionAvailable;
 
     public SourceViewModel(
         Guid id,
         string name,
+        ISettingsManager settingsManager,
         IQueueProvider provider,
-        SettingEntryViewModel[] settings)
+        IReadOnlyDictionary<string, IQueueProvider> availableProviderVersions,
+        SettingEntryViewModel[] settings,
+        Action saveSourcesCallback)
     {
         Id = id;
-        _provider = provider;
         _name = name;
+        _settingsManager = settingsManager;
+        _provider = provider;
         Settings = settings;
+        _saveSourcesCallback = saveSourcesCallback;
+        AvailableProviderVersions = availableProviderVersions
+            .OrderByDescending(x => new Version(x.Key))
+            .ToDictionary();
+
+        SelectedProviderVersion = AvailableProviderVersions.First(x => x.Value == ProviderInstance);
+        ProviderDisplayVersion = SelectedProviderVersion.Key;
+
+        ChangeVersionCommand = new RelayCommand(ChangeProviderVersion, () => _provider != SelectedProviderVersion.Value);
     }
 
     public Guid Id { get; }
@@ -34,31 +53,62 @@ public class SourceViewModel : ViewModel
             OnPropertyChanged();
         }
     }
+    public ICommand ChangeVersionCommand { get; }
 
     public Type ProviderType => _provider.GetType();
+    public IQueueProvider ProviderInstance => _provider;
 
-    public SettingEntryViewModel[] Settings { get; }
+    public string ProviderDisplayName => $"{ProviderType.FullName}";
 
-    public IQueueProviderSettings UpdateSettings(IQueueProviderSettings settingsObjectToUpdate)
+    public string ProviderDisplayVersion
     {
-        foreach (var setting in Settings)
+        get => _providerDisplayVersion;
+        private set
         {
-            setting.ReflectedProperty.SetValue(settingsObjectToUpdate, EnsureProperValueType(setting));
+            _providerDisplayVersion = $"v{value}";
+            OnPropertyChanged();
         }
-
-        return settingsObjectToUpdate;
     }
 
-    private object? EnsureProperValueType(SettingEntryViewModel setting)
-    {
-        if (setting.Value is not null
-            && setting.Type == typeof(int)
-            && setting.Value.GetType() != typeof(int))
-        {
-            return Convert.ToInt32(setting.Value);
-        }
+    public IReadOnlyDictionary<string, IQueueProvider> AvailableProviderVersions { get; }
+    public KeyValuePair<string, IQueueProvider> SelectedProviderVersion { get; set; }
+    public bool IsNewerVersionAvailable => SelectedProviderVersion.Key != AvailableProviderVersions.First().Key;
 
-        return setting.Value;
+    public SettingEntryViewModel[] Settings
+    {
+        get => _settings;
+        private set
+        {
+            _settings = value;
+            OnPropertyChanged();
+        }
     }
 
+    public void ChangeProviderVersion()
+    {
+        if (_provider == SelectedProviderVersion.Value)
+        {
+            return;
+        }
+
+        _provider = SelectedProviderVersion.Value;
+        ProviderDisplayVersion = SelectedProviderVersion.Key;
+
+        var newSettings = _settingsManager.ExtractSettings(_provider);
+        var mergedSettings = _settingsManager.MergePacks(newSettings, Settings.Select(x => new SettingDetachedPack
+        {
+            PropertyName = x.PropertyName,
+            Value = x.Value
+        }));
+        Settings = mergedSettings.Select(x => new SettingEntryViewModel(x)).ToArray();
+
+
+        _saveSourcesCallback();
+
+        OnPropertyChanged(nameof(ProviderType));
+        OnPropertyChanged(nameof(ProviderInstance));
+        OnPropertyChanged(nameof(ProviderDisplayName));
+        OnPropertyChanged(nameof(ProviderDisplayVersion));
+        OnPropertyChanged(nameof(IsNewerVersionAvailable));
+    }
 }

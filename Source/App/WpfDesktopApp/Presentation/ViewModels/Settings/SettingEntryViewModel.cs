@@ -1,14 +1,20 @@
-﻿using System.Reflection;
-using Rachkov.InspectaQueue.Abstractions.Attributes;
+﻿using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models;
+using System.Reflection;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 
-public class SettingEntryViewModel
+public class SettingEntryViewModel(SettingPack settingsInstance)
 {
-    public required PropertyInfo ReflectedProperty { get; set; }
-    public required string PropertyName { get; set; }
-    public required string Name { get; set; }
-    public string? ToolTip { get; set; }
-    public required Type Type { get; set; }
-    public object? Value { get; set; }
+    public SettingPack SettingsInstance { get; } = settingsInstance;
+
+    public PropertyInfo ReflectedProperty => SettingsInstance.ReflectedProperty;
+    public string PropertyName => SettingsInstance.PropertyName;
+    public string Name => SettingsInstance.Name;
+    public string? ToolTip => SettingsInstance.ToolTip;
+    public Type Type => SettingsInstance.Type;
+    public object? Value
+    {
+        get => SettingsInstance.Value;
+        set => SettingsInstance.Value = value;
+    }
 }

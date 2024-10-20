@@ -6,11 +6,12 @@ using System.IO;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
 
-public class ConfigStoreService : IConfigStoreService
+public class JsonFileConfigStoreService : IConfigStoreService
 {
     private const string StorageFileName = "config.json";
 
     private SettingsDto? _settingsCache;
+    private object _settingsWriteLock = new();
 
     public void StoreSources(SourceViewModel[] sources)
     {
@@ -48,10 +49,13 @@ public class ConfigStoreService : IConfigStoreService
 
     public void StoreSettings(SettingsDto settings)
     {
-        _settingsCache = null;
-        var text = JsonConvert.SerializeObject(settings, Formatting.Indented);
-        File.WriteAllText(StorageFileName, text);
-        _settingsCache = settings;
+        lock (_settingsWriteLock)
+        {
+            _settingsCache = null;
+            var text = JsonConvert.SerializeObject(settings, Formatting.Indented);
+            File.WriteAllText(StorageFileName, text);
+            _settingsCache = settings;
+        }
     }
 
     private void UpdateSources(SourceDto[] sources)

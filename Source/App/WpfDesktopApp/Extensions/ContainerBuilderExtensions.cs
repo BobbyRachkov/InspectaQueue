@@ -1,15 +1,16 @@
 ﻿using Autofac;
+using AutoMapper.Contrib.Autofac.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Rachkov.InspectaQueue.Abstractions;
-using System.Diagnostics;
+using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
+using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
+using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.MapperProfiles;
+using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.WindowManager;
+using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
+using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
-using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
-using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
-using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.WindowManager;
-using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
-using Rachkov.InspectaQueue.WpfDesktopApp.Services.SettingsParser;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Extensions;
 
@@ -65,16 +66,20 @@ public static class ContainerBuilderExtensions
 
     public static ContainerBuilder RegisterConfigStore(this ContainerBuilder builder)
     {
-        builder.RegisterType<ConfigStoreService>()
+        builder.RegisterType<JsonFileConfigStoreService>()
             .AsImplementedInterfaces()
             .SingleInstance();
 
         return builder;
     }
 
-    public static ContainerBuilder RegisterSettingsParser(this ContainerBuilder builder)
+    public static ContainerBuilder RegisterManagers(this ContainerBuilder builder)
     {
-        builder.RegisterType<ReflectionParser>()
+        builder.RegisterType<ProviderManager>()
+            .AsImplementedInterfaces()
+            .SingleInstance();
+
+        builder.RegisterType<SettingsManager>()
             .AsImplementedInterfaces()
             .SingleInstance();
 
@@ -121,6 +126,16 @@ public static class ContainerBuilderExtensions
         builder.RegisterType<UpdateMigratorService>()
             .AsImplementedInterfaces()
             .SingleInstance();
+
+        return builder;
+    }
+
+    public static ContainerBuilder RegisterMapper(this ContainerBuilder builder)
+    {
+        builder.RegisterAutoMapper(cfg => cfg.AddProfiles(
+            [
+                new SettingsProfile()
+            ]));
 
         return builder;
     }

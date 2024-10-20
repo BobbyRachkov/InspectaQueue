@@ -8,7 +8,7 @@
         xmlns:converters="clr-namespace:Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Converters"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=infrastructure:PresenterViewModel}"
-        Title="{Binding Name}" Height="450" Width="800"
+        Title="{Binding Name}" Height="600" Width="1000"
         Icon="/Resources/iq.ico">
     <mah:MetroWindow.Resources>
         <converters:IntegerToVisibilityConverter x:Key="IntegerToVisibilityConverter"/>
