@@ -7,7 +7,7 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 
 public abstract class PresenterViewModel : ViewModel, IPresenterViewModel
 {
-    private readonly IErrorManager _errorManager;
+    protected readonly IErrorManager ErrorManager;
     public event EventHandler? Show;
 
     public event EventHandler? Hide;
@@ -18,14 +18,14 @@ public abstract class PresenterViewModel : ViewModel, IPresenterViewModel
 
     protected PresenterViewModel(IErrorManager errorManager)
     {
-        _errorManager = errorManager;
-        _errorManager.ErrorRaised += OnErrorRaised;
-        _errorManager.ErrorsCleared += OnErrorsCleared;
+        ErrorManager = errorManager;
+        ErrorManager.ErrorRaised += OnErrorRaised;
+        ErrorManager.ErrorsCleared += OnErrorsCleared;
 
-        var existingErrors = _errorManager.GetErrors().Select(ConvertError).ToArray();
+        var existingErrors = ErrorManager.GetErrors().Select(ConvertError).ToArray();
         Errors = new(existingErrors);
 
-        ClearErrorsCommand = new RelayCommand(_errorManager.ClearErrors, Errors.Any);
+        ClearErrorsCommand = new RelayCommand(ErrorManager.ClearErrors, Errors.Any);
         OpenErrorsFlyoutCommand = new RelayCommand(() => IsErrorsFlyoutOpen = true);
     }
 
@@ -72,8 +72,8 @@ public abstract class PresenterViewModel : ViewModel, IPresenterViewModel
     public void RaiseClosing(CancelEventArgs args)
     {
         OnClosing?.Invoke(this, args);
-        _errorManager.ErrorRaised -= OnErrorRaised;
-        _errorManager.ErrorsCleared -= OnErrorsCleared;
+        ErrorManager.ErrorRaised -= OnErrorRaised;
+        ErrorManager.ErrorsCleared -= OnErrorsCleared;
     }
 
     private void OnErrorRaised(object? sender, Abstractions.Error e)
@@ -87,10 +87,21 @@ public abstract class PresenterViewModel : ViewModel, IPresenterViewModel
 
     private static ErrorViewModel ConvertError(Error e)
     {
+        string sourceAsString;
+
+        if (e.Source is string str)
+        {
+            sourceAsString = str;
+        }
+        else
+        {
+            sourceAsString = e.Source.GetType().FullName ?? e.Source.GetType().Name;
+        }
+
         return new ErrorViewModel
         {
             Text = e.Text,
-            Source = e.Source.GetType().FullName ?? e.Source.GetType().Name,
+            Source = sourceAsString,
             ExceptionHeader = e.Exception?.GetType().Name,
             ExceptionText = e.Exception?.ToString()
         };
