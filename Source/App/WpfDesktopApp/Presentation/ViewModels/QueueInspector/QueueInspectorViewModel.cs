@@ -51,7 +51,7 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
             ErrorManager.RaiseError(new Error
             {
                 Source = Name,
-                Text = $"Messages are set to be hidden when reach {_queueProvider.Settings.HideMessagesAfter} in count. No messages will appear in the view."
+                Text = $"Messages are set to be hidden when reach {_queueProvider.Settings.HideMessagesAfter} in count.\nNo messages will appear in the view."
             });
         }
     }
