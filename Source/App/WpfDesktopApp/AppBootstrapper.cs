@@ -17,11 +17,12 @@ public class AppBootstrapper
             .RegisterPresenterViewModels()
             .RegisterWindowManager()
             .RegisterConfigStore()
-            .RegisterSettingsParser()
+            .RegisterManagers()
             .RegisterSourceReader()
             .RegisterErrorManager()
             .RegisterHttpClientFactory()
-            .RegisterAutoUpdater();
+            .RegisterAutoUpdater()
+            .RegisterMapper();
 
         _container = builder.Build();
 

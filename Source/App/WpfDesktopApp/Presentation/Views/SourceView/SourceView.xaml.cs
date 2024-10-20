@@ -1,11 +1,11 @@
-﻿using System.Windows;
+﻿using MahApps.Metro.Controls;
+using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
+using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView.ValueConverters;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Media;
-using MahApps.Metro.Controls;
-using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
-using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView.ValueConverters;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
 {
@@ -53,6 +53,16 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
         private void SourceView_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
             if (DataContext is SourceViewModel sourceViewModel)
+            {
+                RenderSettingsControls(sourceViewModel);
+                sourceViewModel.PropertyChanged += SourceViewModel_PropertyChanged;
+            }
+        }
+
+        private void SourceViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(SourceViewModel.Settings)
+                && sender is SourceViewModel sourceViewModel)
             {
                 RenderSettingsControls(sourceViewModel);
             }
@@ -143,6 +153,11 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
             Random r = new Random();
             return new SolidColorBrush(Color.FromRgb((byte)r.Next(1, 255),
                 (byte)r.Next(1, 255), (byte)r.Next(1, 233)));
+        }
+
+        private void HideVersionChangeGrid(object sender, RoutedEventArgs e)
+        {
+            ChangeVersionToggle.IsChecked = false;
         }
     }
 }

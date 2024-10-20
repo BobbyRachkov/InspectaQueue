@@ -1,14 +1,17 @@
-﻿using System.IO;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config.Models;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config.Translators;
+using System.IO;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
 
-public class ConfigStoreService : IConfigStoreService
+public class JsonFileConfigStoreService : IConfigStoreService
 {
     private const string StorageFileName = "config.json";
+
+    private SettingsDto? _settingsCache;
+    private object _settingsWriteLock = new();
 
     public void StoreSources(SourceViewModel[] sources)
     {
@@ -26,8 +29,14 @@ public class ConfigStoreService : IConfigStoreService
     {
         EnsureFileExists();
 
+        if (_settingsCache is not null)
+        {
+            return _settingsCache;
+        }
+
         var text = File.ReadAllText(StorageFileName);
-        return JsonConvert.DeserializeObject<SettingsDto>(text) ?? new SettingsDto();
+        _settingsCache = JsonConvert.DeserializeObject<SettingsDto>(text) ?? new SettingsDto();
+        return _settingsCache;
     }
 
     private void EnsureFileExists()
@@ -40,14 +49,26 @@ public class ConfigStoreService : IConfigStoreService
 
     public void StoreSettings(SettingsDto settings)
     {
-        var text = JsonConvert.SerializeObject(settings, Formatting.Indented);
-        File.WriteAllText(StorageFileName, text);
+        lock (_settingsWriteLock)
+        {
+            _settingsCache = null;
+            var text = JsonConvert.SerializeObject(settings, Formatting.Indented);
+            File.WriteAllText(StorageFileName, text);
+            _settingsCache = settings;
+        }
     }
 
     private void UpdateSources(SourceDto[] sources)
     {
         var settings = GetSettings();
         settings.Sources = sources;
+        StoreSettings(settings);
+    }
+
+    public void UpdateAndStore(Action<SettingsDto> update)
+    {
+        var settings = GetSettings();
+        update(settings);
         StoreSettings(settings);
     }
 }

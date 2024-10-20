@@ -1,8 +1,8 @@
-﻿using System.Collections.ObjectModel;
-using Rachkov.InspectaQueue.Abstractions;
+﻿using Rachkov.InspectaQueue.Abstractions;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.WindowManager;
+using System.Collections.ObjectModel;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector;
 
@@ -10,17 +10,18 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
 {
     private readonly IQueueProvider _queueProvider;
     private readonly IWindowManager _windowManager;
-    public override string Name => "Queue Inspector";
     private readonly Task? _listenerTask;
     private readonly CancellationTokenSource _cts = new();
     private bool _topmost;
 
     public QueueInspectorViewModel(
+        string? nameSuffix,
         IQueueProvider queueProvider,
         IErrorManager errorManager,
         IWindowManager windowManager)
         : base(errorManager)
     {
+        Name = string.IsNullOrWhiteSpace(nameSuffix) ? "Queue Inspector" : $"Queue Inspector | {nameSuffix}";
         _queueProvider = queueProvider;
         _windowManager = windowManager;
         Entries = new();
@@ -35,6 +36,8 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
 
         DisconnectCommand = new(() => windowManager.Close(this));
     }
+
+    public override string Name { get; }
 
     public bool Topmost
     {

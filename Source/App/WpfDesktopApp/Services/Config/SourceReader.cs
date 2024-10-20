@@ -1,25 +1,29 @@
-﻿using Rachkov.InspectaQueue.Abstractions;
-using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
-using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config.Models;
-using Rachkov.InspectaQueue.WpfDesktopApp.Services.SettingsParser;
+﻿using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
+using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
+using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
 
 public class SourceReader : ISourceReader
 {
     private readonly IConfigStoreService _configStore;
-    private readonly ISettingsParser _settingsParser;
+    private readonly IProviderManager _providerManager;
+    private readonly ISettingsManager _settingsManager;
 
-    public SourceReader(IConfigStoreService configStore, ISettingsParser settingsParser)
+    public SourceReader(
+        IConfigStoreService configStore,
+        IProviderManager providerManager,
+        ISettingsManager settingsManager)
     {
         _configStore = configStore;
-        _settingsParser = settingsParser;
+        _providerManager = providerManager;
+        _settingsManager = settingsManager;
     }
 
-    public IEnumerable<SourceViewModel> ReadSources(IEnumerable<IQueueProvider> activeProviders)
+    public IEnumerable<SourceViewModel> ReadSources(Action saveSourcesCallback)
     {
         var storedSources = _configStore.GetSettings().Sources;
-        var activeProvidersArray = activeProviders.ToArray();
+        var activeProvidersArray = _providerManager.GetAllProviderVersions().ToArray();
 
 
         foreach (var storedSource in storedSources)
@@ -32,26 +36,25 @@ public class SourceReader : ISourceReader
                 continue;
             }
 
-            var liveSettings = _settingsParser.ParseMembers(provider).ToArray();
-            FillSettings(liveSettings, storedSource.Settings);
-            yield return new SourceViewModel(storedSource.Name, provider, liveSettings);
-        }
-    }
+            var settings = _settingsManager.ExtractSettings(provider);
 
-    private void FillSettings(SettingEntryViewModel[] liveSettings, SourceSettingEntryDto[] storedSourceSettings)
-    {
-        foreach (var storedSetting in storedSourceSettings)
-        {
-            var correspondingLiveSetting = liveSettings.FirstOrDefault(x =>
-                x.PropertyName == storedSetting.PropertyName
-                && x.Type == storedSetting.Type);
+            var mergedSettings =
+                _settingsManager.MergePacks(
+                    settings,
+                    storedSource.Settings.Select(x => new SettingDetachedPack
+                    {
+                        PropertyName = x.PropertyName,
+                        Value = x.Value
+                    }));
 
-            if (correspondingLiveSetting is null)
-            {
-                continue;
-            }
-
-            correspondingLiveSetting.Value = storedSetting.Value;
+            yield return new SourceViewModel(
+                storedSource.Id,
+                storedSource.Name,
+                _settingsManager,
+                provider,
+                _providerManager.GetProviderByInstance(provider).Versions,
+                mergedSettings.Select(x => new SettingEntryViewModel(x)).ToArray(),
+                saveSourcesCallback);
         }
     }
 }
