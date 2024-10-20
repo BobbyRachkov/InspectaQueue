@@ -39,7 +39,21 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
 
         OnClosing += (_, _) => _queueProvider.Disconnect();
 
+        EnsureValidMessageOverflowThreshold();
+
         DisconnectCommand = new RelayCommand(() => windowManager.Close(this));
+    }
+
+    private void EnsureValidMessageOverflowThreshold()
+    {
+        if (_queueProvider.Settings.HideMessagesAfter < 1)
+        {
+            ErrorManager.RaiseError(new Error
+            {
+                Source = Name,
+                Text = $"Messages are set to be hidden when reach {_queueProvider.Settings.HideMessagesAfter} in count. No messages will appear in the view."
+            });
+        }
     }
 
     public event EventHandler<FeatureStatusUpdatedEventArgs> FeatureStatusUpdated;
