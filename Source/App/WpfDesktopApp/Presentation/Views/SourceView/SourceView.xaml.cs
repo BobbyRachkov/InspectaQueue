@@ -109,7 +109,10 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
                 ToolTip = settingEntryViewModel.ToolTip
             };
 
-            var presenterConfig = _typeHandlers[settingEntryViewModel.Type]();
+            var presenterConfig = _typeHandlers.TryGetValue(settingEntryViewModel.Type, out var handler)
+                ? handler()
+                : _typeHandlers[typeof(string)]();
+
             presenterConfig.Presenter.VerticalAlignment = VerticalAlignment.Center;
 
             if (presenterConfig.ValueConverter is not null)

@@ -16,8 +16,8 @@
     <ProjectReference Include="..\..\App\Abstractions\Abstractions.csproj" />
   </ItemGroup>
 
-  <!--<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="xcopy /Y /E /I &quot;$(TargetDir)*&quot; &quot;$(SolutionDir)Source\App\WpfDesktopApp\bin\$(Configuration)\$(DestinationTargetFrameworkName)\Providers&quot;" />
-    <Exec Command="del /Q &quot;$(SolutionDir)Source\App\WpfDesktopApp\bin\Release\$(DestinationTargetFrameworkName)\Providers\*.pdb&quot;" />
-  </Target>-->
+    <!--<Exec Command="del /Q &quot;$(SolutionDir)Source\App\WpfDesktopApp\bin\Release\$(DestinationTargetFrameworkName)\Providers\*.pdb&quot;" />-->
+  </Target>
 </Project>

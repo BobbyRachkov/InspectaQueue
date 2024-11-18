@@ -1,4 +1,5 @@
-﻿using Rachkov.InspectaQueue.Abstractions;
+﻿using Pulsar.Client.Common;
+using Rachkov.InspectaQueue.Abstractions;
 using Rachkov.InspectaQueue.Abstractions.Attributes;
 
 namespace Rachkov.InspectaQueue.Providers.Pulsar;
@@ -19,6 +20,9 @@ public class PulsarSettings : IQueueProviderSettings
 
     [Exposed(DisplayName = "Topic name")]
     public string TopicName { get; set; } = string.Empty;
+
+    [Exposed(DisplayName = "Subscription Type")]
+    public SubscriptionType SubscriptionType { get; set; } = SubscriptionType.Exclusive;
 
     [Exposed(DisplayName = "Subscription name")]
     public string SubscriptionName { get; set; } = string.Empty;

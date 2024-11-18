@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Rachkov.InspectaQueue.Abstractions;
+using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
@@ -7,13 +8,16 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
 public class ProviderManager : IProviderManager
 {
     private readonly ILifetimeScope _lifetimeScope;
+    private readonly IErrorManager _errorManager;
     private readonly List<Provider> _providers;
 
     public ProviderManager(
         ILifetimeScope lifetimeScope,
-        IEnumerable<IQueueProvider> availableProviders)
+        IEnumerable<IQueueProvider> availableProviders,
+        IErrorManager errorManager)
     {
         _lifetimeScope = lifetimeScope;
+        _errorManager = errorManager;
         _providers = ParseProviders(availableProviders.ToArray());
     }
 
@@ -68,7 +72,19 @@ public class ProviderManager : IProviderManager
     {
         foreach (var setting in settings)
         {
-            setting.ReflectedProperty.SetValue(settingsObjectToUpdate, EnsureProperValueType(setting));
+            try
+            {
+                setting.ReflectedProperty.SetValue(settingsObjectToUpdate, EnsureProperValueType(setting));
+            }
+            catch (Exception ex)
+            {
+                _errorManager.RaiseError(new Error
+                {
+                    Text = "Could not assign setting value to provider property",
+                    Source = "Internal Provider Manager",
+                    Exception = ex
+                });
+            }
         }
 
 
