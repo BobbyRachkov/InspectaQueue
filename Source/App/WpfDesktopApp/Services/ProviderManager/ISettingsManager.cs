@@ -5,13 +5,13 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
 
 public interface ISettingsManager
 {
-    IEnumerable<SettingPack> ExtractSettings(IQueueProvider queueProvider);
+    IEnumerable<ISettingPack> ExtractSettings(IQueueProvider queueProvider);
 
-    IEnumerable<SettingPack> MergePacks(
-        IEnumerable<SettingPack> @base,
-        IEnumerable<SettingPack> overriding);
+    IEnumerable<ISettingPack> MergePacks(
+        IEnumerable<ISettingPack> @base,
+        IEnumerable<ISettingPack> overriding);
 
-    IEnumerable<SettingPack> MergePacks(
-        IEnumerable<SettingPack> @base,
+    IEnumerable<ISettingPack> MergePacks(
+        IEnumerable<ISettingPack> @base,
         IEnumerable<SettingDetachedPack> overriding);
 }

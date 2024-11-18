@@ -7,7 +7,7 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
 
 public class SettingsManager : ISettingsManager
 {
-    public IEnumerable<SettingPack> ExtractSettings(IQueueProvider queueProvider)
+    public IEnumerable<ISettingPack> ExtractSettings(IQueueProvider queueProvider)
     {
         var exposedProperties = GetExposedProperties(queueProvider.Settings.GetType());
 
@@ -17,9 +17,9 @@ public class SettingsManager : ISettingsManager
         }
     }
 
-    public IEnumerable<SettingPack> MergePacks(
-        IEnumerable<SettingPack> @base,
-        IEnumerable<SettingPack> overriding)
+    public IEnumerable<ISettingPack> MergePacks(
+        IEnumerable<ISettingPack> @base,
+        IEnumerable<ISettingPack> overriding)
 
     {
         return MergePacks(@base, overriding.Select(x => new SettingDetachedPack
@@ -29,8 +29,8 @@ public class SettingsManager : ISettingsManager
         }));
     }
 
-    public IEnumerable<SettingPack> MergePacks(
-        IEnumerable<SettingPack> @base,
+    public IEnumerable<ISettingPack> MergePacks(
+        IEnumerable<ISettingPack> @base,
         IEnumerable<SettingDetachedPack> overriding)
 
     {
@@ -66,14 +66,19 @@ public class SettingsManager : ISettingsManager
             .ToArray();
     }
 
-    private static SettingPack PackExposedProperty(PropertyInfo property, object? value)
+    private static ISettingPack PackExposedProperty(PropertyInfo property, object? value)
     {
         var exposedAttribute = (ExposedAttribute)
             property
                 .GetCustomAttributes(typeof(ExposedAttribute))
                 .First();
 
-        return new SettingPack
+        if (property.PropertyType.IsEnum)
+        {
+            return HandleEnum(property, exposedAttribute, value);
+        }
+
+        return new BasicSettingPack
         {
             ReflectedProperty = property,
             Name = exposedAttribute.DisplayName ?? property.Name,
@@ -81,6 +86,29 @@ public class SettingsManager : ISettingsManager
             Type = property.PropertyType,
             PropertyName = property.Name,
             Value = value
+        };
+    }
+
+    private static ISettingPack HandleEnum(PropertyInfo property, ExposedAttribute exposedAttribute, object? value)
+    {
+        var enumType = property.PropertyType;
+        var isFlags = enumType.GetCustomAttributes<FlagsAttribute>().Any();
+        var options = enumType.GetEnumNames().Select(x => new MultipleChoiceEntry
+        {
+            DisplayName = x,
+            Value = Enum.Parse(enumType, x)
+        });
+
+        return new MultipleChoiceSettingPack()
+        {
+            ReflectedProperty = property,
+            Name = exposedAttribute.DisplayName ?? property.Name,
+            ToolTip = exposedAttribute.ToolTip,
+            Type = property.PropertyType,
+            PropertyName = property.Name,
+            Value = value,
+            Options = options.ToArray(),
+            MultipleSelectionEnabled = isFlags
         };
     }
 }

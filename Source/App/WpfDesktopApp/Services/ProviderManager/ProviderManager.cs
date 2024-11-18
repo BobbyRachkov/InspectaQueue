@@ -31,17 +31,17 @@ public class ProviderManager : IProviderManager
         return GetNewInstance(providerInstance.GetType());
     }
 
-    public IQueueProvider GetNewInstance(Type providerType, IEnumerable<SettingPack> settings)
+    public IQueueProvider GetNewInstance(Type providerType, IEnumerable<BasicSettingPack> settings)
     {
         return FillSettings(GetNewInstance(providerType), settings);
     }
 
-    public IQueueProvider GetNewInstance(IQueueProvider provider, IEnumerable<SettingPack> settings)
+    public IQueueProvider GetNewInstance(IQueueProvider provider, IEnumerable<BasicSettingPack> settings)
     {
         return FillSettings(GetNewInstance(provider), settings);
     }
 
-    public IQueueProvider FillSettings(IQueueProvider provider, IEnumerable<SettingPack> settings)
+    public IQueueProvider FillSettings(IQueueProvider provider, IEnumerable<BasicSettingPack> settings)
     {
         UpdateSettings(provider.Settings, settings);
         return provider;
@@ -68,7 +68,7 @@ public class ProviderManager : IProviderManager
         }
     }
 
-    private IQueueProviderSettings UpdateSettings(IQueueProviderSettings settingsObjectToUpdate, IEnumerable<SettingPack> settings)
+    private IQueueProviderSettings UpdateSettings(IQueueProviderSettings settingsObjectToUpdate, IEnumerable<BasicSettingPack> settings)
     {
         foreach (var setting in settings)
         {
@@ -91,7 +91,7 @@ public class ProviderManager : IProviderManager
         return settingsObjectToUpdate;
     }
 
-    private object? EnsureProperValueType(SettingPack setting)
+    private object? EnsureProperValueType(BasicSettingPack setting)
     {
         if (setting.Value is null)
         {
