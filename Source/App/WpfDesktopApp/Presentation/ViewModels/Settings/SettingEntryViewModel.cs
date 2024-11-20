@@ -3,9 +3,9 @@ using System.Reflection;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 
-public class SettingEntryViewModel(BasicSettingPack settingsInstance)
+public class SettingEntryViewModel(ISettingPack settingsInstance)
 {
-    public BasicSettingPack SettingsInstance { get; } = settingsInstance;
+    public ISettingPack SettingsInstance { get; } = settingsInstance;
 
     public PropertyInfo ReflectedProperty => SettingsInstance.ReflectedProperty;
     public string PropertyName => SettingsInstance.PropertyName;

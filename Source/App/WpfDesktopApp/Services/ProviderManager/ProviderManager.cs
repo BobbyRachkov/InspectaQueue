@@ -31,17 +31,17 @@ public class ProviderManager : IProviderManager
         return GetNewInstance(providerInstance.GetType());
     }
 
-    public IQueueProvider GetNewInstance(Type providerType, IEnumerable<BasicSettingPack> settings)
+    public IQueueProvider GetNewInstance(Type providerType, IEnumerable<ISettingPack> settings)
     {
         return FillSettings(GetNewInstance(providerType), settings);
     }
 
-    public IQueueProvider GetNewInstance(IQueueProvider provider, IEnumerable<BasicSettingPack> settings)
+    public IQueueProvider GetNewInstance(IQueueProvider provider, IEnumerable<ISettingPack> settings)
     {
         return FillSettings(GetNewInstance(provider), settings);
     }
 
-    public IQueueProvider FillSettings(IQueueProvider provider, IEnumerable<BasicSettingPack> settings)
+    public IQueueProvider FillSettings(IQueueProvider provider, IEnumerable<ISettingPack> settings)
     {
         UpdateSettings(provider.Settings, settings);
         return provider;
@@ -68,7 +68,7 @@ public class ProviderManager : IProviderManager
         }
     }
 
-    private IQueueProviderSettings UpdateSettings(IQueueProviderSettings settingsObjectToUpdate, IEnumerable<BasicSettingPack> settings)
+    private IQueueProviderSettings UpdateSettings(IQueueProviderSettings settingsObjectToUpdate, IEnumerable<ISettingPack> settings)
     {
         foreach (var setting in settings)
         {
@@ -91,7 +91,7 @@ public class ProviderManager : IProviderManager
         return settingsObjectToUpdate;
     }
 
-    private object? EnsureProperValueType(BasicSettingPack setting)
+    private object? EnsureProperValueType(ISettingPack setting)
     {
         if (setting.Value is null)
         {
@@ -102,6 +102,12 @@ public class ProviderManager : IProviderManager
             && setting.Value.GetType() != typeof(int))
         {
             return Convert.ToInt32(setting.Value);
+        }
+
+        if (setting.Type.IsEnum
+            && setting.Value is string value)
+        {
+            return Enum.Parse(setting.Type, value);
         }
 
         return setting.Value;

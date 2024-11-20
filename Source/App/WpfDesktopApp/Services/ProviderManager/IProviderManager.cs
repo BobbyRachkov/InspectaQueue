@@ -7,10 +7,10 @@ public interface IProviderManager
 {
     IQueueProvider GetNewInstance(Type providerType);
     IQueueProvider GetNewInstance(IQueueProvider providerInstance);
-    IQueueProvider GetNewInstance(Type providerType, IEnumerable<BasicSettingPack> settings);
-    IQueueProvider GetNewInstance(IQueueProvider provider, IEnumerable<BasicSettingPack> settings);
+    IQueueProvider GetNewInstance(Type providerType, IEnumerable<ISettingPack> settings);
+    IQueueProvider GetNewInstance(IQueueProvider provider, IEnumerable<ISettingPack> settings);
     IEnumerable<Provider> GetProviders();
     Provider GetProviderByInstance(IQueueProvider instance);
     IEnumerable<IQueueProvider> GetAllProviderVersions();
-    IQueueProvider FillSettings(IQueueProvider provider, IEnumerable<BasicSettingPack> settings);
+    IQueueProvider FillSettings(IQueueProvider provider, IEnumerable<ISettingPack> settings);
 }
