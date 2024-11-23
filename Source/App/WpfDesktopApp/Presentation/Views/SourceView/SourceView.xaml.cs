@@ -88,7 +88,7 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
             TableGrid.Children.Add(splitter);
         }
 
-        private void RenderSettingRow(BasicSettingViewModel settingEntryViewModel, int index)
+        private void RenderSettingRow(ISettingViewModel settingEntryViewModel, int index)
         {
             double rowHeight = 30;
             double marginTop = index * (rowHeight + 10);
@@ -109,26 +109,33 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
                 ToolTip = settingEntryViewModel.ToolTip
             };
 
-            var presenterConfig = _typeHandlers.TryGetValue(settingEntryViewModel.Type, out var handler)
-                ? handler()
-                : _typeHandlers[typeof(string)]();
-
-            presenterConfig.Presenter.VerticalAlignment = VerticalAlignment.Center;
-
-            if (presenterConfig.ValueConverter is not null)
+            var presenter = settingEntryViewModel switch
             {
-                valueBinding.Converter = presenterConfig.ValueConverter;
-            }
-
-            presenterConfig.Presenter.SetBinding(presenterConfig.DependencyPropertyToBind, valueBinding);
+                _ => HandleBasicViewModel(settingEntryViewModel.Type, valueBinding)
+            };
 
 
+            presenter.VerticalAlignment = VerticalAlignment.Center;
             var nameGrid = CreateGridWrapper(name, rowHeight, 1, 0, nameMargin);
-            var valueGrid = CreateGridWrapper(presenterConfig.Presenter, rowHeight, 1, 2, valueMargin);
-
+            var valueGrid = CreateGridWrapper(presenter, rowHeight, 1, 2, valueMargin);
 
             TableGrid.Children.Add(nameGrid);
             TableGrid.Children.Add(valueGrid);
+        }
+
+        private FrameworkElement HandleBasicViewModel(Type propertyType, Binding binding)
+        {
+            var presenterConfig = _typeHandlers.TryGetValue(propertyType, out var handler)
+                ? handler()
+                : _typeHandlers[typeof(string)]();
+
+            if (presenterConfig.ValueConverter is not null)
+            {
+                binding.Converter = presenterConfig.ValueConverter;
+            }
+
+            presenterConfig.Presenter.SetBinding(presenterConfig.DependencyPropertyToBind, binding);
+            return presenterConfig.Presenter;
         }
 
         private Grid CreateGridWrapper(
