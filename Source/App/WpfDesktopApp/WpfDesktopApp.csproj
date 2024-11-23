@@ -42,10 +42,4 @@
     <ProjectReference Include="..\Abstractions\Abstractions.csproj" />
     <ProjectReference Include="..\AutoUpdater.Core\AutoUpdater.Core.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Presentation\Views\SourceView\ValueConverters\" />
-    <Folder Include="Services\Config\Translators\" />
-  </ItemGroup>
-
 </Project>
