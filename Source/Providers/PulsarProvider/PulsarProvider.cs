@@ -93,7 +93,7 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
             _consumer = await _client.NewConsumer()
                 .Topic(_settings.TopicName)
                 .SubscriptionName(_settings.SubscriptionName)
-                .SubscriptionType((global::Pulsar.Client.Common.SubscriptionType)SubscriptionType.Exclusive)
+                .SubscriptionType(SubscriptionType.Exclusive)
                 .SubscribeAsync();
 
             cancellationToken.ThrowIfCancellationRequested();
