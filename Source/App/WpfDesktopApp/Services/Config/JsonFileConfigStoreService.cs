@@ -1,7 +1,5 @@
 ﻿using Newtonsoft.Json;
-using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config.Models;
-using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config.Translators;
 using System.IO;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
@@ -11,18 +9,13 @@ public class JsonFileConfigStoreService : IConfigStoreService
     private const string StorageFileName = "config.json";
 
     private SettingsDto? _settingsCache;
-    private object _settingsWriteLock = new();
+    private readonly object _settingsWriteLock = new();
 
-    public void StoreSources(SourceViewModel[] sources)
+    public void StoreSources(SourceDto[] sources)
     {
-        var sourceDtos = new SourceDto[sources.Length];
-
-        for (int i = 0; i < sources.Length; i++)
-        {
-            sourceDtos[i] = sources[i].ToSourceDto();
-        }
-
-        UpdateSources(sourceDtos);
+        var settings = GetSettings();
+        settings.Sources = sources;
+        StoreSettings(settings);
     }
 
     public SettingsDto GetSettings()
@@ -56,13 +49,6 @@ public class JsonFileConfigStoreService : IConfigStoreService
             File.WriteAllText(StorageFileName, text);
             _settingsCache = settings;
         }
-    }
-
-    private void UpdateSources(SourceDto[] sources)
-    {
-        var settings = GetSettings();
-        settings.Sources = sources;
-        StoreSettings(settings);
     }
 
     public void UpdateAndStore(Action<SettingsDto> update)

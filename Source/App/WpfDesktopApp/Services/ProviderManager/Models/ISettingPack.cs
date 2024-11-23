@@ -10,5 +10,4 @@ public interface ISettingPack
     string? ToolTip { get; set; }
     Type Type { get; set; }
     object? Value { get; set; }
-    ISettingPack Clone();
 }

@@ -45,6 +45,7 @@
 
   <ItemGroup>
     <Folder Include="Presentation\Views\SourceView\ValueConverters\" />
+    <Folder Include="Services\Config\Translators\" />
   </ItemGroup>
 
 </Project>

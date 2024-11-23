@@ -10,17 +10,4 @@ public class BasicSettingPack : ISettingPack
     public string? ToolTip { get; set; }
     public required Type Type { get; set; }
     public object? Value { get; set; }
-
-    public virtual ISettingPack Clone()
-    {
-        return new BasicSettingPack
-        {
-            ReflectedProperty = ReflectedProperty,
-            PropertyName = PropertyName,
-            Name = Name,
-            ToolTip = ToolTip,
-            Type = Type,
-            Value = Value
-        };
-    }
 }

@@ -88,7 +88,7 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
             TableGrid.Children.Add(splitter);
         }
 
-        private void RenderSettingRow(SettingEntryViewModel settingEntryViewModel, int index)
+        private void RenderSettingRow(BasicSettingViewModel settingEntryViewModel, int index)
         {
             double rowHeight = 30;
             double marginTop = index * (rowHeight + 10);
