@@ -7,7 +7,7 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
 
 public class SettingsManager : ISettingsManager
 {
-    public IEnumerable<SettingPack> ExtractSettings(IQueueProvider queueProvider)
+    public IEnumerable<ISettingPack> ExtractSettings(IQueueProvider queueProvider)
     {
         var exposedProperties = GetExposedProperties(queueProvider.Settings.GetType());
 
@@ -17,9 +17,9 @@ public class SettingsManager : ISettingsManager
         }
     }
 
-    public IEnumerable<SettingPack> MergePacks(
-        IEnumerable<SettingPack> @base,
-        IEnumerable<SettingPack> overriding)
+    public IEnumerable<ISettingPack> MergePacks(
+        IEnumerable<ISettingPack> @base,
+        IEnumerable<ISettingPack> overriding)
 
     {
         return MergePacks(@base, overriding.Select(x => new SettingDetachedPack
@@ -29,8 +29,8 @@ public class SettingsManager : ISettingsManager
         }));
     }
 
-    public IEnumerable<SettingPack> MergePacks(
-        IEnumerable<SettingPack> @base,
+    public IEnumerable<ISettingPack> MergePacks(
+        IEnumerable<ISettingPack> @base,
         IEnumerable<SettingDetachedPack> overriding)
 
     {
@@ -66,14 +66,19 @@ public class SettingsManager : ISettingsManager
             .ToArray();
     }
 
-    private static SettingPack PackExposedProperty(PropertyInfo property, object? value)
+    private static ISettingPack PackExposedProperty(PropertyInfo property, object? value)
     {
         var exposedAttribute = (ExposedAttribute)
             property
                 .GetCustomAttributes(typeof(ExposedAttribute))
                 .First();
 
-        return new SettingPack
+        if (property.PropertyType.IsEnum)
+        {
+            return HandleEnum(property, exposedAttribute, value);
+        }
+
+        return new BasicSettingPack
         {
             ReflectedProperty = property,
             Name = exposedAttribute.DisplayName ?? property.Name,
@@ -82,5 +87,76 @@ public class SettingsManager : ISettingsManager
             PropertyName = property.Name,
             Value = value
         };
+    }
+
+    private static ISettingPack HandleEnum(PropertyInfo property, ExposedAttribute exposedAttribute, object? value)
+    {
+        var enumType = property.PropertyType;
+        var isFlags = enumType.GetCustomAttributes<FlagsAttribute>().Any();
+
+        var exposedEnums = enumType.GetMembers()
+            .Where(x => x.DeclaringType == enumType
+                        && x.GetCustomAttributes(typeof(ExposedAttribute)).Count() == 1);
+
+        var options = exposedEnums.Select(x => new MultipleChoiceEntry
+        {
+            DisplayName = x.GetCustomAttributes<ExposedAttribute>().Single().DisplayName ?? x.Name,
+            Value = Enum.Parse(enumType, x.Name)
+        });
+
+        return new MultipleChoiceSettingPack()
+        {
+            ReflectedProperty = property,
+            Name = exposedAttribute.DisplayName ?? property.Name,
+            ToolTip = exposedAttribute.ToolTip,
+            Type = property.PropertyType,
+            PropertyName = property.Name,
+            Value = value,
+            Options = options.ToArray(),
+            MultipleSelectionEnabled = isFlags
+        };
+    }
+
+    public IEnumerable<ISettingPack> EnsureCorrectTypes(IEnumerable<ISettingPack> settings)
+    {
+        foreach (var setting in settings)
+        {
+            if (setting.Value is null
+                || setting.Value.GetType() == setting.ReflectedProperty.PropertyType)
+            {
+                yield return setting;
+                continue;
+            }
+
+            if (setting.ReflectedProperty.PropertyType.IsEnum)
+            {
+                Enum.TryParse(setting.ReflectedProperty.PropertyType, setting.Value.ToString(), true, out var convertedValue);
+                setting.Value = convertedValue;
+            }
+
+            if (typeof(int) == setting.ReflectedProperty.PropertyType)
+            {
+                if (!int.TryParse(setting.Value?.ToString(), out var convertedValue))
+                {
+                    convertedValue = Convert.ToInt32(setting.Value);
+                }
+
+                setting.Value = convertedValue;
+            }
+
+            if (typeof(double) == setting.ReflectedProperty.PropertyType)
+            {
+                double.TryParse(setting.Value?.ToString(), out var convertedValue);
+                setting.Value = convertedValue;
+            }
+
+            if (typeof(decimal) == setting.ReflectedProperty.PropertyType)
+            {
+                decimal.TryParse(setting.Value?.ToString(), out var convertedValue);
+                setting.Value = convertedValue;
+            }
+
+            yield return setting;
+        }
     }
 }

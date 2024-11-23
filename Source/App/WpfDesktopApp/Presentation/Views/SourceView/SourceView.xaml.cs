@@ -15,6 +15,7 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
     public partial class SourceView : UserControl
     {
         private Dictionary<Type, Func<PresenterConfig>> _typeHandlers;
+        private Func<PresenterConfig> _dropdownHandler;
 
         public SourceView()
         {
@@ -46,7 +47,17 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
                     },
                     DependencyPropertyToBind = NumericUpDown.ValueProperty,
                     ValueConverter = new DoubleToIntValueConverter()
-                }},
+                }}
+            };
+
+            _dropdownHandler = () => new PresenterConfig
+            {
+                Presenter = new ComboBox()
+                {
+                    HorizontalContentAlignment = HorizontalAlignment.Left,
+                    VerticalContentAlignment = VerticalAlignment.Center
+                },
+                DependencyPropertyToBind = Selector.SelectedItemProperty
             };
         }
 
@@ -88,19 +99,12 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
             TableGrid.Children.Add(splitter);
         }
 
-        private void RenderSettingRow(SettingEntryViewModel settingEntryViewModel, int index)
+        private void RenderSettingRow(ISettingViewModel settingEntryViewModel, int index)
         {
             double rowHeight = 30;
             double marginTop = index * (rowHeight + 10);
             var nameMargin = new Thickness(0, marginTop, 5, 0);
             var valueMargin = new Thickness(5, marginTop, 20, 0);
-
-            Binding valueBinding = new Binding
-            {
-                Source = settingEntryViewModel,
-                Path = new PropertyPath(nameof(settingEntryViewModel.Value)),
-                Mode = BindingMode.TwoWay
-            };
 
             var name = new Label
             {
@@ -109,8 +113,52 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
                 ToolTip = settingEntryViewModel.ToolTip
             };
 
-            var presenterConfig = _typeHandlers[settingEntryViewModel.Type]();
-            presenterConfig.Presenter.VerticalAlignment = VerticalAlignment.Center;
+            var presenter = settingEntryViewModel switch
+            {
+                MultipleChoiceSettingViewModel { IsMultiSelectEnabled: false } multipleChoiceSetting => HandleDropdown(multipleChoiceSetting),
+                _ => HandlePrimitive(settingEntryViewModel)
+            };
+
+
+            presenter.VerticalAlignment = VerticalAlignment.Center;
+            var nameGrid = CreateGridWrapper(name, rowHeight, 1, 0, nameMargin);
+            var valueGrid = CreateGridWrapper(presenter, rowHeight, 1, 2, valueMargin);
+
+            TableGrid.Children.Add(nameGrid);
+            TableGrid.Children.Add(valueGrid);
+        }
+
+        private FrameworkElement HandleDropdown(MultipleChoiceSettingViewModel viewModel)
+        {
+            var presenterConfig = _dropdownHandler();
+            var presenter = (ComboBox)presenterConfig.Presenter;
+
+            Binding binding = new Binding
+            {
+                Source = viewModel,
+                Path = new PropertyPath(nameof(viewModel.SelectedItem)),
+                Mode = BindingMode.TwoWay
+            };
+
+            presenter.ItemsSource = viewModel.Options;
+            presenter.DisplayMemberPath = nameof(DropdownOptionViewModel.DisplayName);
+
+            presenterConfig.Presenter.SetBinding(presenterConfig.DependencyPropertyToBind, binding);
+            return presenterConfig.Presenter;
+        }
+
+        private FrameworkElement HandlePrimitive(ISettingViewModel viewModel)
+        {
+            var presenterConfig = _typeHandlers.TryGetValue(viewModel.Type, out var handler)
+                ? handler()
+                : _typeHandlers[typeof(string)]();
+
+            Binding valueBinding = new Binding
+            {
+                Source = viewModel,
+                Path = new PropertyPath(nameof(viewModel.Value)),
+                Mode = BindingMode.TwoWay
+            };
 
             if (presenterConfig.ValueConverter is not null)
             {
@@ -118,14 +166,7 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
             }
 
             presenterConfig.Presenter.SetBinding(presenterConfig.DependencyPropertyToBind, valueBinding);
-
-
-            var nameGrid = CreateGridWrapper(name, rowHeight, 1, 0, nameMargin);
-            var valueGrid = CreateGridWrapper(presenterConfig.Presenter, rowHeight, 1, 2, valueMargin);
-
-
-            TableGrid.Children.Add(nameGrid);
-            TableGrid.Children.Add(valueGrid);
+            return presenterConfig.Presenter;
         }
 
         private Grid CreateGridWrapper(

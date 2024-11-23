@@ -5,6 +5,7 @@ using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.DialogManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.WindowManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector;
+using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings.Translators;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
 using System.Collections.ObjectModel;
@@ -72,6 +73,8 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         RemoveSourceCommand = new(DeleteSource, () => SelectedSource is not null);
 
         MenuViewModel = new MenuViewModel(configStoreService, autoUpdater, migratorService);
+
+        OnClosing += (_, _) => _configStoreService.StoreSources(Sources);
     }
 
 
@@ -158,10 +161,10 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
             return;
         }
 
-        _configStoreService.StoreSources(Sources.ToArray());
+        _configStoreService.StoreSources(Sources);
 
         var freshProvider =
-            _providerManager.GetNewInstance(SelectedSource.ProviderType, SelectedSource.Settings.Select(x => x.SettingsInstance));
+            _providerManager.GetNewInstance(SelectedSource.ProviderType, SelectedSource.Settings.Select(x => x.ToModel()));
 
         var vm = new QueueInspectorViewModel(SelectedSource.Name, freshProvider, _errorManager, _windowManager);
         _windowManager.Create(vm);
@@ -182,7 +185,7 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
             _settingsManager,
             SelectedVersion.Instance,
             SelectedProvider.AssociatedProvider.Versions,
-            settings.Select(x => new SettingEntryViewModel(x)).ToArray(),
+            settings.Select(x => x.ToViewModel()).ToArray(),
             StoreSources);
 
         Sources.Add(source);
@@ -199,7 +202,7 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
 
         Sources.Remove(SelectedSource);
         SelectedSource = Sources.FirstOrDefault();
-        _configStoreService.StoreSources(Sources.ToArray());
+        _configStoreService.StoreSources(Sources);
     }
 
     private void DuplicateSource()
@@ -217,7 +220,7 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
             _settingsManager,
             SelectedSource.ProviderInstance,
             provider.Versions,
-            SettingsEntryViewModelExtensions.Clone(SelectedSource.Settings),
+            SelectedSource.Settings.Select(x => x.Clone()).ToArray(),
             StoreSources);
 
         Sources.Add(source);
@@ -227,6 +230,6 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
 
     private void StoreSources()
     {
-        _configStoreService.StoreSources(Sources.ToArray());
+        _configStoreService.StoreSources(Sources);
     }
 }

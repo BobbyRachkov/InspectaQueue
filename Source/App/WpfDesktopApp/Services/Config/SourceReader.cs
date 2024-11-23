@@ -1,4 +1,5 @@
 ﻿using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
+using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings.Translators;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models;
 
@@ -45,7 +46,9 @@ public class SourceReader : ISourceReader
                     {
                         PropertyName = x.PropertyName,
                         Value = x.Value
-                    }));
+                    }))
+                    .EnsureCorrectTypes(_settingsManager)
+                    .ToArray();
 
             yield return new SourceViewModel(
                 storedSource.Id,
@@ -53,7 +56,7 @@ public class SourceReader : ISourceReader
                 _settingsManager,
                 provider,
                 _providerManager.GetProviderByInstance(provider).Versions,
-                mergedSettings.Select(x => new SettingEntryViewModel(x)).ToArray(),
+                mergedSettings.Select(x => x.ToViewModel()).ToArray(),
                 saveSourcesCallback);
         }
     }
