@@ -15,6 +15,7 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
     public partial class SourceView : UserControl
     {
         private Dictionary<Type, Func<PresenterConfig>> _typeHandlers;
+        private Func<PresenterConfig> _dropdownHandler;
 
         public SourceView()
         {
@@ -46,7 +47,17 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
                     },
                     DependencyPropertyToBind = NumericUpDown.ValueProperty,
                     ValueConverter = new DoubleToIntValueConverter()
-                }},
+                }}
+            };
+
+            _dropdownHandler = () => new PresenterConfig
+            {
+                Presenter = new ComboBox()
+                {
+                    HorizontalContentAlignment = HorizontalAlignment.Left,
+                    VerticalContentAlignment = VerticalAlignment.Center
+                },
+                DependencyPropertyToBind = Selector.SelectedItemProperty
             };
         }
 
@@ -95,13 +106,6 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
             var nameMargin = new Thickness(0, marginTop, 5, 0);
             var valueMargin = new Thickness(5, marginTop, 20, 0);
 
-            Binding valueBinding = new Binding
-            {
-                Source = settingEntryViewModel,
-                Path = new PropertyPath(nameof(settingEntryViewModel.Value)),
-                Mode = BindingMode.TwoWay
-            };
-
             var name = new Label
             {
                 Content = settingEntryViewModel.Name,
@@ -111,7 +115,8 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
 
             var presenter = settingEntryViewModel switch
             {
-                _ => HandleBasicViewModel(settingEntryViewModel.Type, valueBinding)
+                MultipleChoiceSettingViewModel { IsMultiSelectEnabled: false } multipleChoiceSetting => HandleDropdown(multipleChoiceSetting),
+                _ => HandlePrimitive(settingEntryViewModel)
             };
 
 
@@ -123,18 +128,44 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
             TableGrid.Children.Add(valueGrid);
         }
 
-        private FrameworkElement HandleBasicViewModel(Type propertyType, Binding binding)
+        private FrameworkElement HandleDropdown(MultipleChoiceSettingViewModel viewModel)
         {
-            var presenterConfig = _typeHandlers.TryGetValue(propertyType, out var handler)
+            var presenterConfig = _dropdownHandler();
+            var presenter = (ComboBox)presenterConfig.Presenter;
+
+            Binding binding = new Binding
+            {
+                Source = viewModel,
+                Path = new PropertyPath(nameof(viewModel.SelectedItem)),
+                Mode = BindingMode.TwoWay
+            };
+
+            presenter.ItemsSource = viewModel.Options;
+            presenter.DisplayMemberPath = nameof(DropdownOptionViewModel.DisplayName);
+
+            presenterConfig.Presenter.SetBinding(presenterConfig.DependencyPropertyToBind, binding);
+            return presenterConfig.Presenter;
+        }
+
+        private FrameworkElement HandlePrimitive(ISettingViewModel viewModel)
+        {
+            var presenterConfig = _typeHandlers.TryGetValue(viewModel.Type, out var handler)
                 ? handler()
                 : _typeHandlers[typeof(string)]();
 
+            Binding valueBinding = new Binding
+            {
+                Source = viewModel,
+                Path = new PropertyPath(nameof(viewModel.Value)),
+                Mode = BindingMode.TwoWay
+            };
+
             if (presenterConfig.ValueConverter is not null)
             {
-                binding.Converter = presenterConfig.ValueConverter;
+                valueBinding.Converter = presenterConfig.ValueConverter;
             }
 
-            presenterConfig.Presenter.SetBinding(presenterConfig.DependencyPropertyToBind, binding);
+            presenterConfig.Presenter.SetBinding(presenterConfig.DependencyPropertyToBind, valueBinding);
             return presenterConfig.Presenter;
         }
 

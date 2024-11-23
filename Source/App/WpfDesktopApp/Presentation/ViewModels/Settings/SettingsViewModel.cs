@@ -200,7 +200,7 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
 
         Sources.Remove(SelectedSource);
         SelectedSource = Sources.FirstOrDefault();
-        _configStoreService.StoreSources(Sources.ToArray());
+        _configStoreService.StoreSources(Sources);
     }
 
     private void DuplicateSource()
@@ -228,6 +228,6 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
 
     private void StoreSources()
     {
-        _configStoreService.StoreSources(Sources.ToArray());
+        _configStoreService.StoreSources(Sources);
     }
 }
