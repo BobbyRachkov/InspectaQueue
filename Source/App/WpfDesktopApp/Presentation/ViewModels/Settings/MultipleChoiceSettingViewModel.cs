@@ -4,7 +4,6 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 
 public class MultipleChoiceSettingViewModel : ISettingViewModel
 {
-    private object? _selectedItem;
     public required PropertyInfo ReflectedProperty { get; init; }
     public required string PropertyName { get; init; }
     public required string Name { get; init; }
@@ -16,12 +15,8 @@ public class MultipleChoiceSettingViewModel : ISettingViewModel
     public DropdownOptionViewModel[] Options { get; init; } = [];
     public object? SelectedItem
     {
-        get => _selectedItem;
-        set
-        {
-            _selectedItem = value;
-            Value = (value as DropdownOptionViewModel)?.BackingValue;
-        }
+        get => Options.FirstOrDefault(x => x.BackingValue.ToString() == Value?.ToString());
+        set => Value = (value as DropdownOptionViewModel)?.BackingValue;
     }
 
     public ISettingViewModel Clone()

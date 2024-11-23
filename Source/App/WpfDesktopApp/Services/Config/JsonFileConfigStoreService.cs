@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config.Models;
 using System.IO;
 
@@ -7,6 +8,13 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
 public class JsonFileConfigStoreService : IConfigStoreService
 {
     private const string StorageFileName = "config.json";
+    private readonly JsonSerializerSettings _serializerSettings = new()
+    {
+        Converters = new List<JsonConverter>()
+        {
+            new StringEnumConverter()
+        },
+    };
 
     private SettingsDto? _settingsCache;
     private readonly object _settingsWriteLock = new();
@@ -45,7 +53,7 @@ public class JsonFileConfigStoreService : IConfigStoreService
         lock (_settingsWriteLock)
         {
             _settingsCache = null;
-            var text = JsonConvert.SerializeObject(settings, Formatting.Indented);
+            var text = JsonConvert.SerializeObject(settings, Formatting.Indented, _serializerSettings);
             File.WriteAllText(StorageFileName, text);
             _settingsCache = settings;
         }

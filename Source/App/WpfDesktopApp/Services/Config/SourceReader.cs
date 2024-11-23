@@ -46,7 +46,9 @@ public class SourceReader : ISourceReader
                     {
                         PropertyName = x.PropertyName,
                         Value = x.Value
-                    }));
+                    }))
+                    .EnsureCorrectTypes(_settingsManager)
+                    .ToArray();
 
             yield return new SourceViewModel(
                 storedSource.Id,

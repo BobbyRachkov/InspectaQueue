@@ -111,4 +111,47 @@ public class SettingsManager : ISettingsManager
             MultipleSelectionEnabled = isFlags
         };
     }
+
+    public IEnumerable<ISettingPack> EnsureCorrectTypes(IEnumerable<ISettingPack> settings)
+    {
+        foreach (var setting in settings)
+        {
+            if (setting.Value is null
+                || setting.Value.GetType() == setting.ReflectedProperty.PropertyType)
+            {
+                yield return setting;
+                continue;
+            }
+
+            if (setting.ReflectedProperty.PropertyType.IsEnum)
+            {
+                Enum.TryParse(setting.ReflectedProperty.PropertyType, setting.Value.ToString(), true, out var convertedValue);
+                setting.Value = convertedValue;
+            }
+
+            if (typeof(int) == setting.ReflectedProperty.PropertyType)
+            {
+                if (!int.TryParse(setting.Value?.ToString(), out var convertedValue))
+                {
+                    convertedValue = Convert.ToInt32(setting.Value);
+                }
+
+                setting.Value = convertedValue;
+            }
+
+            if (typeof(double) == setting.ReflectedProperty.PropertyType)
+            {
+                double.TryParse(setting.Value?.ToString(), out var convertedValue);
+                setting.Value = convertedValue;
+            }
+
+            if (typeof(decimal) == setting.ReflectedProperty.PropertyType)
+            {
+                decimal.TryParse(setting.Value?.ToString(), out var convertedValue);
+                setting.Value = convertedValue;
+            }
+
+            yield return setting;
+        }
+    }
 }

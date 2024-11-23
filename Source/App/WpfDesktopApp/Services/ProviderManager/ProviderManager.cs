@@ -104,12 +104,6 @@ public class ProviderManager : IProviderManager
             return Convert.ToInt32(setting.Value);
         }
 
-        if (setting.Type.IsEnum
-            && setting.Value is string value)
-        {
-            return Enum.Parse(setting.Type, value);
-        }
-
         return setting.Value;
     }
 

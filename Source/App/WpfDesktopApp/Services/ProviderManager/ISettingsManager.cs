@@ -14,4 +14,6 @@ public interface ISettingsManager
     IEnumerable<ISettingPack> MergePacks(
         IEnumerable<ISettingPack> @base,
         IEnumerable<SettingDetachedPack> overriding);
+
+    IEnumerable<ISettingPack> EnsureCorrectTypes(IEnumerable<ISettingPack> settings);
 }
