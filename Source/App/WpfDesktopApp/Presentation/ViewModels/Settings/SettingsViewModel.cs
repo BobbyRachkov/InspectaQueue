@@ -73,6 +73,8 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         RemoveSourceCommand = new(DeleteSource, () => SelectedSource is not null);
 
         MenuViewModel = new MenuViewModel(configStoreService, autoUpdater, migratorService);
+
+        OnClosing += (_, _) => _configStoreService.StoreSources(Sources);
     }
 
 
