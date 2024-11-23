@@ -1,5 +1,4 @@
-﻿using Pulsar.Client.Common;
-using Rachkov.InspectaQueue.Abstractions;
+﻿using Rachkov.InspectaQueue.Abstractions;
 using Rachkov.InspectaQueue.Abstractions.Attributes;
 
 namespace Rachkov.InspectaQueue.Providers.Pulsar;

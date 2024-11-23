@@ -93,10 +93,15 @@ public class SettingsManager : ISettingsManager
     {
         var enumType = property.PropertyType;
         var isFlags = enumType.GetCustomAttributes<FlagsAttribute>().Any();
-        var options = enumType.GetEnumNames().Select(x => new MultipleChoiceEntry
+
+        var exposedEnums = enumType.GetMembers()
+            .Where(x => x.DeclaringType == enumType
+                        && x.GetCustomAttributes(typeof(ExposedAttribute)).Count() == 1);
+
+        var options = exposedEnums.Select(x => new MultipleChoiceEntry
         {
-            DisplayName = x,
-            Value = Enum.Parse(enumType, x)
+            DisplayName = x.GetCustomAttributes<ExposedAttribute>().Single().DisplayName ?? x.Name,
+            Value = Enum.Parse(enumType, x.Name)
         });
 
         return new MultipleChoiceSettingPack()

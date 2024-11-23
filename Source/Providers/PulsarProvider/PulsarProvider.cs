@@ -1,9 +1,9 @@
-﻿using System.Diagnostics;
-using System.Text;
-using System.Threading.Channels;
-using Pulsar.Client.Api;
+﻿using Pulsar.Client.Api;
 using Pulsar.Client.Common;
 using Rachkov.InspectaQueue.Abstractions;
+using System.Diagnostics;
+using System.Text;
+using System.Threading.Channels;
 
 namespace Rachkov.InspectaQueue.Providers.Pulsar;
 
@@ -93,7 +93,7 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
             _consumer = await _client.NewConsumer()
                 .Topic(_settings.TopicName)
                 .SubscriptionName(_settings.SubscriptionName)
-                .SubscriptionType(SubscriptionType.Exclusive)
+                .SubscriptionType((global::Pulsar.Client.Common.SubscriptionType)SubscriptionType.Exclusive)
                 .SubscribeAsync();
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -120,7 +120,7 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
             try
             {
                 var message = await _consumer.ReceiveAsync(cancellationToken);
-                
+
                 var messageString = Encoding.UTF8.GetString(message.Data);
                 var frame = new MessageFrame
                 {
