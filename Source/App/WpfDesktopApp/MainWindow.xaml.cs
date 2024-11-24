@@ -27,7 +27,12 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp
 
             if (newContent is ICanManageDialogs dialogManagerViewModel)
             {
-                dialogManagerViewModel.DialogManager = new DialogManager(this.ShowModalMessageExternal, this.ShowProgressAsync);
+                dialogManagerViewModel.DialogManager = new DialogManager(
+                    this.ShowModalMessageExternal,
+                    this.ShowProgressAsync,
+                    this.ShowInputAsync,
+                    this.ShowMetroDialogAsync,
+                    this.HideMetroDialogAsync);
             }
         }
 

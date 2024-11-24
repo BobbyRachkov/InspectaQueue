@@ -5,10 +5,15 @@ using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.DialogManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.WindowManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector;
+using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings.Models;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings.Translators;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
+using Rachkov.InspectaQueue.WpfDesktopApp.Services.ImportExport;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
+using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models;
 using System.Collections.ObjectModel;
+using System.Windows;
+using System.Windows.Input;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 
@@ -21,6 +26,7 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
     private readonly IErrorManager _errorManager;
     private readonly IAutoUpdaterService _autoUpdater;
     private readonly IUpdateMigratorService _migratorService;
+    private readonly ISettingImportExportService _settingImportExportService;
     private ProviderViewModel? _selectedProvider;
     private ProviderVersionViewModel? _selectedVersion;
     private bool _isAddNewSourceWorkflowEnabled;
@@ -37,7 +43,8 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         ISourceReader sourceReader,
         IErrorManager errorManager,
         IAutoUpdaterService autoUpdater,
-        IUpdateMigratorService migratorService)
+        IUpdateMigratorService migratorService,
+        ISettingImportExportService settingImportExportService)
     : base(errorManager)
     {
         _windowManager = windowManager;
@@ -46,6 +53,7 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         _errorManager = errorManager;
         _autoUpdater = autoUpdater;
         _migratorService = migratorService;
+        _settingImportExportService = settingImportExportService;
         _settingsManager = settingsManager;
 
         AvailableProviders = providerManager.GetProviders().Select(x => new ProviderViewModel(x)).ToArray();
@@ -62,27 +70,29 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
             SelectedSource = Sources.First();
         }
 
-        ConnectToSourceCommand = new(ConnectToQueue);
-        CreateNewSourceCommand = new(CreateSource, () => SelectedProvider is not null);
-        AddNewSourceCommand = new(() =>
+        ConnectToSourceCommand = new RelayCommand(ConnectToQueue);
+        CreateNewSourceCommand = new RelayCommand(CreateSource, () => SelectedProvider is not null);
+        AddNewSourceCommand = new RelayCommand(() =>
         {
             SelectedSource = null;
             IsAddNewSourceWorkflowEnabled = true;
         });
-        DuplicateSourceCommand = new(DuplicateSource, () => SelectedSource is not null);
-        RemoveSourceCommand = new(DeleteSource, () => SelectedSource is not null);
+        DuplicateSourceCommand = new RelayCommand(DuplicateSource, () => SelectedSource is not null);
+        RemoveSourceCommand = new RelayCommand(DeleteSource, () => SelectedSource is not null);
 
         MenuViewModel = new MenuViewModel(configStoreService, autoUpdater, migratorService);
 
         OnClosing += (_, _) => _configStoreService.StoreSources(Sources);
+        ActionButtonCommand = new RelayCommand(x => _ = PerformAction(x as ActionButtonCommand?));
     }
 
 
-    public RelayCommand ConnectToSourceCommand { get; }
-    public RelayCommand CreateNewSourceCommand { get; }
-    public RelayCommand AddNewSourceCommand { get; }
-    public RelayCommand DuplicateSourceCommand { get; }
-    public RelayCommand RemoveSourceCommand { get; }
+    public ICommand ConnectToSourceCommand { get; }
+    public ICommand CreateNewSourceCommand { get; }
+    public ICommand AddNewSourceCommand { get; }
+    public ICommand DuplicateSourceCommand { get; }
+    public ICommand RemoveSourceCommand { get; }
+    public ICommand ActionButtonCommand { get; }
 
     public MenuViewModel MenuViewModel { get; }
 
@@ -152,6 +162,12 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
             _isAddNewSourceWorkflowEnabled = value;
             OnPropertyChanged();
         }
+    }
+
+    public int SelectedActionIndex
+    {
+        get => _configStoreService.GetSettings().SelectedActionIndex;
+        set => _configStoreService.UpdateAndStore(x => x.SelectedActionIndex = value);
     }
 
     private void ConnectToQueue()
@@ -231,5 +247,88 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
     private void StoreSources()
     {
         _configStoreService.StoreSources(Sources);
+    }
+
+    private async Task PerformAction(ActionButtonCommand? command)
+    {
+        if (command == Models.ActionButtonCommand.ExportSettings)
+        {
+            await ExportSettings();
+        }
+        else if (command == Models.ActionButtonCommand.ImportSettings)
+        {
+            await ImportSettings();
+        }
+    }
+
+    private async Task ImportSettings()
+    {
+        if (SelectedSource is null
+            || DialogManager is null)
+        {
+            return;
+        }
+
+        string? encodedSettings = null;
+        IEnumerable<SettingDetachedPack>? decodedSettings = null;
+        if (Clipboard.ContainsText())
+        {
+            encodedSettings = Clipboard.GetText();
+            decodedSettings = _settingImportExportService.ConvertFromImport(encodedSettings);
+        }
+
+        if (decodedSettings is null)
+        {
+            encodedSettings = await DialogManager.ShowInputDialog("Import", "Paste encoded settings");
+
+            if (string.IsNullOrWhiteSpace(encodedSettings))
+            {
+                await ShowImportUnsuccessfulDialog();
+                return;
+            }
+
+            decodedSettings = _settingImportExportService.ConvertFromImport(encodedSettings);
+        }
+
+        if (decodedSettings is null)
+        {
+            await ShowImportUnsuccessfulDialog();
+            return;
+        }
+
+        SelectedSource.UpdateSettings(decodedSettings.ToArray());
+        await DialogManager.ShowDismissibleMessage("Import successful", "", false);
+        return;
+
+        async Task ShowImportUnsuccessfulDialog()
+        {
+            await DialogManager.ShowDismissibleMessage("Import unsuccessful", "Could not parse the given string", false);
+        }
+    }
+
+    private async Task ExportSettings()
+    {
+        if (SelectedSource is null)
+        {
+            return;
+        }
+
+        var settingsForExport = SelectedSource.Settings.Select(x => new SettingDetachedPack
+        {
+            PropertyName = x.PropertyName,
+            Value = x.Value
+        });
+
+        var encryptedSettings = _settingImportExportService.PrepareForExport(settingsForExport);
+        Clipboard.SetText(encryptedSettings);
+
+        if (_dialogManager is not null)
+        {
+            await _dialogManager.ShowDismissibleMessage("Export", "Settings copied to clipboard");
+        }
+        else
+        {
+            MessageBox.Show("Settings copied to clipboard", "Export", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
+        }
     }
 }

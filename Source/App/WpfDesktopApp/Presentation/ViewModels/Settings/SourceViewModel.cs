@@ -44,7 +44,6 @@ public class SourceViewModel : ViewModel
     }
 
     public Guid Id { get; }
-
     public string Name
     {
         get => _name;
@@ -55,7 +54,6 @@ public class SourceViewModel : ViewModel
         }
     }
     public ICommand ChangeVersionCommand { get; }
-
     public Type ProviderType => _provider.GetType();
     public IQueueProvider ProviderInstance => _provider;
 
@@ -103,7 +101,6 @@ public class SourceViewModel : ViewModel
         }));
         Settings = mergedSettings.Select(x => x.ToViewModel()).ToArray();
 
-
         _saveSourcesCallback();
 
         OnPropertyChanged(nameof(ProviderType));
@@ -111,5 +108,12 @@ public class SourceViewModel : ViewModel
         OnPropertyChanged(nameof(ProviderDisplayName));
         OnPropertyChanged(nameof(ProviderDisplayVersion));
         OnPropertyChanged(nameof(IsNewerVersionAvailable));
+    }
+
+    public void UpdateSettings(SettingDetachedPack[] newSettings)
+    {
+        var settings = Settings.Select(x => x.ToModel());
+        var mergedSettings = _settingsManager.MergePacks(settings, newSettings).EnsureCorrectTypes(_settingsManager);
+        Settings = mergedSettings.Select(x => x.ToViewModel()).ToArray();
     }
 }

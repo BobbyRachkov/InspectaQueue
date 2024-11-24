@@ -22,7 +22,9 @@ public class AppBootstrapper
             .RegisterErrorManager()
             .RegisterHttpClientFactory()
             .RegisterAutoUpdater()
-            .RegisterMapper();
+            .RegisterMapper()
+            .RegisterImportExportService()
+            .RegisterJsonService();
 
         _container = builder.Build();
 

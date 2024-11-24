@@ -1,5 +1,6 @@
 ﻿using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings.Translators;
+using Rachkov.InspectaQueue.WpfDesktopApp.Services.ImportExport;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models;
 
@@ -10,15 +11,18 @@ public class SourceReader : ISourceReader
     private readonly IConfigStoreService _configStore;
     private readonly IProviderManager _providerManager;
     private readonly ISettingsManager _settingsManager;
+    private readonly ISettingImportExportService _settingImportExportService;
 
     public SourceReader(
         IConfigStoreService configStore,
         IProviderManager providerManager,
-        ISettingsManager settingsManager)
+        ISettingsManager settingsManager,
+        ISettingImportExportService settingImportExportService)
     {
         _configStore = configStore;
         _providerManager = providerManager;
         _settingsManager = settingsManager;
+        _settingImportExportService = settingImportExportService;
     }
 
     public IEnumerable<SourceViewModel> ReadSources(Action saveSourcesCallback)
