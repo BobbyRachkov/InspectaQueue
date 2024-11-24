@@ -17,9 +17,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".sln", ".sln", "{7D4E4E8C-8
 	ProjectSection(SolutionItems) = preProject
 		install.bat = install.bat
 		install.ps1 = install.ps1
+		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoUpdater.Core", "Source\App\AutoUpdater.Core\AutoUpdater.Core.csproj", "{EE3D7549-1F5B-46F4-9C06-FD2F06BF367E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoUpdater.Core", "Source\App\AutoUpdater.Core\AutoUpdater.Core.csproj", "{EE3D7549-1F5B-46F4-9C06-FD2F06BF367E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AutoUpdater", "AutoUpdater", "{F1E517E7-E444-402D-A61E-4FA979EA825B}"
 EndProject
@@ -27,7 +28,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{C6955789
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "App", "App", "{9B492040-8BFF-46AF-BC13-E357E348C0A6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoUpdater.Tests", "Source\Tests\AutoUpdater.Tests\AutoUpdater.Tests.csproj", "{871B4F55-EFA9-41CE-A905-ACBDCF62ECB8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoUpdater.Tests", "Source\Tests\AutoUpdater.Tests\AutoUpdater.Tests.csproj", "{871B4F55-EFA9-41CE-A905-ACBDCF62ECB8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
