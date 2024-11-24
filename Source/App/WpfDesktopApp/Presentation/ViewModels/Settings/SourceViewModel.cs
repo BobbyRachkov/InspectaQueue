@@ -101,7 +101,6 @@ public class SourceViewModel : ViewModel
         }));
         Settings = mergedSettings.Select(x => x.ToViewModel()).ToArray();
 
-
         _saveSourcesCallback();
 
         OnPropertyChanged(nameof(ProviderType));
