@@ -42,8 +42,4 @@
     <ProjectReference Include="..\Abstractions\Abstractions.csproj" />
     <ProjectReference Include="..\AutoUpdater.Core\AutoUpdater.Core.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Services\JsonService\" />
-  </ItemGroup>
 </Project>
