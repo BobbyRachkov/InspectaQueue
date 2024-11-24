@@ -3,7 +3,6 @@ using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings.Translators;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models;
-using System.Windows;
 using System.Windows.Input;
 using Version = Rachkov.InspectaQueue.Abstractions.Version;
 
@@ -114,7 +113,8 @@ public class SourceViewModel : ViewModel
 
     public void UpdateSettings(SettingDetachedPack[] newSettings)
     {
-        //todo implememnt this
-        MessageBox.Show("ipd");
+        var settings = Settings.Select(x => x.ToModel());
+        var mergedSettings = _settingsManager.MergePacks(settings, newSettings).EnsureCorrectTypes(_settingsManager);
+        Settings = mergedSettings.Select(x => x.ToViewModel()).ToArray();
     }
 }
