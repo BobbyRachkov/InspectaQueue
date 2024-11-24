@@ -9,6 +9,7 @@
              xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
              xmlns:converters="clr-namespace:Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Converters"
              mc:Ignorable="d" d:DataContext="{d:DesignInstance Type=settings:SourceViewModel}"
+             xmlns:models="clr-namespace:Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings.Models"
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <ResourceDictionary>

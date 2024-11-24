@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Rachkov.InspectaQueue.Abstractions;
+using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
@@ -7,13 +8,16 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
 public class ProviderManager : IProviderManager
 {
     private readonly ILifetimeScope _lifetimeScope;
+    private readonly IErrorManager _errorManager;
     private readonly List<Provider> _providers;
 
     public ProviderManager(
         ILifetimeScope lifetimeScope,
-        IEnumerable<IQueueProvider> availableProviders)
+        IEnumerable<IQueueProvider> availableProviders,
+        IErrorManager errorManager)
     {
         _lifetimeScope = lifetimeScope;
+        _errorManager = errorManager;
         _providers = ParseProviders(availableProviders.ToArray());
     }
 
@@ -27,17 +31,17 @@ public class ProviderManager : IProviderManager
         return GetNewInstance(providerInstance.GetType());
     }
 
-    public IQueueProvider GetNewInstance(Type providerType, IEnumerable<SettingPack> settings)
+    public IQueueProvider GetNewInstance(Type providerType, IEnumerable<ISettingPack> settings)
     {
         return FillSettings(GetNewInstance(providerType), settings);
     }
 
-    public IQueueProvider GetNewInstance(IQueueProvider provider, IEnumerable<SettingPack> settings)
+    public IQueueProvider GetNewInstance(IQueueProvider provider, IEnumerable<ISettingPack> settings)
     {
         return FillSettings(GetNewInstance(provider), settings);
     }
 
-    public IQueueProvider FillSettings(IQueueProvider provider, IEnumerable<SettingPack> settings)
+    public IQueueProvider FillSettings(IQueueProvider provider, IEnumerable<ISettingPack> settings)
     {
         UpdateSettings(provider.Settings, settings);
         return provider;
@@ -64,18 +68,30 @@ public class ProviderManager : IProviderManager
         }
     }
 
-    private IQueueProviderSettings UpdateSettings(IQueueProviderSettings settingsObjectToUpdate, IEnumerable<SettingPack> settings)
+    private IQueueProviderSettings UpdateSettings(IQueueProviderSettings settingsObjectToUpdate, IEnumerable<ISettingPack> settings)
     {
         foreach (var setting in settings)
         {
-            setting.ReflectedProperty.SetValue(settingsObjectToUpdate, EnsureProperValueType(setting));
+            try
+            {
+                setting.ReflectedProperty.SetValue(settingsObjectToUpdate, EnsureProperValueType(setting));
+            }
+            catch (Exception ex)
+            {
+                _errorManager.RaiseError(new Error
+                {
+                    Text = "Could not assign setting value to provider property",
+                    Source = "Internal Provider Manager",
+                    Exception = ex
+                });
+            }
         }
 
 
         return settingsObjectToUpdate;
     }
 
-    private object? EnsureProperValueType(SettingPack setting)
+    private object? EnsureProperValueType(ISettingPack setting)
     {
         if (setting.Value is null)
         {

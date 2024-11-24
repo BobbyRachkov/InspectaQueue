@@ -1,5 +1,6 @@
 ﻿using Rachkov.InspectaQueue.Abstractions;
 using Rachkov.InspectaQueue.Abstractions.Attributes;
+using Rachkov.InspectaQueue.Providers.Pulsar.Models;
 
 namespace Rachkov.InspectaQueue.Providers.Pulsar;
 
@@ -22,6 +23,12 @@ public class PulsarSettings : IQueueProviderSettings
 
     [Exposed(DisplayName = "Subscription name")]
     public string SubscriptionName { get; set; } = string.Empty;
+
+    [Exposed(DisplayName = "Subscription type")]
+    public SubscriptionType SubscriptionType { get; set; } = SubscriptionType.Exclusive;
+
+    [Exposed(DisplayName = "Subscription initial position")]
+    public SubscriptionInitialPosition SubscriptionInitialPosition { get; set; } = SubscriptionInitialPosition.Latest;
 
     [Exposed(DisplayName = "Authentication file path")]
     [FilePath(AllowedExtensions = "*.json")]

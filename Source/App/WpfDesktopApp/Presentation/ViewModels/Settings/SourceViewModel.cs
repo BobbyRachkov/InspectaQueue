@@ -1,5 +1,6 @@
 ﻿using Rachkov.InspectaQueue.Abstractions;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
+using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings.Translators;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models;
 using System.Windows.Input;
@@ -14,7 +15,7 @@ public class SourceViewModel : ViewModel
     private string _name;
     private readonly ISettingsManager _settingsManager;
     private string _providerDisplayVersion;
-    private SettingEntryViewModel[] _settings;
+    private ISettingViewModel[] _settings;
     private bool _isNewerVersionAvailable;
 
     public SourceViewModel(
@@ -23,7 +24,7 @@ public class SourceViewModel : ViewModel
         ISettingsManager settingsManager,
         IQueueProvider provider,
         IReadOnlyDictionary<string, IQueueProvider> availableProviderVersions,
-        SettingEntryViewModel[] settings,
+        ISettingViewModel[] settings,
         Action saveSourcesCallback)
     {
         Id = id;
@@ -43,7 +44,6 @@ public class SourceViewModel : ViewModel
     }
 
     public Guid Id { get; }
-
     public string Name
     {
         get => _name;
@@ -54,7 +54,6 @@ public class SourceViewModel : ViewModel
         }
     }
     public ICommand ChangeVersionCommand { get; }
-
     public Type ProviderType => _provider.GetType();
     public IQueueProvider ProviderInstance => _provider;
 
@@ -74,7 +73,7 @@ public class SourceViewModel : ViewModel
     public KeyValuePair<string, IQueueProvider> SelectedProviderVersion { get; set; }
     public bool IsNewerVersionAvailable => SelectedProviderVersion.Key != AvailableProviderVersions.First().Key;
 
-    public SettingEntryViewModel[] Settings
+    public ISettingViewModel[] Settings
     {
         get => _settings;
         private set
@@ -100,8 +99,7 @@ public class SourceViewModel : ViewModel
             PropertyName = x.PropertyName,
             Value = x.Value
         }));
-        Settings = mergedSettings.Select(x => new SettingEntryViewModel(x)).ToArray();
-
+        Settings = mergedSettings.Select(x => x.ToViewModel()).ToArray();
 
         _saveSourcesCallback();
 
@@ -110,5 +108,12 @@ public class SourceViewModel : ViewModel
         OnPropertyChanged(nameof(ProviderDisplayName));
         OnPropertyChanged(nameof(ProviderDisplayVersion));
         OnPropertyChanged(nameof(IsNewerVersionAvailable));
+    }
+
+    public void UpdateSettings(SettingDetachedPack[] newSettings)
+    {
+        var settings = Settings.Select(x => x.ToModel());
+        var mergedSettings = _settingsManager.MergePacks(settings, newSettings).EnsureCorrectTypes(_settingsManager);
+        Settings = mergedSettings.Select(x => x.ToViewModel()).ToArray();
     }
 }
