@@ -1,6 +1,7 @@
 ﻿using Pulsar.Client.Api;
 using Pulsar.Client.Common;
 using Rachkov.InspectaQueue.Abstractions;
+using Rachkov.InspectaQueue.Providers.Pulsar.Extensions;
 using System.Diagnostics;
 using System.Text;
 using System.Threading.Channels;
@@ -22,7 +23,6 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
     {
         _errorReporter = errorReporter;
         Debug.WriteLine($"==========> Constructing: {_id}");
-        Console.WriteLine($"==========> Constructing: {_id}");
         _settings = new PulsarSettings();
         _messagesChannel = Channel.CreateUnbounded<MessageFrame>(new UnboundedChannelOptions
         {
@@ -34,7 +34,6 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
     ~PulsarProvider()
     {
         Debug.WriteLine($"==========> Destructing: {_id}");
-        Console.WriteLine($"==========> Destructing: {_id}");
     }
 
     public string Name => "Apache Pulsar";
@@ -93,7 +92,8 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
             _consumer = await _client.NewConsumer()
                 .Topic(_settings.TopicName)
                 .SubscriptionName(_settings.SubscriptionName)
-                .SubscriptionType(SubscriptionType.Exclusive)
+                .SubscriptionType(_settings.SubscriptionType.ToPulsarEnum())
+                .SubscriptionInitialPosition(_settings.SubscriptionInitialPosition.ToPulsarEnum())
                 .SubscribeAsync();
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -159,7 +159,6 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         Debug.WriteLine($"==========> Disposing: {_id}");
-        Console.WriteLine($"==========> Disposing: {_id}");
         await Disconnect();
     }
 
