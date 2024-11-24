@@ -22,11 +22,23 @@ public class SettingImportExportService : ISettingImportExportService
         return _cypherService.Encode(settingsJson);
     }
 
-    public IEnumerable<SettingDetachedPack> ConvertFromImport(string settingsCypher)
+    public IEnumerable<SettingDetachedPack>? ConvertFromImport(string settingsCypher)
     {
-        var decodedJson = _cypherService.Decode(settingsCypher);
-        var parsedSettings = _jsonService.Deserialize<SettingDto[]>(decodedJson);
-        return ConvertForImport(parsedSettings);
+        try
+        {
+            var decodedJson = _cypherService.Decode(settingsCypher);
+            var parsedSettings = _jsonService.Deserialize<SettingDto[]>(decodedJson);
+            if (parsedSettings is null)
+            {
+                return null;
+            }
+
+            return ConvertForImport(parsedSettings);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private IEnumerable<SettingDto> ConvertForExport(IEnumerable<SettingDetachedPack> settings)
@@ -41,13 +53,8 @@ public class SettingImportExportService : ISettingImportExportService
         }
     }
 
-    private IEnumerable<SettingDetachedPack> ConvertForImport(IEnumerable<SettingDto>? settings)
+    private IEnumerable<SettingDetachedPack> ConvertForImport(IEnumerable<SettingDto> settings)
     {
-        if (settings is null)
-        {
-            yield break;
-        }
-
         foreach (var settingDetachedPack in settings)
         {
             yield return new SettingDetachedPack

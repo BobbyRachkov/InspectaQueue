@@ -59,7 +59,6 @@ public class SourceReader : ISourceReader
                 storedSource.Name,
                 _settingsManager,
                 provider,
-                _settingImportExportService,
                 _providerManager.GetProviderByInstance(provider).Versions,
                 mergedSettings.Select(x => x.ToViewModel()).ToArray(),
                 saveSourcesCallback);

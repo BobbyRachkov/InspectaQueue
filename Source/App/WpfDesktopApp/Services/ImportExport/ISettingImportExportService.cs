@@ -5,5 +5,5 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.ImportExport;
 public interface ISettingImportExportService
 {
     string PrepareForExport(IEnumerable<SettingDetachedPack> settings);
-    IEnumerable<SettingDetachedPack> ConvertFromImport(string settingsCypher);
+    IEnumerable<SettingDetachedPack>? ConvertFromImport(string settingsCypher);
 }

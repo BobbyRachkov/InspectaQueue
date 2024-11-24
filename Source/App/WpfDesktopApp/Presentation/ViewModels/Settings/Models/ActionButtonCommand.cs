@@ -2,6 +2,6 @@
 
 public enum ActionButtonCommand
 {
-    ImportSettings,
-    ExportSettings
+    ImportSettings = 1,
+    ExportSettings = 2
 }
