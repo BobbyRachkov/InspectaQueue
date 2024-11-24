@@ -97,11 +97,13 @@ public class DialogManager
             AffirmativeButtonText = "OK",
             AnimateHide = animate,
             AnimateShow = animate,
-            DialogMessageFontSize = 50
+            DialogMessageFontSize = 50,
+            NegativeButtonText = "OK",
+            OwnerCanCloseWithDialog = true
         })
         {
             Content = content,
-            Title = title
+            Title = title,
         };
 
         await _showMetroDialogHandle(dialog, null);
