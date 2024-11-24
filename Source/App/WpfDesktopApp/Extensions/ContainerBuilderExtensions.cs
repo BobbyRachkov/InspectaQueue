@@ -7,6 +7,8 @@ using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.MapperProfiles;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.WindowManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
+using Rachkov.InspectaQueue.WpfDesktopApp.Services.ImportExport;
+using Rachkov.InspectaQueue.WpfDesktopApp.Services.JsonService;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
 using System.IO;
 using System.Net.Http;
@@ -124,6 +126,28 @@ public static class ContainerBuilderExtensions
             .SingleInstance();
 
         builder.RegisterType<UpdateMigratorService>()
+            .AsImplementedInterfaces()
+            .SingleInstance();
+
+        return builder;
+    }
+
+    public static ContainerBuilder RegisterImportExportService(this ContainerBuilder builder)
+    {
+        builder.RegisterType<SettingImportExportService>()
+            .AsImplementedInterfaces()
+            .SingleInstance();
+
+        builder.RegisterType<Base64CypherService>()
+            .AsImplementedInterfaces()
+            .SingleInstance();
+
+        return builder;
+    }
+
+    public static ContainerBuilder RegisterJsonService(this ContainerBuilder builder)
+    {
+        builder.RegisterType<NewtonsoftJsonService>()
             .AsImplementedInterfaces()
             .SingleInstance();
 

@@ -9,6 +9,7 @@
              xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
              xmlns:converters="clr-namespace:Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Converters"
              mc:Ignorable="d" d:DataContext="{d:DesignInstance Type=settings:SourceViewModel}"
+             xmlns:models="clr-namespace:Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings.Models"
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <ResourceDictionary>
@@ -77,6 +78,33 @@
                     </Style>
                 </ToggleButton.Style>
             </ToggleButton>
+        </Grid>
+        <Grid
+            Margin="0 0 15 0"
+            VerticalAlignment="Center"
+            HorizontalAlignment="Right"
+            Grid.Row="0">
+            <mah:SplitButton 
+                Command="{Binding  ActionButtonCommand}"
+                CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=SelectedItem.Tag}"
+                Visibility="Visible"
+                Margin="5"
+                Orientation="Horizontal"
+                SelectedIndex="0">
+                <mah:SplitButton.Icon>
+                    <iconPacks:MaterialDesign Kind="ImportExport" Width="25"/>
+                </mah:SplitButton.Icon>
+                <mah:SplitButton.Items>
+                    <ContentPresenter Content="Import settings" Tag="{x:Static models:ActionButtonCommand.ImportSettings}"/>
+                    <ContentPresenter Content="Export settings" Tag="{x:Static models:ActionButtonCommand.ExportSettings}"/>
+                </mah:SplitButton.Items>
+                <!--<mah:SplitButton.ButtonArrowStyle>
+                    <Style  BasedOn="{StaticResource MahApps.Styles.Button.Split.Arrow}">
+                        <Setter Property="Border.BorderThickness" Value="0"/>
+                        <Setter Property="Background" Value="White"/>
+                    </Style>
+                </mah:SplitButton.ButtonArrowStyle>-->
+            </mah:SplitButton>
         </Grid>
         <StackPanel
             Orientation="Horizontal"

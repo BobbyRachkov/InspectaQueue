@@ -44,6 +44,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Services\JsonService\" />
+    <Folder Include="Services\ImportExport\NewFolder\" />
   </ItemGroup>
 </Project>

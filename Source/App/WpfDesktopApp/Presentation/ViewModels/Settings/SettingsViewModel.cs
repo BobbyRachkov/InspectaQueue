@@ -7,6 +7,7 @@ using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.WindowManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings.Translators;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
+using Rachkov.InspectaQueue.WpfDesktopApp.Services.ImportExport;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
 using System.Collections.ObjectModel;
 
@@ -21,6 +22,7 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
     private readonly IErrorManager _errorManager;
     private readonly IAutoUpdaterService _autoUpdater;
     private readonly IUpdateMigratorService _migratorService;
+    private readonly ISettingImportExportService _settingImportExportService;
     private ProviderViewModel? _selectedProvider;
     private ProviderVersionViewModel? _selectedVersion;
     private bool _isAddNewSourceWorkflowEnabled;
@@ -37,7 +39,8 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         ISourceReader sourceReader,
         IErrorManager errorManager,
         IAutoUpdaterService autoUpdater,
-        IUpdateMigratorService migratorService)
+        IUpdateMigratorService migratorService,
+        ISettingImportExportService settingImportExportService)
     : base(errorManager)
     {
         _windowManager = windowManager;
@@ -46,6 +49,7 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         _errorManager = errorManager;
         _autoUpdater = autoUpdater;
         _migratorService = migratorService;
+        _settingImportExportService = settingImportExportService;
         _settingsManager = settingsManager;
 
         AvailableProviders = providerManager.GetProviders().Select(x => new ProviderViewModel(x)).ToArray();
@@ -56,6 +60,7 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         }
 
         Sources = sourceReader.ReadSources(StoreSources).ToObservableCollection();
+        Sources.ForEach(x => x.SetDialogManager(_dialogManager));
 
         if (Sources.Any())
         {
@@ -93,6 +98,7 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         {
             _dialogManager = value;
             MenuViewModel.SetDialogManager(value);
+            Sources.ForEach(x => x.SetDialogManager(_dialogManager));
         }
     }
 
@@ -184,9 +190,11 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
             SelectedVersion.Instance.Name,
             _settingsManager,
             SelectedVersion.Instance,
+            _settingImportExportService,
             SelectedProvider.AssociatedProvider.Versions,
             settings.Select(x => x.ToViewModel()).ToArray(),
             StoreSources);
+        source.SetDialogManager(_dialogManager);
 
         Sources.Add(source);
         SelectedSource = source;
@@ -219,9 +227,11 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
             SelectedSource.Name,
             _settingsManager,
             SelectedSource.ProviderInstance,
+            _settingImportExportService,
             provider.Versions,
             SelectedSource.Settings.Select(x => x.Clone()).ToArray(),
             StoreSources);
+        source.SetDialogManager(_dialogManager);
 
         Sources.Add(source);
         SelectedSource = source;
