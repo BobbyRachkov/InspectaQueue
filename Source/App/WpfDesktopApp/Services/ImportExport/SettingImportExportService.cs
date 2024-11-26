@@ -45,6 +45,13 @@ public class SettingImportExportService : ISettingImportExportService
     {
         foreach (var settingDetachedPack in settings)
         {
+            if (settingDetachedPack.Value is null
+                || (settingDetachedPack.Value is string str
+                    && string.IsNullOrWhiteSpace(str)))
+            {
+                continue;
+            }
+
             yield return new SettingDto
             {
                 PropertyName = settingDetachedPack.PropertyName,
