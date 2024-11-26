@@ -44,7 +44,35 @@ internal static class SettingPackTranslator
 
     public static ISettingPack ToModel(this ISettingViewModel settingPack)
     {
-        return new BasicSettingPack
+        return settingPack switch
+        {
+            MultipleChoiceSettingViewModel multipleChoiceSettingPack => HandleMultipleChoice(multipleChoiceSettingPack),
+            _ => HandleBasicPack(settingPack)
+        };
+    }
+
+    private static ISettingPack HandleMultipleChoice(MultipleChoiceSettingViewModel settingPack)
+    {
+        return new MultipleChoiceSettingPack()
+        {
+            Name = settingPack.Name,
+            ToolTip = settingPack.ToolTip,
+            PropertyName = settingPack.PropertyName,
+            ReflectedProperty = settingPack.ReflectedProperty,
+            Type = settingPack.Type,
+            Value = settingPack.Value,
+            MultipleSelectionEnabled = settingPack.IsMultiSelectEnabled,
+            Options = settingPack.Options.Select(x => new MultipleChoiceEntry
+            {
+                DisplayName = x.DisplayName,
+                Value = x.BackingValue
+            }).ToArray()
+        };
+    }
+
+    private static ISettingPack HandleBasicPack(ISettingViewModel settingPack)
+    {
+        return new BasicSettingPack()
         {
             Name = settingPack.Name,
             ToolTip = settingPack.ToolTip,
