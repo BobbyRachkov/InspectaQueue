@@ -4,5 +4,5 @@
 public class SecretAttribute : Attribute
 {
     public bool CanBeRevealed = false;
-    public char? PasswordChar;
+    public char PasswordChar = '\u25cf';
 }

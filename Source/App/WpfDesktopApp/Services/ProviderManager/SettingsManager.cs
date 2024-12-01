@@ -104,7 +104,7 @@ public class SettingsManager : ISettingsManager
             secretModifier = new SecretModifier
             {
                 CanBeRevealed = secretAttribute.CanBeRevealed,
-                PasswordChar = secretAttribute.PasswordChar ?? '\u25cf'
+                PasswordChar = secretAttribute.PasswordChar
             };
         }
 

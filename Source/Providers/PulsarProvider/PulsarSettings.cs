@@ -16,7 +16,6 @@ public class PulsarSettings : IQueueProviderSettings
     public string Audience { get; set; } = string.Empty;
 
     [Exposed(DisplayName = "Service URL")]
-    [Secret(CanBeRevealed = true)]
     public string ServiceUrl { get; set; } = string.Empty;
 
     [Exposed(DisplayName = "Topic name")]
