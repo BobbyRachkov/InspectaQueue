@@ -3,4 +3,5 @@
 public class FilePathModifier
 {
     public string Filter { get; init; } = "*.*";
+    public required string Title { get; init; }
 }

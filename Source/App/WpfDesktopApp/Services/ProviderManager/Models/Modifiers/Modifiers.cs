@@ -12,7 +12,10 @@ public class Modifiers
     {
         return new Modifiers
         {
-            FilePath = !IsFilePath ? null : new FilePathModifier(),
+            FilePath = !IsFilePath ? null : new FilePathModifier
+            {
+                Title = FilePath!.Title
+            },
             Secret = !IsSecret ? null : new SecretModifier()
         };
     }

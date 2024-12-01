@@ -95,6 +95,7 @@ public class SettingsManager : ISettingsManager
 
     private static Modifiers GetModifiers(PropertyInfo property)
     {
+        var exposedAttribute = property.GetCustomAttribute<ExposedAttribute>();
         SecretModifier? secretModifier = null;
         FilePathModifier? filePathModifier = null;
 
@@ -113,7 +114,8 @@ public class SettingsManager : ISettingsManager
         {
             filePathModifier = new FilePathModifier
             {
-                Filter = filePathAttribute.AllowedExtensions ?? "*"
+                Filter = filePathAttribute.AllowedExtensions ?? "All files (*.*)|*.*",
+                Title = filePathAttribute.Title ?? $"Select {exposedAttribute?.DisplayName ?? property.Name}"
             };
         }
 

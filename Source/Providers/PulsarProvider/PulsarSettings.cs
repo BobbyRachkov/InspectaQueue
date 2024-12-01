@@ -31,7 +31,7 @@ public class PulsarSettings : IQueueProviderSettings
     public SubscriptionInitialPosition SubscriptionInitialPosition { get; set; } = SubscriptionInitialPosition.Latest;
 
     [Exposed(DisplayName = "Authentication file path")]
-    [FilePath(AllowedExtensions = "*.json")]
+    [FilePath(AllowedExtensions = "JSON files|*.json")]
     public string FilePath { get; set; } = string.Empty;
 
     [Exposed(

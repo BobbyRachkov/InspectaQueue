@@ -1,8 +1,10 @@
 ﻿using MahApps.Metro.Controls;
+using Microsoft.Win32;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView.ValueConverters;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models.Modifiers;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -45,7 +47,7 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
 
                             if (m.Secret.CanBeRevealed)
                             {
-                                frameworkElement.Style = Application.Current.TryFindResource("MahApps.Styles.PasswordBox.Revealed") as Style;
+                                frameworkElement.Style = FindStyle("MahApps.Styles.PasswordBox.Revealed");
                             }
 
                             dependencyPropertyToBind = PasswordBoxHelper.BoundPasswordProperty;
@@ -54,8 +56,28 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
                         else if (m.FilePath is not null)
                         {
                             frameworkElement = new TextBox();
-                            frameworkElement.SetValue(TextBoxHelper.ButtonContentProperty,"s");
-                            frameworkElement.SetValue(TextBoxHelper.ButtonCommandProperty,new RelayCommand(()=>MessageBox.Show("lol")));
+                            frameworkElement.Style = FindStyle("MahApps.Styles.TextBox.Search");
+                            frameworkElement.SetValue(TextBoxHelper.ButtonContentProperty,"M16.5,12C19,12 21,14 21,16.5C21,17.38 20.75,18.21 20.31,18.9L23.39,22L22,23.39L18.88,20.32C18.19,20.75 17.37,21 16.5,21C14,21 12,19 12,16.5C12,14 14,12 16.5,12M16.5,14A2.5,2.5 0 0,0 14,16.5A2.5,2.5 0 0,0 16.5,19A2.5,2.5 0 0,0 19,16.5A2.5,2.5 0 0,0 16.5,14M19,8H3V18H10.17C10.34,18.72 10.63,19.39 11,20H3C1.89,20 1,19.1 1,18V6C1,4.89 1.89,4 3,4H9L11,6H19A2,2 0 0,1 21,8V11.81C20.42,11.26 19.75,10.81 19,10.5V8Z");
+                            frameworkElement.SetValue(TextBoxHelper.ButtonCommandProperty,new RelayCommand(()=>
+                            {
+                                var textBox = (TextBox)frameworkElement;
+                                var defaultDirectory = !string.IsNullOrWhiteSpace(textBox.Text) ? Path.GetDirectoryName(textBox.Text) : null;
+                                var ofd = new OpenFileDialog()
+                                {
+                                    Filter = m.FilePath.Filter,
+                                    CheckFileExists = true,
+                                    InitialDirectory = defaultDirectory ?? "C:\\",
+                                    Multiselect = false,
+                                };
+
+                                var result=ofd.ShowDialog();
+
+                                if (result is true)
+                                {
+                                    frameworkElement.SetValue(TextBox.TextProperty,ofd.FileName);
+                                    frameworkElement.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
+                                }
+                            }));
                         }
                         else
                         {
@@ -201,8 +223,6 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
                 valueBinding.Converter = presenterConfig.ValueConverter;
             }
 
-
-
             presenterConfig.Presenter.SetBinding(presenterConfig.DependencyPropertyToBind, valueBinding);
             return presenterConfig.Presenter;
         }
@@ -237,6 +257,11 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
         private void HideVersionChangeGrid(object sender, RoutedEventArgs e)
         {
             ChangeVersionToggle.IsChecked = false;
+        }
+
+        private Style? FindStyle(string key)
+        {
+            return Application.Current.TryFindResource(key) as Style;
         }
     }
 }
