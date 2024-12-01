@@ -12,11 +12,16 @@ public class Modifiers
     {
         return new Modifiers
         {
-            FilePath = !IsFilePath ? null : new FilePathModifier
+            FilePath = FilePath is null ? null : new FilePathModifier
             {
-                Title = FilePath!.Title
+                Title = FilePath!.Title,
+                Filter = FilePath.Filter
             },
-            Secret = !IsSecret ? null : new SecretModifier()
+            Secret = Secret is null ? null : new SecretModifier
+            {
+                CanBeRevealed = Secret.CanBeRevealed,
+                PasswordChar = Secret.PasswordChar
+            }
         };
     }
 }

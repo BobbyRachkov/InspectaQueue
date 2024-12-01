@@ -4,5 +4,4 @@
 [Obsolete]
 public class SensitiveDataAttribute : Attribute
 {
-
 }
