@@ -14,7 +14,7 @@ public class Modifiers
         {
             FilePath = FilePath is null ? null : new FilePathModifier
             {
-                Title = FilePath!.Title,
+                Title = FilePath.Title,
                 Filter = FilePath.Filter
             },
             Secret = Secret is null ? null : new SecretModifier
