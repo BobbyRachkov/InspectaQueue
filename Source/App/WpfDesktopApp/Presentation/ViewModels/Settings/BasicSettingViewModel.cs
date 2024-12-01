@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models.Modifiers;
+using System.Reflection;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 
@@ -8,10 +9,11 @@ public class BasicSettingViewModel : ISettingViewModel
     public required string PropertyName { get; init; }
     public required string Name { get; init; }
     public string? ToolTip { get; init; }
+    public Modifiers Modifiers { get; init; } = new();
     public required Type Type { get; init; }
     public object? Value { get; set; }
 
-    public ISettingViewModel Clone()
+    public virtual ISettingViewModel Clone()
     {
         return new BasicSettingViewModel()
         {
@@ -20,7 +22,8 @@ public class BasicSettingViewModel : ISettingViewModel
             Name = Name,
             ToolTip = ToolTip,
             Type = Type,
-            Value = Value
+            Value = Value,
+            Modifiers = Modifiers.Clone()
         };
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Rachkov.InspectaQueue.Abstractions;
 using Rachkov.InspectaQueue.Abstractions.Attributes;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models;
+using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models.Modifiers;
 using System.Reflection;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
@@ -73,9 +74,11 @@ public class SettingsManager : ISettingsManager
                 .GetCustomAttributes(typeof(ExposedAttribute))
                 .First();
 
+        var modifiers = GetModifiers(property);
+
         if (property.PropertyType.IsEnum)
         {
-            return HandleEnum(property, exposedAttribute, value);
+            return HandleEnum(property, exposedAttribute, modifiers, value);
         }
 
         return new BasicSettingPack
@@ -85,11 +88,42 @@ public class SettingsManager : ISettingsManager
             ToolTip = exposedAttribute.ToolTip,
             Type = property.PropertyType,
             PropertyName = property.Name,
-            Value = value
+            Value = value,
+            Modifiers = modifiers
         };
     }
 
-    private static ISettingPack HandleEnum(PropertyInfo property, ExposedAttribute exposedAttribute, object? value)
+    private static Modifiers GetModifiers(PropertyInfo property)
+    {
+        SecretModifier? secretModifier = null;
+        FilePathModifier? filePathModifier = null;
+
+        var secretAttribute = property.GetCustomAttribute<SecretAttribute>();
+        if (secretAttribute is not null)
+        {
+            secretModifier = new SecretModifier
+            {
+                CanBeRevealed = secretAttribute.CanBeRevealed
+            };
+        }
+
+        var filePathAttribute = property.GetCustomAttribute<FilePathAttribute>();
+        if (filePathAttribute is not null)
+        {
+            filePathModifier = new FilePathModifier
+            {
+                Filter = filePathAttribute.Filter
+            };
+        }
+
+        return new Modifiers
+        {
+            FilePath = filePathModifier,
+            Secret = secretModifier
+        };
+    }
+
+    private static ISettingPack HandleEnum(PropertyInfo property, ExposedAttribute exposedAttribute, Modifiers modifiers, object? value)
     {
         var enumType = property.PropertyType;
         var isFlags = enumType.GetCustomAttributes<FlagsAttribute>().Any();
@@ -113,7 +147,8 @@ public class SettingsManager : ISettingsManager
             PropertyName = property.Name,
             Value = value,
             Options = options.ToArray(),
-            MultipleSelectionEnabled = isFlags
+            MultipleSelectionEnabled = isFlags,
+            Modifiers = modifiers
         };
     }
 
