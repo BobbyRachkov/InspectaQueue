@@ -103,7 +103,8 @@ public class SettingsManager : ISettingsManager
         {
             secretModifier = new SecretModifier
             {
-                CanBeRevealed = secretAttribute.CanBeRevealed
+                CanBeRevealed = secretAttribute.CanBeRevealed,
+                PasswordChar = secretAttribute.PasswordChar ?? '\u25cf'
             };
         }
 
@@ -112,7 +113,7 @@ public class SettingsManager : ISettingsManager
         {
             filePathModifier = new FilePathModifier
             {
-                Filter = filePathAttribute.Filter
+                Filter = filePathAttribute.AllowedExtensions ?? "*"
             };
         }
 

@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <!--<Exec Command="xcopy /Y /E /I &quot;$(TargetDir)*&quot; &quot;$(SolutionDir)Source\App\WpfDesktopApp\bin\$(Configuration)\$(DestinationTargetFrameworkName)\Providers&quot;" />-->
+    <Exec Command="xcopy /Y /E /I &quot;$(TargetDir)*&quot; &quot;$(SolutionDir)Source\App\WpfDesktopApp\bin\$(Configuration)\$(DestinationTargetFrameworkName)\Providers&quot;" />
     <!--<Exec Command="del /Q &quot;$(SolutionDir)Source\App\WpfDesktopApp\bin\Release\$(DestinationTargetFrameworkName)\Providers\*.pdb&quot;" />-->
   </Target>
 </Project>

@@ -1,7 +1,8 @@
 ﻿namespace Rachkov.InspectaQueue.Abstractions.Attributes;
 
 [AttributeUsage(System.AttributeTargets.Property)]
-public class SecretAttribute(bool canBeRevealed = false) : Attribute
+public class SecretAttribute : Attribute
 {
-    public bool CanBeRevealed { get; } = canBeRevealed;
+    public bool CanBeRevealed = false;
+    public char? PasswordChar;
 }

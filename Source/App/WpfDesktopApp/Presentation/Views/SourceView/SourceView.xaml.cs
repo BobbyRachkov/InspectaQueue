@@ -1,11 +1,14 @@
 ﻿using MahApps.Metro.Controls;
+using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView.ValueConverters;
+using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models.Modifiers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Media;
+using PasswordBoxHelper = Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView.AttachedProperties.PasswordBoxHelper;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
 {
@@ -14,8 +17,9 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
     /// </summary>
     public partial class SourceView : UserControl
     {
-        private Dictionary<Type, Func<PresenterConfig>> _typeHandlers;
+        private Dictionary<Type, Func<Modifiers, PresenterConfig>> _typeHandlers;
         private Func<PresenterConfig> _dropdownHandler;
+        private Style? _revealedPasswordBoxStyle;
 
         public SourceView()
         {
@@ -26,19 +30,51 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
 
         private void InitTypeHandlers()
         {
-            _typeHandlers = new Dictionary<Type, Func<PresenterConfig>>
+            _typeHandlers = new Dictionary<Type, Func<Modifiers, PresenterConfig>>
             {
-                {typeof(string),()=>new PresenterConfig
-                {
-                    Presenter = new TextBox(),
-                    DependencyPropertyToBind = TextBox.TextProperty
-                }},
-                {typeof(bool),()=>new PresenterConfig
+                {typeof(string),(m)=>
+                    {
+                        FrameworkElement frameworkElement;
+                        DependencyProperty dependencyPropertyToBind = TextBox.TextProperty;
+                        if (m.Secret is not null)
+                        {
+                            frameworkElement = new PasswordBox
+                            {
+                                PasswordChar = m.Secret.PasswordChar,
+                            };
+
+                            if (m.Secret.CanBeRevealed)
+                            {
+                                frameworkElement.Style = Application.Current.TryFindResource("MahApps.Styles.PasswordBox.Revealed") as Style;
+                            }
+
+                            dependencyPropertyToBind = PasswordBoxHelper.BoundPasswordProperty;
+                            frameworkElement.SetValue(PasswordBoxHelper.BindPasswordProperty,true);
+                        }
+                        else if (m.FilePath is not null)
+                        {
+                            frameworkElement = new TextBox();
+                            frameworkElement.SetValue(TextBoxHelper.ButtonContentProperty,"s");
+                            frameworkElement.SetValue(TextBoxHelper.ButtonCommandProperty,new RelayCommand(()=>MessageBox.Show("lol")));
+                        }
+                        else
+                        {
+                            frameworkElement = new TextBox();
+                        }
+
+                        return new PresenterConfig
+                        {
+                            Presenter = frameworkElement,
+                            DependencyPropertyToBind = dependencyPropertyToBind
+                        };
+                    }
+                },
+                {typeof(bool),(_)=>new PresenterConfig
                 {
                     Presenter = new CheckBox(),
                     DependencyPropertyToBind = ToggleButton.IsCheckedProperty
                 }},
-                {typeof(int),()=>new PresenterConfig
+                {typeof(int),(_)=>new PresenterConfig
                 {
                     Presenter = new NumericUpDown
                     {
@@ -150,8 +186,8 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
         private FrameworkElement HandlePrimitive(ISettingViewModel viewModel)
         {
             var presenterConfig = _typeHandlers.TryGetValue(viewModel.Type, out var handler)
-                ? handler()
-                : _typeHandlers[typeof(string)]();
+                ? handler(viewModel.Modifiers)
+                : _typeHandlers[typeof(string)](viewModel.Modifiers);
 
             Binding valueBinding = new Binding
             {
@@ -164,6 +200,8 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
             {
                 valueBinding.Converter = presenterConfig.ValueConverter;
             }
+
+
 
             presenterConfig.Presenter.SetBinding(presenterConfig.DependencyPropertyToBind, valueBinding);
             return presenterConfig.Presenter;
