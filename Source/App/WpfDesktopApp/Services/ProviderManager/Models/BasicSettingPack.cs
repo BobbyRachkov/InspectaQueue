@@ -8,6 +8,7 @@ public class BasicSettingPack : ISettingPack
     public required string PropertyName { get; set; }
     public required string Name { get; set; }
     public string? ToolTip { get; set; }
+    public Modifiers.Modifiers Modifiers { get; init; } = new();
     public required Type Type { get; set; }
     public object? Value { get; set; }
 }

@@ -8,6 +8,7 @@ public interface ISettingPack
     string PropertyName { get; set; }
     string Name { get; set; }
     string? ToolTip { get; set; }
+    Modifiers.Modifiers Modifiers { get; init; }
     Type Type { get; set; }
     object? Value { get; set; }
 }

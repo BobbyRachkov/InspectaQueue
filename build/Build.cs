@@ -33,7 +33,7 @@ public class Build : NukeBuild
 
     Dictionary<Project, string> ProviderVersions => new()
     {
-        {Solution.QueueProviders.PulsarProvider,"0.1.2.0"}
+        {Solution.QueueProviders.PulsarProvider,"0.1.3.0"}
     };
 
     AbsolutePath ZipDirectory => ArtifactsDirectory / "wpf";

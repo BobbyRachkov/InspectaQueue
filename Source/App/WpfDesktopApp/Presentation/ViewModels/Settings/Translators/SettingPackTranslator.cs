@@ -25,7 +25,8 @@ internal static class SettingPackTranslator
             Type = settingPack.Type,
             Value = settingPack.Value,
             IsMultiSelectEnabled = settingPack.MultipleSelectionEnabled,
-            Options = settingPack.Options.Select(x => new DropdownOptionViewModel(x.DisplayName, x.Value)).ToArray()
+            Options = settingPack.Options.Select(x => new DropdownOptionViewModel(x.DisplayName, x.Value)).ToArray(),
+            Modifiers = settingPack.Modifiers
         };
     }
 
@@ -38,7 +39,8 @@ internal static class SettingPackTranslator
             PropertyName = settingPack.PropertyName,
             ReflectedProperty = settingPack.ReflectedProperty,
             Type = settingPack.Type,
-            Value = settingPack.Value
+            Value = settingPack.Value,
+            Modifiers = settingPack.Modifiers
         };
     }
 
@@ -66,7 +68,8 @@ internal static class SettingPackTranslator
             {
                 DisplayName = x.DisplayName,
                 Value = x.BackingValue
-            }).ToArray()
+            }).ToArray(),
+            Modifiers = settingPack.Modifiers
         };
     }
 
@@ -79,7 +82,8 @@ internal static class SettingPackTranslator
             PropertyName = settingPack.PropertyName,
             ReflectedProperty = settingPack.ReflectedProperty,
             Type = settingPack.Type,
-            Value = settingPack.Value
+            Value = settingPack.Value,
+            Modifiers = settingPack.Modifiers
         };
     }
 
