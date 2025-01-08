@@ -29,7 +29,7 @@
       <Grid Grid.Row="0">
         <li:LoadingIndicator
             Foreground="{Binding AccentColor}"
-            IsActive="{Binding IsActive}"
+            IsActive="{Binding IsBusy}"
             Mode="DoubleBounce">
           <li:LoadingIndicator.RenderTransform>
             <ScaleTransform ScaleX="2.3" ScaleY="2.3"/>
@@ -61,18 +61,27 @@
           </Style>
         </StackPanel.Styles>
         <Button
+            IsVisible="{Binding IsInstallButtonVisible}"
             Command="{Binding UpdateCommand}">
           Install
         </Button>
         <Button
+            IsVisible="{Binding IsUpdateButtonVisible}"
           Command="{Binding UpdateCommand}">
           Update
         </Button>
         <Button
+            IsVisible="{Binding IsUninstallButtonVisible}"
           Command="{Binding UpdateCommand}">
           Uninstall
         </Button>
         <Button
+            IsVisible="{Binding IsCancelButtonVisible}"
+            Command="{Binding CloseCommand}">
+          Cancel
+        </Button>
+        <Button
+            IsVisible="{Binding IsCloseButtonVisible}"
             Command="{Binding CloseCommand}">
           Close
         </Button>

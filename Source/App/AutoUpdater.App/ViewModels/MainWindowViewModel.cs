@@ -9,7 +9,7 @@ namespace AutoUpdater.App.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
-        private bool _isActive;
+        private bool _isBusy;
         private readonly FileService _fileService;
 
         public MainWindowViewModel()
@@ -23,20 +23,42 @@ namespace AutoUpdater.App.ViewModels
         public IImmutableSolidColorBrush AccentColor => new ImmutableSolidColorBrush(new Color(255, 65, 55, 75));
 
 
-        public bool IsActive
+        public bool IsBusy
         {
-            get => _isActive;
-            set => this.RaiseAndSetIfChanged(ref _isActive, value);
+            get => _isBusy;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _isBusy, value);
+                RaiseButtonsVisibilityUpdated();
+            }
         }
 
-        public string Text => _fileService.IsIqInstalled().ToString();
+        public bool IsForceUpdate => StartupArgsService.Instance?.IsForceUpdate ?? false;
+        public bool IsInstallButtonVisible => !IsBusy && !_fileService.IsIqInstalled() && !IsForceUpdate;
+        public bool IsUpdateButtonVisible => !IsBusy && _fileService.IsIqInstalled() && !IsForceUpdate;
+        public bool IsUninstallButtonVisible => !IsBusy && _fileService.IsIqInstalled() && !IsForceUpdate;
+        public bool IsCancelButtonVisible => IsBusy;
+        public bool IsCloseButtonVisible => !IsBusy;
+
+
+        public string Text => StartupArgsService.Instance?.IsForceUpdate.ToString() ?? "";
 
         public ICommand CloseCommand { get; }
+
         public ICommand UpdateCommand { get; }
 
         private void NextEffect()
         {
-            IsActive = !IsActive;
+            IsBusy = !IsBusy;
+        }
+
+        private void RaiseButtonsVisibilityUpdated()
+        {
+            this.RaisePropertyChanged(nameof(IsInstallButtonVisible));
+            this.RaisePropertyChanged(nameof(IsUpdateButtonVisible));
+            this.RaisePropertyChanged(nameof(IsUninstallButtonVisible));
+            this.RaisePropertyChanged(nameof(IsCancelButtonVisible));
+            this.RaisePropertyChanged(nameof(IsCloseButtonVisible));
         }
     }
 }
