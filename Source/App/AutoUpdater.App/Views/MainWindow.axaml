@@ -10,58 +10,73 @@
         Icon="/Assets/iq.ico"
         SystemDecorations="None"
         WindowStartupLocation="CenterScreen"
-        Width="300"
+        Width="250"
         Height="400"
         RequestedThemeVariant="Dark"
         Foreground="White"
         Background="{Binding Background}"
         Title="InspectaQueue Installer">
 
-    <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
+  <Design.DataContext>
+    <!-- This only sets the DataContext for the previewer in an IDE,
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainWindowViewModel/>
-    </Design.DataContext>
-    <Border
-        BorderBrush="{Binding AccentColor}"
-        BorderThickness="1 1 1 1">
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="150"/>
-            </Grid.RowDefinitions>
-            <Grid Grid.Row="0">
-                <li:LoadingIndicator
-                    Foreground="{Binding AccentColor}"
-                    IsActive="{Binding IsActive}"
-                    Mode="DoubleBounce">
-                    <li:LoadingIndicator.RenderTransform>
-                        <ScaleTransform ScaleX="2" ScaleY="2"/>
-                    </li:LoadingIndicator.RenderTransform>
-                </li:LoadingIndicator>
-                <Image
-                    Height="70"
-                    VerticalAlignment="Center"
-                    HorizontalAlignment="Center"
-                    Source="../Assets/iq_logo.png"/>
-            </Grid>
-            <StackPanel
-                VerticalAlignment="Center"
-                HorizontalAlignment="Center"
-                Orientation="Horizontal"
-                Grid.Row="1">
-                <Button
-                    Background="{Binding AccentColor}"
-                    Margin="0 0 10 0"
-                    Command="{Binding UpdateCommand}">
-                    Next progress
-                </Button>
-                <Button
-                    Background="{Binding AccentColor}"
-                    Command="{Binding CloseCommand}">
-                    Close
-                </Button>
-            </StackPanel>
-        </Grid>
-    </Border>
+    <vm:MainWindowViewModel/>
+  </Design.DataContext>
+  <Border
+      BorderBrush="{Binding AccentColor}"
+      BorderThickness="1 1 1 1">
+    <Grid RowDefinitions="*,150">
+      <Grid Grid.Row="0">
+        <li:LoadingIndicator
+            Foreground="{Binding AccentColor}"
+            IsActive="{Binding IsActive}"
+            Mode="DoubleBounce">
+          <li:LoadingIndicator.RenderTransform>
+            <ScaleTransform ScaleX="2.3" ScaleY="2.3"/>
+          </li:LoadingIndicator.RenderTransform>
+        </li:LoadingIndicator>
+        <Image
+            Height="80"
+            VerticalAlignment="Center"
+            HorizontalAlignment="Center"
+            Source="../Assets/iq_logo.png"/>
+        <TextBlock
+            HorizontalAlignment="Center"
+            VerticalAlignment="Bottom"
+            Text="{Binding Text}"/>
+      </Grid>
+      <StackPanel
+          Margin="0 0 0 25"
+          VerticalAlignment="Bottom"
+          HorizontalAlignment="Center"
+          Width="200"
+          Orientation="Vertical"
+          Grid.Row="1">
+        <StackPanel.Styles>
+          <Style Selector="Button">
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="Background" Value="{Binding AccentColor}"/>
+            <Setter Property="Margin" Value="0 5 0 0"/>
+          </Style>
+        </StackPanel.Styles>
+        <Button
+            Command="{Binding UpdateCommand}">
+          Install
+        </Button>
+        <Button
+          Command="{Binding UpdateCommand}">
+          Update
+        </Button>
+        <Button
+          Command="{Binding UpdateCommand}">
+          Uninstall
+        </Button>
+        <Button
+            Command="{Binding CloseCommand}">
+          Close
+        </Button>
+      </StackPanel>
+    </Grid>
+  </Border>
 </Window>
