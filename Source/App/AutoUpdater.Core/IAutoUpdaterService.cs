@@ -3,7 +3,7 @@
 public interface IAutoUpdaterService
 {
     Task<(Version version, string? downloadUrl)?> GetLatestVersion(ReleaseType releaseType);
-    Task DownloadVersion(string downloadUrl);
+    Task DownloadVersion(string downloadPath, string downloadUrl);
     Version GetAppVersion();
     void RunFinalCopyScript();
 }

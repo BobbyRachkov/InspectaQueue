@@ -102,7 +102,7 @@ public class MenuViewModel : ViewModel
         _migratorService.MigrateConfig();
         _migratorService.MigrateProviders();
 
-        Task downloadTask = _autoUpdater.DownloadVersion(downloadUrl).ContinueWith(_ =>
+        Task downloadTask = _autoUpdater.DownloadVersion(TODO, downloadUrl).ContinueWith(_ =>
         {
             _autoUpdater.RunFinalCopyScript();
             Environment.Exit(0);

@@ -40,6 +40,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\AutoUpdater.Core\AutoUpdater.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Assets\iq.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>

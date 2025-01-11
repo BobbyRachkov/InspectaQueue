@@ -10,6 +10,10 @@
     },
     "Normal startup": {
       "commandName": "Project"
+    },
+    "Quiet update": {
+      "commandName": "Project",
+      "commandLineArgs": "-quiet-update"
     }
   }
 }

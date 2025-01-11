@@ -54,12 +54,12 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         }
     }
 
-    public async Task DownloadVersion(string downloadUrl)
+    public async Task DownloadVersion(string downloadPath, string downloadUrl)
     {
         var client = _httpClientFactory.CreateClient();
         Stream fileStream = await client.GetStreamAsync(downloadUrl);
 
-        await using FileStream outputFileStream = new FileStream(Constants.Path.DownloadPath, FileMode.Create);
+        await using FileStream outputFileStream = new FileStream(downloadPath, FileMode.Create);
         await fileStream.CopyToAsync(outputFileStream);
     }
 

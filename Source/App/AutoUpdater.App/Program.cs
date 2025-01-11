@@ -1,6 +1,7 @@
 ﻿using AutoUpdater.App.Services;
 using Avalonia;
 using Avalonia.ReactiveUI;
+using Rachkov.InspectaQueue.Abstractions;
 using System;
 using System.Linq;
 
@@ -22,11 +23,12 @@ namespace AutoUpdater.App
 
         private static void ParseArgs(string[] args)
         {
-            var normalizedArgs = args.Select(x => x.ToLower().TrimStart('-'));
+            var normalizedArgs = args.Select(x => x.ToLower().TrimStart('-')).ToArray();
 
-            var isForceUpdate = normalizedArgs.Any(x => x == "update");
+            var isForceUpdate = normalizedArgs.Any(x => x == Constants.StartupArgs.ForceUpdateArg);
+            var isQuietUpdate = normalizedArgs.Any(x => x == Constants.StartupArgs.QuietUpdateArg);
 
-            StartupArgsService.Init(isForceUpdate);
+            StartupArgsService.Init(isForceUpdate, isQuietUpdate);
         }
 
         // Avalonia configuration, don't remove; also used by visual designer.

@@ -59,5 +59,18 @@ namespace AutoUpdater.Tests
             //Assert
             Assert.That(release.Value.version.ToString(), Is.EqualTo(expectedVersion));
         }
+
+        //[Ignore("Used for development purposes")]
+        [Test]
+        public async Task DownloadRealInfo()
+        {
+            _httpClient = new HttpClient();
+
+            var httpClientFactoryMock = new Mock<IHttpClientFactory>();
+            httpClientFactoryMock.Setup<HttpClient>(x => x.CreateClient(It.IsAny<string>())).Returns(_httpClient);
+
+            _sut = new AutoUpdaterService(httpClientFactoryMock.Object);
+            var release = await _sut.GetLatestVersion(ReleaseType.Official);
+        }
     }
 }
