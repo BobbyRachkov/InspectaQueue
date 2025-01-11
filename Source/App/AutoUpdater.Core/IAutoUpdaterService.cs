@@ -1,9 +1,13 @@
-﻿namespace Rachkov.InspectaQueue.Abstractions;
+﻿using Rachkov.InspectaQueue.Abstractions.EventArgs;
+using Rachkov.InspectaQueue.Abstractions.Models;
+
+namespace Rachkov.InspectaQueue.Abstractions;
 
 public interface IAutoUpdaterService
 {
-    Task<(Version version, string? downloadUrl)?> GetLatestVersion(ReleaseType releaseType);
-    Task DownloadVersion(string downloadPath, string downloadUrl);
-    Version GetAppVersion();
-    void RunFinalCopyScript();
+    event EventHandler<JobStatusChangedEventArgs>? JobStatusChanged;
+    event EventHandler<StageStatusChangedEventArgs>? StageStatusChanged;
+
+    Task<ReleaseInfo?> GetReleaseInfo();
+    Version GetExecutingAppVersion();
 }

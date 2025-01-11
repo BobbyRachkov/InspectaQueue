@@ -3,6 +3,7 @@ using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.DialogManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings.Models;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
+using System.Diagnostics;
 using System.Windows;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
@@ -66,22 +67,33 @@ public class MenuViewModel : ViewModel
         var updateChannel = _configService.GetSettings().IsAutoUpdaterBetaReleaseChannel
             ? ReleaseType.Prerelease
             : ReleaseType.Official;
-        var latestVersion = await _autoUpdater.GetLatestVersion(updateChannel);
 
-        if (latestVersion is null || DialogManager is null)
+        var releaseInfo = await _autoUpdater.GetReleaseInfo();
+
+        if (releaseInfo is null || DialogManager is null)
         {
             return UpdateResult.UnsuccessfulRequest;
         }
 
-        var (newVersion, downloadUrl) = latestVersion.Value;
-        var currentVersion = _autoUpdater.GetAppVersion();
+        var latestRelease = updateChannel == ReleaseType.Official
+            ? releaseInfo.Latest
+            : releaseInfo.Prerelease;
 
-        if (!(newVersion > currentVersion))
+        if (latestRelease is null
+            || latestRelease.WindowsAppZip?.Version is null)
+        {
+            return UpdateResult.UnsuccessfulRequest;
+        }
+
+        var currentVersion = _autoUpdater.GetExecutingAppVersion();
+        var latestVersion = latestRelease.WindowsAppZip.Version;
+
+        if (!(latestVersion > currentVersion))
         {
             return UpdateResult.UpToDate;
         }
 
-        if (downloadUrl is null)
+        if (latestRelease.WindowsAppZip.DownloadUrl is null)
         {
             MessageBox.Show("There is new version, but the download url is corrupted. Contact application author.");
             return UpdateResult.SystemError;
@@ -91,7 +103,7 @@ public class MenuViewModel : ViewModel
 
         OnUiThread(() =>
         {
-            promptResult = DialogManager.ShowNewUpdateDialog(currentVersion.ToString(), newVersion.ToString());
+            promptResult = DialogManager.ShowNewUpdateDialog(currentVersion.ToString(), latestVersion.ToString());
         });
 
         if (promptResult is not true)
@@ -99,21 +111,28 @@ public class MenuViewModel : ViewModel
             return UpdateResult.Rejected;
         }
 
-        _migratorService.MigrateConfig();
-        _migratorService.MigrateProviders();
 
-        Task downloadTask = _autoUpdater.DownloadVersion(TODO, downloadUrl).ContinueWith(_ =>
+
+        ProcessStartInfo psi = new ProcessStartInfo
         {
-            _autoUpdater.RunFinalCopyScript();
-            Environment.Exit(0);
-        });
+            FileName = "cmd.exe",
+            WorkingDirectory = "..\\",
+            Arguments = $"{Constants.StartupArgs.ForceUpdateArg} {(updateChannel == ReleaseType.Prerelease ? Constants.StartupArgs.PrereleaseVersionArg : string.Empty)}",
+            UseShellExecute = false,
+            CreateNoWindow = false,
+            RedirectStandardOutput = false,
+            RedirectStandardError = false,
+            RedirectStandardInput = false,
+            WindowStyle = ProcessWindowStyle.Normal
+        };
 
-        OnUiThread(async () =>
-        {
-            await DialogManager.ShowProgressDialog("Update in progress...", "The program will restart soon...", false, true);
-        });
+        Process? cmdProcess = Process.Start(psi);
+        Environment.Exit(0);
 
-        await downloadTask;
+        //OnUiThread(async () =>
+        //{
+        //    await DialogManager.ShowProgressDialog("Update in progress...", "The program will restart soon...", false, true);
+        //});
 
         return UpdateResult.Updated;
     }
@@ -125,7 +144,7 @@ public class MenuViewModel : ViewModel
             {
                 if (updateResult.Result is UpdateResult.UpToDate)
                 {
-                    DialogManager?.ShowVersionUpToDateDialog(_autoUpdater.GetAppVersion().ToString());
+                    DialogManager?.ShowVersionUpToDateDialog(_autoUpdater.GetExecutingAppVersion().ToString());
                 }
             });
     }
@@ -145,6 +164,6 @@ public class MenuViewModel : ViewModel
 
     private void ShowAboutDialog()
     {
-        DialogManager?.ShowVersionInfoDialog(_autoUpdater.GetAppVersion().ToString());
+        DialogManager?.ShowVersionInfoDialog(_autoUpdater.GetExecutingAppVersion().ToString());
     }
 }

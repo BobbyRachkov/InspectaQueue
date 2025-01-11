@@ -5,20 +5,22 @@ using System.Text.RegularExpressions;
 
 namespace Rachkov.InspectaQueue.Abstractions;
 
-public sealed class DownloadService
+public sealed class DownloadService : IDownloadService
 {
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly HttpClient _client;
 
     public DownloadService(IHttpClientFactory httpClientFactory)
     {
-        _httpClientFactory = httpClientFactory;
+        _client = httpClientFactory.CreateClient();
+        _client.BaseAddress = new Uri(Constants.Url.RepositoryApi);
+        _client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("product", "1"));
     }
 
     public async Task<ReleaseInfo?> FetchReleaseInfoAsync()
     {
         try
         {
-            var allReleasesJson = await CreateClient().GetStringAsync(Constants.Url.ReleasesPath);
+            var allReleasesJson = await _client.GetStringAsync(Constants.Url.ReleasesPath);
             var allReleases = JsonConvert.DeserializeObject<Contracts.Release[]>(allReleasesJson);
 
             var latest = allReleases?.FirstOrDefault(x => x.Prerelease is false);
@@ -34,7 +36,9 @@ public sealed class DownloadService
                     Tag = latest.TagName ?? string.Empty,
                     IsLatest = true,
                     IsPrerelease = false,
-                    Assets = ParseAssets(latest)
+                    Assets = ParseAssets(latest),
+                    WindowsAppZip = GetWindowsZip(latest),
+                    Installer = GetInstaller(latest)
                 };
             }
 
@@ -46,7 +50,9 @@ public sealed class DownloadService
                     Tag = prerelease.TagName ?? string.Empty,
                     IsLatest = false,
                     IsPrerelease = true,
-                    Assets = ParseAssets(prerelease)
+                    Assets = ParseAssets(prerelease),
+                    WindowsAppZip = GetWindowsZip(prerelease),
+                    Installer = GetInstaller(prerelease)
                 };
             }
 
@@ -107,12 +113,25 @@ public sealed class DownloadService
         return asset is null ? null : ParseAsset(asset);
     }
 
-
-    private HttpClient CreateClient()
+    public async Task<bool> TryDownloadAssetAsync(Asset asset, string downloadPath)
     {
-        var client = _httpClientFactory.CreateClient();
-        client.BaseAddress = new Uri(Constants.Url.RepositoryApi);
-        client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("product", "1"));
-        return client;
+        if (string.IsNullOrWhiteSpace(asset.DownloadUrl))
+        {
+            return false;
+        }
+
+        try
+        {
+            var fileStream = await _client.GetStreamAsync(asset.DownloadUrl);
+
+            await using var outputFileStream = new FileStream(downloadPath, FileMode.Create);
+            await fileStream.CopyToAsync(outputFileStream);
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            return false;
+        }
     }
 }

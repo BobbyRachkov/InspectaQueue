@@ -13,13 +13,13 @@ namespace AutoUpdater.Tests
         [SetUp]
         public void Setup()
         {
-            _handler = new MockHttpMessageHandler();
-            _httpClient = new HttpClient(_handler);
+            //_handler = new MockHttpMessageHandler();
+            //_httpClient = new HttpClient(_handler);
 
-            var httpClientFactoryMock = new Mock<IHttpClientFactory>();
-            httpClientFactoryMock.Setup<HttpClient>(x => x.CreateClient(It.IsAny<string>())).Returns(_httpClient);
+            //var httpClientFactoryMock = new Mock<IHttpClientFactory>();
+            //httpClientFactoryMock.Setup<HttpClient>(x => x.CreateClient(It.IsAny<string>())).Returns(_httpClient);
 
-            _sut = new AutoUpdaterService(httpClientFactoryMock.Object);
+            //_sut = new AutoUpdaterService(httpClientFactoryMock.Object);
         }
 
         [TearDown]
@@ -29,48 +29,57 @@ namespace AutoUpdater.Tests
             _handler.Dispose();
         }
 
-        [Theory]
-        public async Task GivenCheckingForLatestVersion_WhenResponseIsIncorrectJson_ThenReturnsNull(ReleaseType releaseType)
-        {
-            //Arrange
-            _handler.When("https://api.github.com/repos/BobbyRachkov/InspectaQueue/releases")
-                .Respond("application/json", "{'name' : 'Test McGee'}");
+        //[Theory]
+        //public async Task GivenCheckingForLatestVersion_WhenResponseIsIncorrectJson_ThenReturnsNull(ReleaseType releaseType)
+        //{
+        //    //Arrange
+        //    _handler.When("https://api.github.com/repos/BobbyRachkov/InspectaQueue/releases")
+        //        .Respond("application/json", "{'name' : 'Test McGee'}");
 
-            //Act
-            var release = await _sut.GetLatestVersion(releaseType);
+        //    //Act
+        //    var release = await _sut.GetLatestVersion(releaseType);
 
-            //Assert
-            Assert.That(release, Is.Null);
-        }
+        //    //Assert
+        //    Assert.That(release, Is.Null);
+        //}
 
-        [TestCase(ReleaseType.Official, "0.1.2")]
-        [TestCase(ReleaseType.Prerelease, "0.1.1")]
-        public async Task GivenCheckingForLatestVersion_WhenResponseIsCorrectJson_ThenReturnsExpectedVersion(
-            ReleaseType releaseType,
-            string expectedVersion)
-        {
-            //Arrange
-            _handler.When("https://api.github.com/repos/BobbyRachkov/InspectaQueue/releases")
-                .Respond("application/json", TestData.ReleasesResponse);
+        //[TestCase(ReleaseType.Official, "0.1.2")]
+        //[TestCase(ReleaseType.Prerelease, "0.1.1")]
+        //public async Task GivenCheckingForLatestVersion_WhenResponseIsCorrectJson_ThenReturnsExpectedVersion(
+        //    ReleaseType releaseType,
+        //    string expectedVersion)
+        //{
+        //    //Arrange
+        //    _handler.When("https://api.github.com/repos/BobbyRachkov/InspectaQueue/releases")
+        //        .Respond("application/json", TestData.ReleasesResponse);
 
-            //Act
-            var release = await _sut.GetLatestVersion(releaseType);
+        //    //Act
+        //    var release = await _sut.GetLatestVersion(releaseType);
 
-            //Assert
-            Assert.That(release.Value.version.ToString(), Is.EqualTo(expectedVersion));
-        }
+        //    //Assert
+        //    Assert.That(release.Value.version.ToString(), Is.EqualTo(expectedVersion));
+        //}
 
-        //[Ignore("Used for development purposes")]
+        [Ignore("Used for development purposes")]
         [Test]
         public async Task DownloadRealInfo()
         {
             _httpClient = new HttpClient();
 
             var httpClientFactoryMock = new Mock<IHttpClientFactory>();
-            httpClientFactoryMock.Setup<HttpClient>(x => x.CreateClient(It.IsAny<string>())).Returns(_httpClient);
+            httpClientFactoryMock.Setup<HttpClient>(x => x.CreateClient(It.IsAny<string>())).Returns(new HttpClient());
 
-            _sut = new AutoUpdaterService(httpClientFactoryMock.Object);
-            var release = await _sut.GetLatestVersion(ReleaseType.Official);
+            //_sut = new AutoUpdaterService(httpClientFactoryMock.Object);
+            //var release = await _sut.GetLatestVersion(ReleaseType.Official);
+
+            var downloader = new DownloadService(httpClientFactoryMock.Object);
+
+            var info = await downloader.FetchReleaseInfoAsync();
+
+            if (info?.Latest.WindowsAppZip is not null)
+            {
+                var result = await downloader.TryDownloadAssetAsync(info.Latest.WindowsAppZip, "kuramiqnko.zip");
+            }
         }
     }
 }

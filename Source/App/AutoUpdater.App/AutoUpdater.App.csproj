@@ -36,7 +36,6 @@
     </PackageReference>
     <PackageReference Include="Avalonia.ReactiveUI" Version="11.2.3" />
     <PackageReference Include="LoadingIndicators.Avalonia" Version="11.0.11.1" />
-    <PackageReference Include="Nuke.Utilities" Version="9.0.3" />
   </ItemGroup>
 
   <ItemGroup>

@@ -11,10 +11,9 @@
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
-    <PackageReference Include="Nuke.Utilities" Version="9.0.3" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="EventArgs\" />
+    <Folder Include="Extensions\" />
   </ItemGroup>
 </Project>

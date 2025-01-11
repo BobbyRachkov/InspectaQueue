@@ -12,6 +12,7 @@ public class Constants
     {
         public const string ForceUpdateArg = "update";
         public const string QuietUpdateArg = "quiet-update";
+        public const string PrereleaseVersionArg = "prerelease";
     }
 
     public class Path

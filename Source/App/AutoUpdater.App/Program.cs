@@ -27,8 +27,9 @@ namespace AutoUpdater.App
 
             var isForceUpdate = normalizedArgs.Any(x => x == Constants.StartupArgs.ForceUpdateArg);
             var isQuietUpdate = normalizedArgs.Any(x => x == Constants.StartupArgs.QuietUpdateArg);
+            var isPrerelease = normalizedArgs.Any(x => x == Constants.StartupArgs.PrereleaseVersionArg);
 
-            StartupArgsService.Init(isForceUpdate, isQuietUpdate);
+            StartupArgsService.Init(isForceUpdate, isQuietUpdate, isPrerelease);
         }
 
         // Avalonia configuration, don't remove; also used by visual designer.
