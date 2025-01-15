@@ -10,4 +10,7 @@ public interface IAutoUpdaterService
 
     Task<ReleaseInfo?> GetReleaseInfo();
     Version GetExecutingAppVersion();
+    Task<bool> DownloadRelease(bool prerelease);
+    Task<bool> Unzip();
+
 }

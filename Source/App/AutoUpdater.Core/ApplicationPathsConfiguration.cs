@@ -2,9 +2,9 @@
 
 namespace Rachkov.InspectaQueue.Abstractions;
 
-public static class ApplicationPaths
+public class ApplicationPathsConfiguration : IApplicationPathsConfiguration
 {
-    static ApplicationPaths()
+    public ApplicationPathsConfiguration()
     {
         LocalAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
@@ -14,32 +14,32 @@ public static class ApplicationPaths
         IqAppFolderPath = IqBaseFolderPath / "App";
         IqAppExecutablePath = IqAppFolderPath / "InspectaQueue.exe";
         IqUpdateZipPath = IqBaseFolderPath / "release.zip";
-        IqExtractedZipFolderPath = IqBaseFolderPath / "ReleaseExtracted";
+        IqExtractedZipFolderPath = IqBaseFolderPath / "Release";
 
         IqAppFolderPath.CreateDirectory();
     }
 
-    private static AbsolutePath LocalAppDataPath { get; }
-    public static AbsolutePath IqBaseFolderPath { get; }
-    public static AbsolutePath IqAppFolderPath { get; }
-    public static AbsolutePath IqAppExecutablePath { get; }
-    public static AbsolutePath? InstallerPath => GetInstallerPath();
-    public static AbsolutePath IqUpdateZipPath { get; }
-    public static AbsolutePath IqExtractedZipFolderPath { get; }
+    private AbsolutePath LocalAppDataPath { get; }
+    public AbsolutePath IqBaseFolderPath { get; }
+    public AbsolutePath IqAppFolderPath { get; }
+    public AbsolutePath IqAppExecutablePath { get; }
+    public AbsolutePath? InstallerPath => GetInstallerPath();
+    public AbsolutePath IqUpdateZipPath { get; }
+    public AbsolutePath IqExtractedZipFolderPath { get; }
 
-    private static AbsolutePath? GetInstallerPath()
+    private AbsolutePath? GetInstallerPath()
     {
         var files = Directory.GetFiles(IqBaseFolderPath);
         return files.FirstOrDefault(x => x.StartsWith("Installer") && x.EndsWith(".exe"));
     }
 
-    public static AbsolutePath? GetInstallerPath(Version version)
+    public AbsolutePath? GetInstallerPath(Version version)
     {
 
         return IqBaseFolderPath / $"Installer_{version}.exe";
     }
 
-    public static bool IsIqInstalled()
+    public bool IsIqInstalled()
     {
         return IqAppExecutablePath.FileExists();
     }

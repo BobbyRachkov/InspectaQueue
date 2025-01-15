@@ -1,8 +1,10 @@
 ﻿using AutoUpdater.App.Services;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
+using Rachkov.InspectaQueue.Abstractions;
 using ReactiveUI;
 using System;
+using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace AutoUpdater.App.ViewModels
@@ -11,12 +13,18 @@ namespace AutoUpdater.App.ViewModels
     {
         private bool _isBusy;
         private readonly FileService _fileService;
+        private readonly IAutoUpdaterService _autoUpdater;
 
         public MainWindowViewModel()
         {
             CloseCommand = ReactiveCommand.Create(() => Environment.Exit(0));
             UpdateCommand = ReactiveCommand.Create(NextEffect);
             _fileService = new FileService();
+
+            _autoUpdater = new AutoUpdaterService(
+                new DownloadService(new HttpClientFactory()),
+                new ApplicationPathsConfiguration());
+
         }
 
         public IImmutableSolidColorBrush Background => new ImmutableSolidColorBrush(new Color(255, 25, 25, 25));
@@ -47,9 +55,11 @@ namespace AutoUpdater.App.ViewModels
 
         public ICommand UpdateCommand { get; }
 
-        private void NextEffect()
+        private async Task NextEffect()
         {
             IsBusy = !IsBusy;
+            await _autoUpdater.DownloadRelease(false);
+            await _autoUpdater.Unzip();
         }
 
         private void RaiseButtonsVisibilityUpdated()
