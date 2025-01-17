@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Nuke.Common.IO;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Models;
 using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
@@ -113,7 +114,7 @@ public sealed class DownloadService : IDownloadService
         return asset is null ? null : ParseAsset(asset);
     }
 
-    public async Task<bool> TryDownloadAssetAsync(Asset asset, string downloadPath, CancellationToken cancellationToken = default)
+    public async Task<bool> TryDownloadAssetAsync(Asset asset, AbsolutePath downloadPath, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(asset.DownloadUrl))
         {
@@ -124,6 +125,7 @@ public sealed class DownloadService : IDownloadService
         {
             var fileStream = await _client.GetStreamAsync(asset.DownloadUrl, cancellationToken);
 
+            downloadPath.DeleteFile();
             await using var outputFileStream = new FileStream(downloadPath, FileMode.Create);
             await fileStream.CopyToAsync(outputFileStream, cancellationToken);
 

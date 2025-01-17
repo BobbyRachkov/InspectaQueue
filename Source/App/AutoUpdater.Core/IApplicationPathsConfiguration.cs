@@ -10,11 +10,12 @@ public interface IApplicationPathsConfiguration
     AbsolutePath? InstallerPath { get; }
     AbsolutePath IqUpdateZipPath { get; }
     AbsolutePath IqExtractedZipDirectory { get; }
+    AbsolutePath IqExtractedAppDirectory { get; }
     public AbsolutePath ConfigFilePath { get; }
     public AbsolutePath OldConfigFilePath { get; }
     public AbsolutePath ProvidersDirectory { get; }
     public AbsolutePath OldProvidersDirectory { get; }
-    AbsolutePath? GetInstallerPath(Version? version);
+    AbsolutePath GetInstallerPath(Version? version);
     Version? GetInstallerVersion();
     bool IsIqInstalled();
 }

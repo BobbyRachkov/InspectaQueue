@@ -114,7 +114,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
             return FailJob();
         }
 
-        RaiseJobStatusChanged(true);
+        RaiseJobStatusChanged(false);
         return true;
     }
 
@@ -147,7 +147,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
             return FailJob();
         }
 
-        RaiseJobStatusChanged(true);
+        RaiseJobStatusChanged(false);
         return true;
     }
 
@@ -180,7 +180,22 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
             return FailJob(Stage.LaunchApp);
         }
 
-        RaiseJobStatusChanged(true);
+        RaiseJobStatusChanged(false);
+        return true;
+    }
+
+    public async Task<bool> Uninstall(bool removeConfig = false, CancellationToken cancellationToken = default)
+    {
+        RaiseJobStatusChanged(true, [Stage.Uninstalling]);
+
+        await Task.Yield();
+
+        if (!UninstallInternal())
+        {
+            return FailJob(Stage.Uninstalling);
+        }
+
+        RaiseJobStatusChanged(false);
         return true;
     }
 
@@ -194,7 +209,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         {
             RaiseStageStatusChanged(Stage.DownloadingRelease, StageStatus.InProgress);
 
-            var releaseInfo = await GetReleaseInfo();
+            var releaseInfo = await GetReleaseInfo(cancellationToken);
 
             if (releaseInfo is null)
             {
@@ -234,7 +249,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         {
             RaiseStageStatusChanged(Stage.DownloadingInstaller, StageStatus.InProgress);
 
-            var releaseInfo = await GetReleaseInfo();
+            var releaseInfo = await GetReleaseInfo(cancellationToken);
 
             if (releaseInfo is null)
             {
@@ -270,6 +285,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         {
             RaiseStageStatusChanged(Stage.Unzipping, StageStatus.InProgress);
 
+            _applicationPathsConfiguration.IqExtractedZipDirectory.DeleteDirectory();
             ZipFile.ExtractToDirectory(
                 _applicationPathsConfiguration.IqUpdateZipPath,
                 _applicationPathsConfiguration.IqExtractedZipDirectory);
@@ -290,30 +306,28 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 
             if (_applicationPathsConfiguration.OldConfigFilePath.FileExists())
             {
-                _applicationPathsConfiguration.OldConfigFilePath.Copy(_applicationPathsConfiguration.ConfigFilePath);
+                _applicationPathsConfiguration.OldConfigFilePath.Copy(_applicationPathsConfiguration.ConfigFilePath, ExistsPolicy.FileOverwrite);
             }
 
             if (_applicationPathsConfiguration.OldProvidersDirectory.DirectoryExists())
             {
-                _applicationPathsConfiguration.OldProvidersDirectory.CopyToDirectory(_applicationPathsConfiguration.ProvidersDirectory);
+                _applicationPathsConfiguration.OldProvidersDirectory.CopyToDirectory(_applicationPathsConfiguration.IqBaseDirectory, ExistsPolicy.MergeAndOverwrite);
             }
 
-            _applicationPathsConfiguration.IqAppDirectory.CreateOrCleanDirectory();
+            _applicationPathsConfiguration.IqAppDirectory.DeleteDirectory();
 
-            _applicationPathsConfiguration.IqExtractedZipDirectory.CopyToDirectory(
-                _applicationPathsConfiguration.IqAppDirectory);
-
-            _applicationPathsConfiguration.IqExtractedZipDirectory.DeleteDirectory();
+            (_applicationPathsConfiguration.IqExtractedZipDirectory / "App").CopyToDirectory(
+                _applicationPathsConfiguration.IqBaseDirectory);
 
 
             if (_applicationPathsConfiguration.ConfigFilePath.FileExists())
             {
-                _applicationPathsConfiguration.ConfigFilePath.Copy(_applicationPathsConfiguration.OldConfigFilePath);
+                _applicationPathsConfiguration.ConfigFilePath.Copy(_applicationPathsConfiguration.OldConfigFilePath, ExistsPolicy.FileOverwrite);
             }
 
             if (_applicationPathsConfiguration.ProvidersDirectory.DirectoryExists())
             {
-                _applicationPathsConfiguration.ProvidersDirectory.CopyToDirectory(_applicationPathsConfiguration.OldProvidersDirectory);
+                _applicationPathsConfiguration.ProvidersDirectory.CopyToDirectory(_applicationPathsConfiguration.IqAppDirectory, ExistsPolicy.MergeAndOverwrite);
             }
 
             return PassStage(Stage.CopyingFiles);
@@ -331,12 +345,33 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
             RaiseStageStatusChanged(Stage.CleaningUp, StageStatus.InProgress);
 
             _applicationPathsConfiguration.IqExtractedZipDirectory.DeleteDirectory();
+            _applicationPathsConfiguration.IqUpdateZipPath.DeleteFile();
 
             return PassStage(Stage.CleaningUp);
         }
         catch
         {
             return FailStage(Stage.CleaningUp);
+        }
+    }
+
+    private bool UninstallInternal(bool deleteConfig = true)
+    {
+        try
+        {
+            RaiseStageStatusChanged(Stage.Uninstalling, StageStatus.InProgress);
+
+            _applicationPathsConfiguration.IqAppDirectory.DeleteDirectory();
+            _applicationPathsConfiguration.ConfigFilePath.DeleteFile();
+            _applicationPathsConfiguration.ProvidersDirectory.DeleteDirectory();
+            _applicationPathsConfiguration.IqExtractedZipDirectory.DeleteDirectory();
+            _applicationPathsConfiguration.IqUpdateZipPath.DeleteFile();
+
+            return PassStage(Stage.Uninstalling);
+        }
+        catch
+        {
+            return FailStage(Stage.Uninstalling);
         }
     }
 

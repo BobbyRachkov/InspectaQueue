@@ -9,5 +9,6 @@ public enum Stage
     CopyingFiles,
     CleaningUp,
     WaitingAppToClose,
-    LaunchApp
+    LaunchApp,
+    Uninstalling
 }

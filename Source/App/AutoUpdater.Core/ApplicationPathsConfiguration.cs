@@ -15,11 +15,12 @@ public class ApplicationPathsConfiguration : IApplicationPathsConfiguration
         IqAppExecutablePath = IqAppDirectory / "InspectaQueue.exe";
         IqUpdateZipPath = IqBaseDirectory / "release.zip";
         IqExtractedZipDirectory = IqBaseDirectory / "Release";
+        IqExtractedAppDirectory = IqExtractedZipDirectory / "App";
 
-        ConfigFilePath = IqAppDirectory / "config.json";
-        OldConfigFilePath = IqBaseDirectory / "config.json";
-        ProvidersDirectory = IqAppDirectory / "Providers";
-        OldProvidersDirectory = IqBaseDirectory / "Providers";
+        ConfigFilePath = IqBaseDirectory / "config.json";
+        OldConfigFilePath = IqAppDirectory / "config.json";
+        ProvidersDirectory = IqBaseDirectory / "Providers";
+        OldProvidersDirectory = IqAppDirectory / "Providers";
 
         IqAppDirectory.CreateDirectory();
     }
@@ -27,6 +28,7 @@ public class ApplicationPathsConfiguration : IApplicationPathsConfiguration
     private AbsolutePath LocalAppDataDirectory { get; }
     public AbsolutePath IqBaseDirectory { get; }
     public AbsolutePath IqAppDirectory { get; }
+    public AbsolutePath IqExtractedAppDirectory { get; }
     public AbsolutePath ConfigFilePath { get; }
     public AbsolutePath OldConfigFilePath { get; }
     public AbsolutePath ProvidersDirectory { get; }

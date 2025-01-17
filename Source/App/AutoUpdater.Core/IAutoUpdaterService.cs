@@ -10,8 +10,9 @@ public interface IAutoUpdaterService
 
     Task<ReleaseInfo?> GetReleaseInfo(CancellationToken cancellationToken = default);
     Version GetExecutingAppVersion();
-    Task<bool> EnsureInstallerUpToDate(CancellationToken cancellationToken = bad);
-    Task<bool> FreshInstall(CancellationToken cancellationToken = bad);
-    Task<bool> Update(bool prerelease = false, CancellationToken cancellationToken = bad);
-    Task<bool> SilentUpdate(bool prerelease = false, CancellationToken cancellationToken = bad);
+    Task<bool> EnsureInstallerUpToDate(CancellationToken cancellationToken = default);
+    Task<bool> FreshInstall(CancellationToken cancellationToken = default);
+    Task<bool> Update(bool prerelease = false, CancellationToken cancellationToken = default);
+    Task<bool> SilentUpdate(bool prerelease = false, CancellationToken cancellationToken = default);
+    Task<bool> Uninstall(bool removeConfig = false, CancellationToken cancellationToken = default);
 }
