@@ -58,8 +58,7 @@ namespace AutoUpdater.App.ViewModels
         private async Task NextEffect()
         {
             IsBusy = !IsBusy;
-            await _autoUpdater.DownloadRelease(false);
-            await _autoUpdater.Unzip();
+            _autoUpdater.LaunchInspectaQueue();
         }
 
         private void RaiseButtonsVisibilityUpdated()

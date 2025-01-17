@@ -1,4 +1,5 @@
-﻿using Rachkov.InspectaQueue.Abstractions.EventArgs;
+﻿using Nuke.Common.IO;
+using Rachkov.InspectaQueue.Abstractions.EventArgs;
 using Rachkov.InspectaQueue.Abstractions.Models;
 using System.Diagnostics;
 using System.IO.Compression;
@@ -40,13 +41,160 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         return new Version(fvi.FileVersion ?? assembly.GetName().Version?.ToString() ?? "0.0.0");
     }
 
-    public async Task<bool> DownloadRelease(bool prerelease)
+    #region Jobs
+
+    public async Task<bool> EnsureInstallerUpToDate()
+    {
+        RaiseJobStatusChanged(true, [Stage.VerifyingInstaller, Stage.DownloadingInstaller]);
+        RaiseStageStatusChanged(Stage.VerifyingInstaller, StageStatus.InProgress);
+
+        var releaseInfo = await GetReleaseInfo();
+
+        if (releaseInfo?.Latest.Installer?.Version is null)
+        {
+            RaiseJobStatusChanged(false);
+            return FailStage(Stage.VerifyingInstaller);
+        }
+
+        var localInstallerVersion = _applicationPathsConfiguration.GetInstallerVersion();
+
+        if (localInstallerVersion is not null
+            && localInstallerVersion >= releaseInfo.Latest.Installer.Version)
+        {
+            RaiseStageStatusChanged(Stage.VerifyingInstaller, StageStatus.Done);
+            RaiseStageStatusChanged(Stage.DownloadingInstaller, StageStatus.Skipped);
+            RaiseJobStatusChanged(false);
+            return true;
+        }
+
+        RaiseStageStatusChanged(Stage.VerifyingInstaller, StageStatus.Done);
+        RaiseStageStatusChanged(Stage.DownloadingInstaller, StageStatus.InProgress);
+
+        _applicationPathsConfiguration.InstallerPath.DeleteFile();
+        var result = await DownloadInstaller();
+
+        if (!result)
+        {
+            RaiseStageStatusChanged(Stage.DownloadingInstaller, StageStatus.Failed);
+            RaiseJobStatusChanged(false);
+            return false;
+        }
+
+        RaiseStageStatusChanged(Stage.DownloadingInstaller, StageStatus.Done);
+        RaiseJobStatusChanged(false);
+        return true;
+    }
+
+    public async Task<bool> FreshInstall()
+    {
+        RaiseJobStatusChanged(true, [Stage.DownloadingRelease, Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp]);
+
+        if (!await DownloadRelease())
+        {
+            return FailJob(Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
+        }
+
+        if (!Unzip())
+        {
+            return FailJob(Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
+        }
+
+        if (!CopyFiles())
+        {
+            return FailJob(Stage.CleaningUp, Stage.LaunchApp);
+        }
+
+        if (!CleanUp())
+        {
+            return FailJob(Stage.LaunchApp);
+        }
+
+        if (!LaunchInspectaQueue())
+        {
+            return FailJob();
+        }
+
+        RaiseJobStatusChanged(true);
+        return true;
+    }
+
+    public async Task<bool> Update(bool prerelease = false)
+    {
+        RaiseJobStatusChanged(true, [Stage.DownloadingRelease, Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp]);
+
+        if (!await DownloadRelease(prerelease))
+        {
+            return FailJob(Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
+        }
+
+        if (!Unzip())
+        {
+            return FailJob(Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
+        }
+
+        if (!CopyFiles())
+        {
+            return FailJob(Stage.CleaningUp, Stage.LaunchApp);
+        }
+
+        if (!CleanUp())
+        {
+            return FailJob(Stage.LaunchApp);
+        }
+
+        if (!LaunchInspectaQueue())
+        {
+            return FailJob();
+        }
+
+        RaiseJobStatusChanged(true);
+        return true;
+    }
+
+    public async Task<bool> SilentUpdate(bool prerelease = false)
+    {
+        RaiseJobStatusChanged(true, [Stage.WaitingAppToClose, Stage.DownloadingRelease, Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp]);
+
+        if (!await WaitInspectaQueueToExit())
+        {
+            return FailJob(Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
+        }
+
+        if (!await DownloadRelease(prerelease))
+        {
+            return FailJob(Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
+        }
+
+        if (!Unzip())
+        {
+            return FailJob(Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
+        }
+
+        if (!CopyFiles())
+        {
+            return FailJob(Stage.CleaningUp, Stage.LaunchApp);
+        }
+
+        if (!CleanUp())
+        {
+            return FailJob(Stage.LaunchApp);
+        }
+
+        RaiseJobStatusChanged(true);
+        return true;
+    }
+
+    #endregion
+
+    #region Stages
+
+    private async Task<bool> DownloadRelease(bool prerelease = false)
     {
         try
         {
             RaiseStageStatusChanged(Stage.DownloadingRelease, StageStatus.InProgress);
 
-            var releaseInfo = await _downloadService.FetchReleaseInfoAsync();
+            var releaseInfo = await GetReleaseInfo();
 
             if (releaseInfo is null)
             {
@@ -77,7 +225,40 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         }
     }
 
-    public Task<bool> Unzip()
+    private async Task<bool> DownloadInstaller()
+    {
+        try
+        {
+            RaiseStageStatusChanged(Stage.DownloadingInstaller, StageStatus.InProgress);
+
+            var releaseInfo = await GetReleaseInfo();
+
+            if (releaseInfo is null)
+            {
+                return FailStage(Stage.DownloadingInstaller);
+            }
+
+            if (releaseInfo.Latest.Installer is null)
+            {
+                return FailStage(Stage.DownloadingInstaller);
+            }
+
+            var downloadResult = await _downloadService.TryDownloadAssetAsync(releaseInfo.Latest.Installer, _applicationPathsConfiguration.GetInstallerPath(releaseInfo.Latest.Installer.Version));
+
+            if (!downloadResult)
+            {
+                return FailStage(Stage.DownloadingInstaller);
+            }
+
+            return PassStage(Stage.DownloadingInstaller);
+        }
+        catch
+        {
+            return FailStage(Stage.DownloadingInstaller);
+        }
+    }
+
+    private bool Unzip()
     {
         try
         {
@@ -85,45 +266,134 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 
             ZipFile.ExtractToDirectory(
                 _applicationPathsConfiguration.IqUpdateZipPath,
-                _applicationPathsConfiguration.IqExtractedZipFolderPath);
+                _applicationPathsConfiguration.IqExtractedZipDirectory);
 
-            return Task.FromResult(PassStage(Stage.Unzipping));
+            return PassStage(Stage.Unzipping);
         }
         catch
         {
-            return Task.FromResult(FailStage(Stage.Unzipping));
+            return FailStage(Stage.Unzipping);
         }
     }
 
-    //public void RunFinalCopyScript()
-    //{
-    //    var scriptPath = "..\\restore.bat";
-    //    var scriptFullPath = Path.GetFullPath(scriptPath);
+    private bool CopyFiles()
+    {
+        try
+        {
+            RaiseStageStatusChanged(Stage.CopyingFiles, StageStatus.InProgress);
 
-    //    File.WriteAllText(scriptPath, Constants.Script.Finalize2);
-    //    ProcessStartInfo psi = new ProcessStartInfo
-    //    {
-    //        FileName = "cmd.exe",
-    //        WorkingDirectory = Path.GetDirectoryName(scriptFullPath),
-    //        Arguments = "/c " + Path.GetFileName(scriptFullPath),
-    //        UseShellExecute = false,
-    //        CreateNoWindow = false, //
-    //        RedirectStandardOutput = false,
-    //        RedirectStandardError = false,
-    //        RedirectStandardInput = false,
-    //        WindowStyle = ProcessWindowStyle.Normal
-    //    };
+            if (_applicationPathsConfiguration.OldConfigFilePath.FileExists())
+            {
+                _applicationPathsConfiguration.OldConfigFilePath.Copy(_applicationPathsConfiguration.ConfigFilePath);
+            }
 
-    //    Process cmdProcess = Process.Start(psi);
-    //    cmdProcess.Dispose();
-    //}
+            if (_applicationPathsConfiguration.OldProvidersDirectory.DirectoryExists())
+            {
+                _applicationPathsConfiguration.OldProvidersDirectory.CopyToDirectory(_applicationPathsConfiguration.ProvidersDirectory);
+            }
+
+            _applicationPathsConfiguration.IqAppDirectory.CreateOrCleanDirectory();
+
+            _applicationPathsConfiguration.IqExtractedZipDirectory.CopyToDirectory(
+                _applicationPathsConfiguration.IqAppDirectory);
+
+            _applicationPathsConfiguration.IqExtractedZipDirectory.DeleteDirectory();
+
+
+            if (_applicationPathsConfiguration.ConfigFilePath.FileExists())
+            {
+                _applicationPathsConfiguration.ConfigFilePath.Copy(_applicationPathsConfiguration.OldConfigFilePath);
+            }
+
+            if (_applicationPathsConfiguration.ProvidersDirectory.DirectoryExists())
+            {
+                _applicationPathsConfiguration.ProvidersDirectory.CopyToDirectory(_applicationPathsConfiguration.OldProvidersDirectory);
+            }
+
+            return PassStage(Stage.CopyingFiles);
+        }
+        catch
+        {
+            return FailStage(Stage.CopyingFiles);
+        }
+    }
+
+    private bool CleanUp()
+    {
+        try
+        {
+            RaiseStageStatusChanged(Stage.CleaningUp, StageStatus.InProgress);
+
+            _applicationPathsConfiguration.IqExtractedZipDirectory.DeleteDirectory();
+
+            return PassStage(Stage.CleaningUp);
+        }
+        catch
+        {
+            return FailStage(Stage.CleaningUp);
+        }
+    }
+
+    private async Task<bool> WaitInspectaQueueToExit()
+    {
+        try
+        {
+            RaiseStageStatusChanged(Stage.WaitingAppToClose, StageStatus.InProgress);
+
+            var processes = Process.GetProcessesByName("InspectaQueue");
+
+            if (processes.Length == 0)
+            {
+                return PassStage(Stage.WaitingAppToClose);
+            }
+
+            await processes[0].WaitForExitAsync();
+
+            return PassStage(Stage.WaitingAppToClose);
+        }
+        catch
+        {
+            return FailStage(Stage.WaitingAppToClose);
+        }
+    }
+
+    private bool LaunchInspectaQueue()
+    {
+        try
+        {
+            RaiseStageStatusChanged(Stage.LaunchApp, StageStatus.InProgress);
+
+            ProcessStartInfo psi = new ProcessStartInfo
+            {
+                FileName = _applicationPathsConfiguration.IqAppExecutablePath,
+                WorkingDirectory = _applicationPathsConfiguration.IqAppDirectory,
+                Arguments = "",
+                UseShellExecute = false,
+                CreateNoWindow = false,
+                RedirectStandardOutput = false,
+                RedirectStandardError = false,
+                RedirectStandardInput = false,
+                WindowStyle = ProcessWindowStyle.Normal
+            };
+
+            Process.Start(psi);
+
+            return PassStage(Stage.LaunchApp);
+        }
+        catch
+        {
+            return FailStage(Stage.LaunchApp);
+        }
+    }
+
+    #endregion
 
     private async Task UpdateReleaseInfo()
     {
         _releaseInfo = await _downloadService.FetchReleaseInfoAsync();
     }
 
-    private void RaiseJobStatusChanged(bool isJobRunning, Stage[] stages)
+    private void RaiseJobStatusChanged(bool isJobRunning, Stage[]? stages = null)
     {
         JobStatusChanged?.Invoke(this, new JobStatusChangedEventArgs
         {
@@ -151,5 +421,16 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
     {
         RaiseStageStatusChanged(stage, StageStatus.Done);
         return true;
+    }
+
+    private bool FailJob(params Stage[] failStages)
+    {
+        foreach (var stage in failStages)
+        {
+            RaiseStageStatusChanged(stage, StageStatus.Failed);
+        }
+
+        RaiseJobStatusChanged(false);
+        return false;
     }
 }

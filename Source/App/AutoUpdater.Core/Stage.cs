@@ -3,9 +3,11 @@
 public enum Stage
 {
     DownloadingRelease,
+    VerifyingInstaller,
     DownloadingInstaller,
     Unzipping,
     CopyingFiles,
     CleaningUp,
-    WaitingAppToClose
+    WaitingAppToClose,
+    LaunchApp
 }

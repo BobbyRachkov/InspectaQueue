@@ -5,5 +5,6 @@ public enum StageStatus
     Pending,
     InProgress,
     Done,
-    Failed
+    Failed,
+    Skipped
 }

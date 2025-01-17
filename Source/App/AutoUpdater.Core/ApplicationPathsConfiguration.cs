@@ -6,37 +6,63 @@ public class ApplicationPathsConfiguration : IApplicationPathsConfiguration
 {
     public ApplicationPathsConfiguration()
     {
-        LocalAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        LocalAppDataDirectory = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
         //If Windows
-        IqBaseFolderPath = LocalAppDataPath / "InspectaQueue";
+        IqBaseDirectory = LocalAppDataDirectory / "InspectaQueue";
 
-        IqAppFolderPath = IqBaseFolderPath / "App";
-        IqAppExecutablePath = IqAppFolderPath / "InspectaQueue.exe";
-        IqUpdateZipPath = IqBaseFolderPath / "release.zip";
-        IqExtractedZipFolderPath = IqBaseFolderPath / "Release";
+        IqAppDirectory = IqBaseDirectory / "App";
+        IqAppExecutablePath = IqAppDirectory / "InspectaQueue.exe";
+        IqUpdateZipPath = IqBaseDirectory / "release.zip";
+        IqExtractedZipDirectory = IqBaseDirectory / "Release";
 
-        IqAppFolderPath.CreateDirectory();
+        ConfigFilePath = IqAppDirectory / "config.json";
+        OldConfigFilePath = IqBaseDirectory / "config.json";
+        ProvidersDirectory = IqAppDirectory / "Providers";
+        OldProvidersDirectory = IqBaseDirectory / "Providers";
+
+        IqAppDirectory.CreateDirectory();
     }
 
-    private AbsolutePath LocalAppDataPath { get; }
-    public AbsolutePath IqBaseFolderPath { get; }
-    public AbsolutePath IqAppFolderPath { get; }
+    private AbsolutePath LocalAppDataDirectory { get; }
+    public AbsolutePath IqBaseDirectory { get; }
+    public AbsolutePath IqAppDirectory { get; }
+    public AbsolutePath ConfigFilePath { get; }
+    public AbsolutePath OldConfigFilePath { get; }
+    public AbsolutePath ProvidersDirectory { get; }
+    public AbsolutePath OldProvidersDirectory { get; }
     public AbsolutePath IqAppExecutablePath { get; }
     public AbsolutePath? InstallerPath => GetInstallerPath();
     public AbsolutePath IqUpdateZipPath { get; }
-    public AbsolutePath IqExtractedZipFolderPath { get; }
+    public AbsolutePath IqExtractedZipDirectory { get; }
 
     private AbsolutePath? GetInstallerPath()
     {
-        var files = Directory.GetFiles(IqBaseFolderPath);
+        var files = Directory.GetFiles(IqBaseDirectory);
         return files.FirstOrDefault(x => x.StartsWith("Installer") && x.EndsWith(".exe"));
     }
 
-    public AbsolutePath? GetInstallerPath(Version version)
+    public Version? GetInstallerVersion()
     {
+        var installerPath = GetInstallerPath();
 
-        return IqBaseFolderPath / $"Installer_{version}.exe";
+        if (installerPath is null)
+        {
+            return null;
+        }
+
+        var versionString = installerPath.NameWithoutExtension.Substring(installerPath.NameWithoutExtension.IndexOf("_", StringComparison.Ordinal));
+        return new Version(versionString);
+    }
+
+    public AbsolutePath GetInstallerPath(Version? version)
+    {
+        if (version is null)
+        {
+            return IqBaseDirectory / "Installer_0.0.0.exe";
+        }
+
+        return IqBaseDirectory / $"Installer_{version}.exe";
     }
 
     public bool IsIqInstalled()

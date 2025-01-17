@@ -90,6 +90,16 @@ public sealed class Version : IComparable<Version>
         return a != b && !(a > b);
     }
 
+    public static bool operator >=(Version a, Version b)
+    {
+        return a == b || a > b;
+    }
+
+    public static bool operator <=(Version a, Version b)
+    {
+        return a == b || a < b;
+    }
+
     public static bool operator ==(Version a, Version b)
     {
         return a.Equals(b);

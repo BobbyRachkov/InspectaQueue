@@ -10,7 +10,8 @@ public interface IAutoUpdaterService
 
     Task<ReleaseInfo?> GetReleaseInfo();
     Version GetExecutingAppVersion();
-    Task<bool> DownloadRelease(bool prerelease);
-    Task<bool> Unzip();
-
+    Task<bool> EnsureInstallerUpToDate();
+    Task<bool> FreshInstall();
+    Task<bool> Update(bool prerelease = false);
+    Task<bool> SilentUpdate(bool prerelease = false);
 }
