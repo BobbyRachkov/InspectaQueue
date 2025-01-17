@@ -33,6 +33,7 @@ namespace AutoUpdater.App.ViewModels
             _autoUpdater.JobStatusChanged += OnJobStatusChanged;
             _autoUpdater.StageStatusChanged += OnStageStatusChanged;
 
+            _ = RunStartupProcedures();
         }
 
         private void OnStageStatusChanged(object? sender, Rachkov.InspectaQueue.AutoUpdater.Core.EventArgs.StageStatusChangedEventArgs e)
@@ -71,6 +72,7 @@ namespace AutoUpdater.App.ViewModels
         }
 
         public IImmutableSolidColorBrush Background => new ImmutableSolidColorBrush(new Color(255, 25, 25, 25));
+
         public IImmutableSolidColorBrush AccentColor => new ImmutableSolidColorBrush(new Color(255, 65, 55, 75));
 
 
@@ -85,19 +87,25 @@ namespace AutoUpdater.App.ViewModels
         }
 
         public bool IsForceUpdate => StartupArgsService.Instance?.IsForceUpdate ?? false;
+
         public bool IsInstallButtonVisible => !IsBusy && !_fileService.IsIqInstalled() && !IsForceUpdate && !_finished;
+
         public bool IsUpdateButtonVisible => !IsBusy && _fileService.IsIqInstalled() && !IsForceUpdate && !_finished;
+
         public bool IsUninstallButtonVisible => !IsBusy && _fileService.IsIqInstalled() && !IsForceUpdate && !_finished;
+
         public bool IsCancelButtonVisible => IsBusy;
+
         public bool IsCloseButtonVisible => !IsBusy;
 
         public ObservableCollection<StageViewModel> Stages { get; } = new();
 
-        public string Text => StartupArgsService.Instance?.IsForceUpdate.ToString() ?? "";
-
         public ICommand CloseCommand { get; }
+
         public ICommand UpdateCommand { get; }
+
         public ICommand InstallCommand { get; }
+
         public ICommand UninstallCommand { get; }
 
         private async Task Update()
@@ -122,6 +130,21 @@ namespace AutoUpdater.App.ViewModels
             this.RaisePropertyChanged(nameof(IsUninstallButtonVisible));
             this.RaisePropertyChanged(nameof(IsCancelButtonVisible));
             this.RaisePropertyChanged(nameof(IsCloseButtonVisible));
+        }
+
+        private async Task RunStartupProcedures()
+        {
+            var prerelease = StartupArgsService.Instance?.IsPrerelease ?? false;
+
+            if (StartupArgsService.Instance?.IsForceUpdate == true)
+            {
+                await _autoUpdater.Update(prerelease);
+            }
+
+            if (StartupArgsService.Instance?.IsQuietUpdate == true)
+            {
+                await _autoUpdater.SilentUpdate(prerelease);
+            }
         }
     }
 }
