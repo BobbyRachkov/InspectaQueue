@@ -14,6 +14,7 @@ using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
+using Rachkov.InspectaQueue.AutoUpdater.Core;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 

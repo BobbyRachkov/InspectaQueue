@@ -1,4 +1,4 @@
-﻿namespace Rachkov.InspectaQueue.Abstractions;
+﻿namespace Rachkov.InspectaQueue.AutoUpdater.Core;
 
 public enum StageStatus
 {

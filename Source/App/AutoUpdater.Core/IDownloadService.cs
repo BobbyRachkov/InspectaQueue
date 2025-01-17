@@ -1,9 +1,9 @@
-﻿using Rachkov.InspectaQueue.Abstractions.Models;
+﻿using Rachkov.InspectaQueue.AutoUpdater.Core.Models;
 
-namespace Rachkov.InspectaQueue.Abstractions;
+namespace Rachkov.InspectaQueue.AutoUpdater.Core;
 
 public interface IDownloadService
 {
-    Task<ReleaseInfo?> FetchReleaseInfoAsync();
-    Task<bool> TryDownloadAssetAsync(Asset asset, string downloadPath);
+    Task<ReleaseInfo?> FetchReleaseInfoAsync(CancellationToken cancellationToken = default);
+    Task<bool> TryDownloadAssetAsync(Asset asset, string downloadPath, CancellationToken cancellationToken = default);
 }

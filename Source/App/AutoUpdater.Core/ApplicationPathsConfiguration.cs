@@ -1,6 +1,6 @@
 ﻿using Nuke.Common.IO;
 
-namespace Rachkov.InspectaQueue.Abstractions;
+namespace Rachkov.InspectaQueue.AutoUpdater.Core;
 
 public class ApplicationPathsConfiguration : IApplicationPathsConfiguration
 {

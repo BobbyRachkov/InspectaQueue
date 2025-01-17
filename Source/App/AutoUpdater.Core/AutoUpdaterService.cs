@@ -1,11 +1,11 @@
 ﻿using Nuke.Common.IO;
-using Rachkov.InspectaQueue.Abstractions.EventArgs;
-using Rachkov.InspectaQueue.Abstractions.Models;
+using Rachkov.InspectaQueue.AutoUpdater.Core.EventArgs;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Models;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Reflection;
 
-namespace Rachkov.InspectaQueue.Abstractions;
+namespace Rachkov.InspectaQueue.AutoUpdater.Core;
 
 public sealed class AutoUpdaterService : IAutoUpdaterService
 {
@@ -24,11 +24,11 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
     public event EventHandler<JobStatusChangedEventArgs>? JobStatusChanged;
     public event EventHandler<StageStatusChangedEventArgs>? StageStatusChanged;
 
-    public async Task<ReleaseInfo?> GetReleaseInfo()
+    public async Task<ReleaseInfo?> GetReleaseInfo(CancellationToken cancellationToken = default)
     {
         if (_releaseInfo is null)
         {
-            await UpdateReleaseInfo();
+            await UpdateReleaseInfo(cancellationToken);
         }
 
         return _releaseInfo;
@@ -43,12 +43,12 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 
     #region Jobs
 
-    public async Task<bool> EnsureInstallerUpToDate()
+    public async Task<bool> EnsureInstallerUpToDate(CancellationToken cancellationToken = default)
     {
         RaiseJobStatusChanged(true, [Stage.VerifyingInstaller, Stage.DownloadingInstaller]);
         RaiseStageStatusChanged(Stage.VerifyingInstaller, StageStatus.InProgress);
 
-        var releaseInfo = await GetReleaseInfo();
+        var releaseInfo = await GetReleaseInfo(cancellationToken);
 
         if (releaseInfo?.Latest.Installer?.Version is null)
         {
@@ -71,7 +71,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         RaiseStageStatusChanged(Stage.DownloadingInstaller, StageStatus.InProgress);
 
         _applicationPathsConfiguration.InstallerPath.DeleteFile();
-        var result = await DownloadInstaller();
+        var result = await DownloadInstaller(cancellationToken);
 
         if (!result)
         {
@@ -85,11 +85,11 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         return true;
     }
 
-    public async Task<bool> FreshInstall()
+    public async Task<bool> FreshInstall(CancellationToken cancellationToken = default)
     {
         RaiseJobStatusChanged(true, [Stage.DownloadingRelease, Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp]);
 
-        if (!await DownloadRelease())
+        if (!await DownloadRelease(cancellationToken: cancellationToken))
         {
             return FailJob(Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
         }
@@ -118,11 +118,11 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         return true;
     }
 
-    public async Task<bool> Update(bool prerelease = false)
+    public async Task<bool> Update(bool prerelease = false, CancellationToken cancellationToken = default)
     {
         RaiseJobStatusChanged(true, [Stage.DownloadingRelease, Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp]);
 
-        if (!await DownloadRelease(prerelease))
+        if (!await DownloadRelease(prerelease, cancellationToken))
         {
             return FailJob(Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
         }
@@ -151,16 +151,16 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         return true;
     }
 
-    public async Task<bool> SilentUpdate(bool prerelease = false)
+    public async Task<bool> SilentUpdate(bool prerelease = false, CancellationToken cancellationToken = default)
     {
         RaiseJobStatusChanged(true, [Stage.WaitingAppToClose, Stage.DownloadingRelease, Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp]);
 
-        if (!await WaitInspectaQueueToExit())
+        if (!await WaitInspectaQueueToExit(cancellationToken))
         {
             return FailJob(Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
         }
 
-        if (!await DownloadRelease(prerelease))
+        if (!await DownloadRelease(prerelease, cancellationToken))
         {
             return FailJob(Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
         }
@@ -188,7 +188,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 
     #region Stages
 
-    private async Task<bool> DownloadRelease(bool prerelease = false)
+    private async Task<bool> DownloadRelease(bool prerelease = false, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -210,7 +210,10 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
                 ? releaseInfo.Prerelease.WindowsAppZip
                 : releaseInfo.Latest.WindowsAppZip;
 
-            var downloadResult = await _downloadService.TryDownloadAssetAsync(assetForDownloading, _applicationPathsConfiguration.IqUpdateZipPath);
+            var downloadResult = await _downloadService.TryDownloadAssetAsync(
+                assetForDownloading,
+                _applicationPathsConfiguration.IqUpdateZipPath,
+                cancellationToken);
 
             if (!downloadResult)
             {
@@ -225,7 +228,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         }
     }
 
-    private async Task<bool> DownloadInstaller()
+    private async Task<bool> DownloadInstaller(CancellationToken cancellationToken = default)
     {
         try
         {
@@ -243,7 +246,10 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
                 return FailStage(Stage.DownloadingInstaller);
             }
 
-            var downloadResult = await _downloadService.TryDownloadAssetAsync(releaseInfo.Latest.Installer, _applicationPathsConfiguration.GetInstallerPath(releaseInfo.Latest.Installer.Version));
+            var downloadResult = await _downloadService.TryDownloadAssetAsync(
+                releaseInfo.Latest.Installer,
+                _applicationPathsConfiguration.GetInstallerPath(releaseInfo.Latest.Installer.Version),
+                cancellationToken);
 
             if (!downloadResult)
             {
@@ -334,7 +340,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         }
     }
 
-    private async Task<bool> WaitInspectaQueueToExit()
+    private async Task<bool> WaitInspectaQueueToExit(CancellationToken cancellationToken = default)
     {
         try
         {
@@ -347,7 +353,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
                 return PassStage(Stage.WaitingAppToClose);
             }
 
-            await processes[0].WaitForExitAsync();
+            await processes[0].WaitForExitAsync(cancellationToken);
 
             return PassStage(Stage.WaitingAppToClose);
         }
@@ -388,9 +394,9 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 
     #endregion
 
-    private async Task UpdateReleaseInfo()
+    private async Task UpdateReleaseInfo(CancellationToken cancellationToken = default)
     {
-        _releaseInfo = await _downloadService.FetchReleaseInfoAsync();
+        _releaseInfo = await _downloadService.FetchReleaseInfoAsync(cancellationToken);
     }
 
     private void RaiseJobStatusChanged(bool isJobRunning, Stage[]? stages = null)

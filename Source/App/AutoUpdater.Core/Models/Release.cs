@@ -1,4 +1,4 @@
-﻿namespace Rachkov.InspectaQueue.Abstractions.Models;
+﻿namespace Rachkov.InspectaQueue.AutoUpdater.Core.Models;
 
 public sealed record Release
 {

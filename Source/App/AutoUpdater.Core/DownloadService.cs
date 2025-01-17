@@ -1,9 +1,9 @@
 ﻿using Newtonsoft.Json;
-using Rachkov.InspectaQueue.Abstractions.Models;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Models;
 using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
 
-namespace Rachkov.InspectaQueue.Abstractions;
+namespace Rachkov.InspectaQueue.AutoUpdater.Core;
 
 public sealed class DownloadService : IDownloadService
 {
@@ -16,11 +16,11 @@ public sealed class DownloadService : IDownloadService
         _client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("product", "1"));
     }
 
-    public async Task<ReleaseInfo?> FetchReleaseInfoAsync()
+    public async Task<ReleaseInfo?> FetchReleaseInfoAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            var allReleasesJson = await _client.GetStringAsync(Constants.Url.ReleasesPath);
+            var allReleasesJson = await _client.GetStringAsync(Constants.Url.ReleasesPath, cancellationToken);
             var allReleases = JsonConvert.DeserializeObject<Contracts.Release[]>(allReleasesJson);
 
             var latest = allReleases?.FirstOrDefault(x => x.Prerelease is false);
@@ -113,7 +113,7 @@ public sealed class DownloadService : IDownloadService
         return asset is null ? null : ParseAsset(asset);
     }
 
-    public async Task<bool> TryDownloadAssetAsync(Asset asset, string downloadPath)
+    public async Task<bool> TryDownloadAssetAsync(Asset asset, string downloadPath, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(asset.DownloadUrl))
         {
@@ -122,10 +122,10 @@ public sealed class DownloadService : IDownloadService
 
         try
         {
-            var fileStream = await _client.GetStreamAsync(asset.DownloadUrl);
+            var fileStream = await _client.GetStreamAsync(asset.DownloadUrl, cancellationToken);
 
             await using var outputFileStream = new FileStream(downloadPath, FileMode.Create);
-            await fileStream.CopyToAsync(outputFileStream);
+            await fileStream.CopyToAsync(outputFileStream, cancellationToken);
 
             return true;
         }

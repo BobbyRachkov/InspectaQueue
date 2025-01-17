@@ -13,6 +13,7 @@ using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
+using Rachkov.InspectaQueue.AutoUpdater.Core;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Extensions;
 

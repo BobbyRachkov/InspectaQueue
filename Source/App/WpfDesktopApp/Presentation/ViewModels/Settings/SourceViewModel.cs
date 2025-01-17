@@ -4,7 +4,7 @@ using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings.Trans
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models;
 using System.Windows.Input;
-using Version = Rachkov.InspectaQueue.Abstractions.Version;
+using Version = Rachkov.InspectaQueue.AutoUpdater.Core.Version;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 

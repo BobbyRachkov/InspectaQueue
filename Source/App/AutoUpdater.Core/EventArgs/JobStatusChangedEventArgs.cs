@@ -1,4 +1,4 @@
-﻿namespace Rachkov.InspectaQueue.Abstractions.EventArgs;
+﻿namespace Rachkov.InspectaQueue.AutoUpdater.Core.EventArgs;
 
 public record JobStatusChangedEventArgs
 {

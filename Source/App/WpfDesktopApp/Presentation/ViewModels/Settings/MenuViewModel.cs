@@ -5,6 +5,7 @@ using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings.Model
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
 using System.Diagnostics;
 using System.Windows;
+using Rachkov.InspectaQueue.AutoUpdater.Core;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 

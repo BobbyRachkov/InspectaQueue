@@ -1,7 +1,7 @@
 ﻿using AutoUpdater.App.Services;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
-using Rachkov.InspectaQueue.Abstractions;
+using Rachkov.InspectaQueue.AutoUpdater.Core;
 using ReactiveUI;
 using System;
 using System.Threading.Tasks;
@@ -58,7 +58,6 @@ namespace AutoUpdater.App.ViewModels
         private async Task NextEffect()
         {
             IsBusy = !IsBusy;
-            _autoUpdater.LaunchInspectaQueue();
         }
 
         private void RaiseButtonsVisibilityUpdated()

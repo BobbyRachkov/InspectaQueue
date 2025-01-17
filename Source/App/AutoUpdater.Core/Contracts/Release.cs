@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Serialization;
 
-namespace Rachkov.InspectaQueue.Abstractions.Contracts;
+namespace Rachkov.InspectaQueue.AutoUpdater.Core.Contracts;
 
 [DataContract]
 internal sealed class Release
