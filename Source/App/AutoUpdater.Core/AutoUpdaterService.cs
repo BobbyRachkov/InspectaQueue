@@ -12,6 +12,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
     private readonly IDownloadService _downloadService;
     private readonly IApplicationPathsConfiguration _applicationPathsConfiguration;
     private ReleaseInfo? _releaseInfo;
+    private readonly TimeSpan _consistentDelay = TimeSpan.FromMilliseconds(750);
 
     public AutoUpdaterService(
         IDownloadService downloadService,
@@ -94,17 +95,17 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
             return FailJob(Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
         }
 
-        if (!Unzip())
+        if (!await Unzip(cancellationToken))
         {
             return FailJob(Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
         }
 
-        if (!CopyFiles())
+        if (!await CopyFiles(cancellationToken))
         {
             return FailJob(Stage.CleaningUp, Stage.LaunchApp);
         }
 
-        if (!CleanUp())
+        if (!await CleanUp(cancellationToken))
         {
             return FailJob(Stage.LaunchApp);
         }
@@ -127,17 +128,17 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
             return FailJob(Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
         }
 
-        if (!Unzip())
+        if (!await Unzip(cancellationToken))
         {
             return FailJob(Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
         }
 
-        if (!CopyFiles())
+        if (!await CopyFiles(cancellationToken))
         {
             return FailJob(Stage.CleaningUp, Stage.LaunchApp);
         }
 
-        if (!CleanUp())
+        if (!await CleanUp(cancellationToken))
         {
             return FailJob(Stage.LaunchApp);
         }
@@ -165,17 +166,17 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
             return FailJob(Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
         }
 
-        if (!Unzip())
+        if (!await Unzip(cancellationToken))
         {
             return FailJob(Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
         }
 
-        if (!CopyFiles())
+        if (!await CopyFiles(cancellationToken))
         {
             return FailJob(Stage.CleaningUp, Stage.LaunchApp);
         }
 
-        if (!CleanUp())
+        if (!await CleanUp(cancellationToken))
         {
             return FailJob(Stage.LaunchApp);
         }
@@ -190,7 +191,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 
         await Task.Yield();
 
-        if (!UninstallInternal())
+        if (!await UninstallInternal(cancellationToken: cancellationToken))
         {
             return FailJob(Stage.Uninstalling);
         }
@@ -248,6 +249,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         try
         {
             RaiseStageStatusChanged(Stage.DownloadingInstaller, StageStatus.InProgress);
+            await Task.Delay(_consistentDelay, cancellationToken);
 
             var releaseInfo = await GetReleaseInfo(cancellationToken);
 
@@ -279,11 +281,12 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         }
     }
 
-    private bool Unzip()
+    private async Task<bool> Unzip(CancellationToken cancellationToken = default)
     {
         try
         {
             RaiseStageStatusChanged(Stage.Unzipping, StageStatus.InProgress);
+            await Task.Delay(_consistentDelay, cancellationToken);
 
             _applicationPathsConfiguration.IqExtractedZipDirectory.DeleteDirectory();
             ZipFile.ExtractToDirectory(
@@ -298,11 +301,12 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         }
     }
 
-    private bool CopyFiles()
+    private async Task<bool> CopyFiles(CancellationToken cancellationToken = default)
     {
         try
         {
             RaiseStageStatusChanged(Stage.CopyingFiles, StageStatus.InProgress);
+            await Task.Delay(_consistentDelay, cancellationToken);
 
             if (_applicationPathsConfiguration.OldConfigFilePath.FileExists())
             {
@@ -338,11 +342,12 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         }
     }
 
-    private bool CleanUp()
+    private async Task<bool> CleanUp(CancellationToken cancellationToken = default)
     {
         try
         {
             RaiseStageStatusChanged(Stage.CleaningUp, StageStatus.InProgress);
+            await Task.Delay(_consistentDelay, cancellationToken);
 
             _applicationPathsConfiguration.IqExtractedZipDirectory.DeleteDirectory();
             _applicationPathsConfiguration.IqUpdateZipPath.DeleteFile();
@@ -355,11 +360,12 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         }
     }
 
-    private bool UninstallInternal(bool deleteConfig = true)
+    private async Task<bool> UninstallInternal(bool deleteConfig = true, CancellationToken cancellationToken = default)
     {
         try
         {
             RaiseStageStatusChanged(Stage.Uninstalling, StageStatus.InProgress);
+            await Task.Delay(_consistentDelay, cancellationToken);
 
             _applicationPathsConfiguration.IqAppDirectory.DeleteDirectory();
             _applicationPathsConfiguration.ConfigFilePath.DeleteFile();
@@ -380,6 +386,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         try
         {
             RaiseStageStatusChanged(Stage.WaitingAppToClose, StageStatus.InProgress);
+            await Task.Delay(_consistentDelay, cancellationToken);
 
             var processes = Process.GetProcessesByName("InspectaQueue");
 
@@ -468,7 +475,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
     {
         foreach (var stage in failStages)
         {
-            RaiseStageStatusChanged(stage, StageStatus.Failed);
+            RaiseStageStatusChanged(stage, StageStatus.Skipped);
         }
 
         RaiseJobStatusChanged(false);

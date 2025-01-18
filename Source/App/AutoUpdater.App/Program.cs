@@ -1,9 +1,9 @@
 ﻿using AutoUpdater.App.Services;
 using Avalonia;
 using Avalonia.ReactiveUI;
+using Rachkov.InspectaQueue.AutoUpdater.Core;
 using System;
 using System.Linq;
-using Rachkov.InspectaQueue.AutoUpdater.Core;
 
 namespace AutoUpdater.App
 {

@@ -16,8 +16,8 @@ public class StageViewModel : ViewModelBase
         { Stage.Unzipping ,"Extracting"},
         { Stage.CopyingFiles ,"Copying files"},
         { Stage.CleaningUp ,"Cleaning up"},
-        { Stage.WaitingAppToClose ,"Waiting InspectaQueue to be closed"},
-        { Stage.LaunchApp ,"Launching InspectaQueue"},
+        { Stage.WaitingAppToClose ,"Waiting IQ to exit"},
+        { Stage.LaunchApp ,"Launching IQ"},
         { Stage.Uninstalling ,"Uninstalling"},
     };
 
@@ -40,6 +40,22 @@ public class StageViewModel : ViewModelBase
         {
             _status = value;
             this.RaisePropertyChanged();
+            RaiseStatusUpdated();
         }
     }
+
+    private void RaiseStatusUpdated()
+    {
+        this.RaisePropertyChanged(nameof(IsPending));
+        this.RaisePropertyChanged(nameof(IsInProgress));
+        this.RaisePropertyChanged(nameof(IsDone));
+        this.RaisePropertyChanged(nameof(IsFailed));
+        this.RaisePropertyChanged(nameof(IsSkipped));
+    }
+
+    public bool IsPending => Status == StageStatus.Pending;
+    public bool IsInProgress => Status == StageStatus.InProgress;
+    public bool IsDone => Status == StageStatus.Done;
+    public bool IsFailed => Status == StageStatus.Failed;
+    public bool IsSkipped => Status == StageStatus.Skipped;
 }
