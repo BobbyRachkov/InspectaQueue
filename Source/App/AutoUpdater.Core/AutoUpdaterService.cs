@@ -121,9 +121,14 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 
     public async Task<bool> Update(bool prerelease = false, CancellationToken cancellationToken = default)
     {
-        RaiseJobStatusChanged(true, [Stage.DownloadingRelease, Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp]);
+        RaiseJobStatusChanged(true, [Stage.DownloadingRelease, Stage.WaitingAppToClose, Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp]);
 
         if (!await DownloadRelease(prerelease, cancellationToken))
+        {
+            return FailJob(Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
+        }
+
+        if (!await WaitInspectaQueueToExit(cancellationToken))
         {
             return FailJob(Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
         }
