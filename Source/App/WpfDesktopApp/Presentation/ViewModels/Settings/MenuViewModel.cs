@@ -38,7 +38,6 @@ public class MenuViewModel : ViewModel
         LaunchAutoUpdater = new RelayCommand(LaunchInstaller);
     }
 
-
     public bool IsAutoupdaterEnabled
     {
         get => _isAutoupdaterEnabled;
