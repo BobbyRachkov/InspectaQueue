@@ -41,8 +41,10 @@ public class Build : NukeBuild
     AbsolutePath AutoUpdaterCompileDirectory => ArtifactsDirectory / "wpf" / "AutoUpdater";
     AbsolutePath ProvidersCompileDirectory => ArtifactsDirectory / "providers";
     AbsolutePath ArtifactsDirectory => RootDirectory / "artifacts";
-    AbsolutePath ProvidersDirectory => WpfCompileDirectory / "Providers";
+    AbsolutePath ProvidersDirectory => ZipDirectory / "Providers";
     AbsolutePath ProdZipName => ArtifactsDirectory / $"InspectaQueue_{AppVersion}.zip";
+
+    AbsolutePath ProvidersDevDirectory => RootDirectory / "\\Source\\App\\WpfDesktopApp\\bin\\Debug\\Providers";
 
     Target Clean => _ => _
         .Before(Restore)
@@ -121,5 +123,33 @@ public class Build : NukeBuild
         .Executes(() =>
         {
             ZipDirectory.ZipTo(ProdZipName);
+        });
+
+    Target Dev => _ => _
+        .DependsOn(DebugProviders);
+
+    Target DebugProviders => _ => _
+        .Executes(() =>
+        {
+            if (Configuration == Configuration.Release)
+            {
+                return;
+            }
+
+            foreach (var project in Solution.AllProjects.Where(x => x.Name.EndsWith("Provider")))
+            {
+                Log.Information("Compiling project: {projectName}", project.Name);
+                var providerName = project.Name.Replace("Provider", "");
+                var providerDirectory = ProvidersDevDirectory / $"{providerName}_0.0.0.0-dev";
+                providerDirectory.CreateOrCleanDirectory();
+
+                DotNetTasks.DotNetBuild(_ => _
+                    .SetProjectFile(project)
+                    .SetConfiguration(Configuration)
+                    .SetAssemblyVersion("0.0.0.0")
+                    .SetAuthors("Bobi Rachkov")
+                    .SetOutputDirectory(providerDirectory)
+                );
+            }
         });
 }

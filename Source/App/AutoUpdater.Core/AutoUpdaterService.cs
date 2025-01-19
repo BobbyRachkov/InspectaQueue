@@ -12,7 +12,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
     private readonly IDownloadService _downloadService;
     private readonly IApplicationPathsConfiguration _applicationPathsConfiguration;
     private ReleaseInfo? _releaseInfo;
-    private readonly TimeSpan _consistentDelay = TimeSpan.FromMilliseconds(750);
+    private readonly TimeSpan _consistentDelay = TimeSpan.FromMilliseconds(600);
 
     public AutoUpdaterService(
         IDownloadService downloadService,
@@ -324,14 +324,9 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
                 _applicationPathsConfiguration.IqBaseDirectory);
 
 
-            if (_applicationPathsConfiguration.ConfigFilePath.FileExists())
+            if (_applicationPathsConfiguration.IqExtractedProvidersDirectory.DirectoryExists())
             {
-                _applicationPathsConfiguration.ConfigFilePath.Copy(_applicationPathsConfiguration.OldConfigFilePath, ExistsPolicy.FileOverwrite);
-            }
-
-            if (_applicationPathsConfiguration.ProvidersDirectory.DirectoryExists())
-            {
-                _applicationPathsConfiguration.ProvidersDirectory.CopyToDirectory(_applicationPathsConfiguration.IqAppDirectory, ExistsPolicy.MergeAndOverwrite);
+                _applicationPathsConfiguration.IqExtractedProvidersDirectory.CopyToDirectory(_applicationPathsConfiguration.IqBaseDirectory, ExistsPolicy.MergeAndOverwrite);
             }
 
             return PassStage(Stage.CopyingFiles);

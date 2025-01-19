@@ -16,6 +16,7 @@ public class ApplicationPathsConfiguration : IApplicationPathsConfiguration
         IqUpdateZipPath = IqBaseDirectory / "release.zip";
         IqExtractedZipDirectory = IqBaseDirectory / "Release";
         IqExtractedAppDirectory = IqExtractedZipDirectory / "App";
+        IqExtractedProvidersDirectory = IqExtractedZipDirectory / "Providers";
 
         ConfigFilePath = IqBaseDirectory / "config.json";
         OldConfigFilePath = IqAppDirectory / "config.json";
@@ -29,6 +30,7 @@ public class ApplicationPathsConfiguration : IApplicationPathsConfiguration
     public AbsolutePath IqBaseDirectory { get; }
     public AbsolutePath IqAppDirectory { get; }
     public AbsolutePath IqExtractedAppDirectory { get; }
+    public AbsolutePath IqExtractedProvidersDirectory { get; }
     public AbsolutePath ConfigFilePath { get; }
     public AbsolutePath OldConfigFilePath { get; }
     public AbsolutePath ProvidersDirectory { get; }

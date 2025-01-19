@@ -11,6 +11,7 @@ public interface IApplicationPathsConfiguration
     AbsolutePath IqUpdateZipPath { get; }
     AbsolutePath IqExtractedZipDirectory { get; }
     AbsolutePath IqExtractedAppDirectory { get; }
+    AbsolutePath IqExtractedProvidersDirectory { get; }
     public AbsolutePath ConfigFilePath { get; }
     public AbsolutePath OldConfigFilePath { get; }
     public AbsolutePath ProvidersDirectory { get; }

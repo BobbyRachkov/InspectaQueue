@@ -2,6 +2,7 @@
 using AutoMapper.Contrib.Autofac.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Rachkov.InspectaQueue.Abstractions;
+using Rachkov.InspectaQueue.AutoUpdater.Core;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.MapperProfiles;
@@ -13,7 +14,6 @@ using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;
 using System.IO;
 using System.Net.Http;
 using System.Reflection;
-using Rachkov.InspectaQueue.AutoUpdater.Core;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Extensions;
 
@@ -34,7 +34,7 @@ public static class ContainerBuilderExtensions
 
     private static IEnumerable<Assembly> LoadProviderModules()
     {
-        var providersFolder = ".\\Providers\\";
+        var providersFolder = ".\\..\\Providers\\";
         Directory.CreateDirectory(providersFolder);
 
         var files = Directory
@@ -123,6 +123,14 @@ public static class ContainerBuilderExtensions
     public static ContainerBuilder RegisterAutoUpdater(this ContainerBuilder builder)
     {
         builder.RegisterType<AutoUpdaterService>()
+            .AsImplementedInterfaces()
+            .SingleInstance();
+
+        builder.RegisterType<DownloadService>()
+            .AsImplementedInterfaces()
+            .SingleInstance();
+
+        builder.RegisterType<ApplicationPathsConfiguration>()
             .AsImplementedInterfaces()
             .SingleInstance();
 

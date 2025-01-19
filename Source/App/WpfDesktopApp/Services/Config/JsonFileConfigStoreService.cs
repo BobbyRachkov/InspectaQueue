@@ -7,7 +7,7 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
 
 public class JsonFileConfigStoreService : IConfigStoreService
 {
-    private const string StorageFileName = "config.json";
+    private const string StorageFileName = ".\\..\\config.json";
     private readonly JsonSerializerSettings _serializerSettings = new()
     {
         Converters = new List<JsonConverter>()

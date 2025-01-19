@@ -42,6 +42,8 @@
         "CleanPdbs",
         "Compile",
         "CompileProviders",
+        "DebugProviders",
+        "Dev",
         "Restore",
         "Zip"
       ]
