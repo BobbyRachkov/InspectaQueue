@@ -17,11 +17,10 @@
         Background="{Binding Background}"
         Title="InspectaQueue Installer">
 
-  <Design.DataContext>
-    <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+    <Design.DataContext>
     <vm:MainWindowViewModel/>
   </Design.DataContext>
+
   <Border
       BorderBrush="{Binding AccentColor}"
       BorderThickness="1 1 1 1">
@@ -52,19 +51,16 @@
             VerticalAlignment="Top"
             ItemsSource="{Binding Stages}">
 
-          <!--Use a StackPanel to display all the modules-->
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
               <StackPanel />
             </ItemsPanelTemplate>
           </ItemsControl.ItemsPanel>
 
-          <!--This defines the layout for each item (i.e. each module)-->
           <ItemsControl.ItemTemplate>
             <DataTemplate>
               <Grid ColumnDefinitions="*,50" Margin="5" Height="20">
                 <TextBlock Text="{Binding Name}"/>
-                <!--<TextBlock Grid.Column="1" Text="{Binding Status}"/>-->
                 <li:LoadingIndicator
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center"
@@ -81,9 +77,6 @@
                     Width="13"
                     Height="13"
                     Grid.Column="1">
-                    <!--<Canvas.RenderTransform>
-                        <MatrixTransform Matrix="1,0,0,-1,0,0" />
-                    </Canvas.RenderTransform>-->
                     <Path Data="M13.41,12l4.3-4.29a1,1,0,1,0-1.42-1.42L12,10.59,7.71,6.29A1,1,0,0,0,6.29,7.71L10.59,12l-4.3,4.29a1,1,0,0,0,0,1.42,1,1,0,0,0,1.42,0L12,13.41l4.29,4.3a1,1,0,0,0,1.42,0,1,1,0,0,0,0-1.42Z"
                           Stroke="{x:Null}"
                           Fill="Red"
