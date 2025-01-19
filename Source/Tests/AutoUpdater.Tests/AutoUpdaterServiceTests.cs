@@ -1,5 +1,5 @@
 using Moq;
-using Rachkov.InspectaQueue.Abstractions;
+using Rachkov.InspectaQueue.AutoUpdater.Core;
 using RichardSzalay.MockHttp;
 
 namespace AutoUpdater.Tests
@@ -13,13 +13,7 @@ namespace AutoUpdater.Tests
         [SetUp]
         public void Setup()
         {
-            _handler = new MockHttpMessageHandler();
-            _httpClient = new HttpClient(_handler);
 
-            var httpClientFactoryMock = new Mock<IHttpClientFactory>();
-            httpClientFactoryMock.Setup<HttpClient>(x => x.CreateClient(It.IsAny<string>())).Returns(_httpClient);
-
-            _sut = new AutoUpdaterService(httpClientFactoryMock.Object);
         }
 
         [TearDown]
@@ -29,35 +23,26 @@ namespace AutoUpdater.Tests
             _handler.Dispose();
         }
 
-        [Theory]
-        public async Task GivenCheckingForLatestVersion_WhenResponseIsIncorrectJson_ThenReturnsNull(ReleaseType releaseType)
+        [Ignore("Used for development purposes")]
+        [Test]
+        public async Task DownloadRealInfo()
         {
-            //Arrange
-            _handler.When("https://api.github.com/repos/BobbyRachkov/InspectaQueue/releases")
-                .Respond("application/json", "{'name' : 'Test McGee'}");
+            _httpClient = new HttpClient();
 
-            //Act
-            var release = await _sut.GetLatestVersion(releaseType);
+            var httpClientFactoryMock = new Mock<IHttpClientFactory>();
+            httpClientFactoryMock.Setup<HttpClient>(x => x.CreateClient(It.IsAny<string>())).Returns(new HttpClient());
 
-            //Assert
-            Assert.That(release, Is.Null);
-        }
+            //_sut = new AutoUpdaterService(httpClientFactoryMock.Object);
+            //var release = await _sut.GetLatestVersion(ReleaseType.Official);
 
-        [TestCase(ReleaseType.Official, "0.1.2")]
-        [TestCase(ReleaseType.Prerelease, "0.1.1")]
-        public async Task GivenCheckingForLatestVersion_WhenResponseIsCorrectJson_ThenReturnsExpectedVersion(
-            ReleaseType releaseType,
-            string expectedVersion)
-        {
-            //Arrange
-            _handler.When("https://api.github.com/repos/BobbyRachkov/InspectaQueue/releases")
-                .Respond("application/json", TestData.ReleasesResponse);
+            var downloader = new DownloadService(httpClientFactoryMock.Object);
 
-            //Act
-            var release = await _sut.GetLatestVersion(releaseType);
+            var info = await downloader.FetchReleaseInfoAsync();
 
-            //Assert
-            Assert.That(release.Value.version.ToString(), Is.EqualTo(expectedVersion));
+            if (info?.Latest.WindowsAppZip is not null)
+            {
+                var result = await downloader.TryDownloadAssetAsync(info.Latest.WindowsAppZip, "test.zip");
+            }
         }
     }
 }

@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
-using Rachkov.InspectaQueue.Abstractions.Config;
-using Rachkov.InspectaQueue.Abstractions.Config.Migrators;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Config;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Config.Migrators;
 
-namespace Rachkov.InspectaQueue.Abstractions;
+namespace Rachkov.InspectaQueue.AutoUpdater.Core;
 
 public sealed class UpdateMigratorService : IUpdateMigratorService
 {

@@ -1,4 +1,4 @@
-﻿namespace Rachkov.InspectaQueue.Abstractions.Config.v1;
+﻿namespace Rachkov.InspectaQueue.AutoUpdater.Core.Config.v1;
 
 internal class SettingsDto
 {

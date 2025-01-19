@@ -1,4 +1,4 @@
-﻿namespace Rachkov.InspectaQueue.Abstractions.Config;
+﻿namespace Rachkov.InspectaQueue.AutoUpdater.Core.Config;
 
 internal class Base
 {

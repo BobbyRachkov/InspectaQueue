@@ -6,5 +6,6 @@ public enum UpdateResult
     SystemError,
     Updated,
     UpToDate,
-    Rejected
+    Rejected,
+    MissingInstaller
 }

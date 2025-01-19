@@ -24,19 +24,26 @@ public class DialogManager
         _hideDialogHandle = hideDialogHandle;
     }
 
-    public bool ShowNewUpdateDialog(string currentVersion, string newVersion)
+    public UpdateDialogResult ShowNewUpdateDialog(string currentVersion, string newVersion)
     {
         var result = _simpleDialogHandle(
             "New Update available!",
             $"Current version: {currentVersion}\nAvailable version: {newVersion}",
-            MessageDialogStyle.AffirmativeAndNegative,
+            MessageDialogStyle.AffirmativeAndNegativeAndSingleAuxiliary,
             new MetroDialogSettings
             {
-                AffirmativeButtonText = "Download & Install",
-                NegativeButtonText = "Not now"
+                AffirmativeButtonText = "Download & Install now",
+                FirstAuxiliaryButtonText = "Not now",
+                NegativeButtonText = "Install in the background"
             });
 
-        return result is MessageDialogResult.Affirmative;
+        return result switch
+        {
+            MessageDialogResult.Affirmative => UpdateDialogResult.InstallNow,
+            MessageDialogResult.Negative => UpdateDialogResult.InstallOnClose,
+            MessageDialogResult.FirstAuxiliary => UpdateDialogResult.NotNow,
+            _ => UpdateDialogResult.NotNow
+        };
     }
 
     public void ShowVersionUpToDateDialog(string currentVersion)
