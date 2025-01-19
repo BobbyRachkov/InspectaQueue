@@ -5,6 +5,7 @@ using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings.Model
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Input;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 
@@ -32,9 +33,11 @@ public class MenuViewModel : ViewModel
         _isAutoupdaterEnabled = configService.GetSettings().IsAutoUpdaterEnabled;
         _isBetaReleaseChannel = configService.GetSettings().IsAutoUpdaterBetaReleaseChannel;
 
-        CheckForUpdatesCommand = new(CheckForUpdatesManually);
-        ShowAboutDialogCommand = new(ShowAboutDialog);
+        CheckForUpdatesCommand = new RelayCommand(CheckForUpdatesManually);
+        ShowAboutDialogCommand = new RelayCommand(ShowAboutDialog);
+        LaunchAutoUpdater = new RelayCommand(LaunchInstaller);
     }
+
 
     public bool IsAutoupdaterEnabled
     {
@@ -56,8 +59,9 @@ public class MenuViewModel : ViewModel
         }
     }
 
-    public RelayCommand CheckForUpdatesCommand { get; }
-    public RelayCommand ShowAboutDialogCommand { get; }
+    public ICommand CheckForUpdatesCommand { get; }
+    public ICommand LaunchAutoUpdater { get; }
+    public ICommand ShowAboutDialogCommand { get; }
 
     public void SetDialogManager(DialogManager? dialogManager)
     {
@@ -173,5 +177,23 @@ public class MenuViewModel : ViewModel
         }
 
         return UpdateResult.Updated;
+    }
+
+    private void LaunchInstaller()
+    {
+        ProcessStartInfo psi = new ProcessStartInfo
+        {
+            FileName = _applicationPathsConfiguration.InstallerPath,
+            WorkingDirectory = _applicationPathsConfiguration.IqBaseDirectory,
+            Arguments = "",
+            UseShellExecute = false,
+            CreateNoWindow = false,
+            RedirectStandardOutput = false,
+            RedirectStandardError = false,
+            RedirectStandardInput = false,
+            WindowStyle = ProcessWindowStyle.Normal
+        };
+
+        Process.Start(psi);
     }
 }
