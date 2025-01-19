@@ -75,7 +75,10 @@ public class MenuViewModel : ViewModel
             {
                 if (updateResult.Result is UpdateResult.UpToDate)
                 {
-                    DialogManager?.ShowVersionUpToDateDialog(_autoUpdater.GetExecutingAppVersion().ToString());
+                    OnUiThread(() =>
+                    {
+                        DialogManager?.ShowVersionUpToDateDialog(_autoUpdater.GetExecutingAppVersion().ToString());
+                    });
                 }
             });
     }
