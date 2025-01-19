@@ -59,7 +59,7 @@ public class ApplicationPathsConfiguration : IApplicationPathsConfiguration
             return null;
         }
 
-        var versionString = installerPath.NameWithoutExtension.Substring(installerPath.NameWithoutExtension.IndexOf("_", StringComparison.Ordinal));
+        var versionString = installerPath.NameWithoutExtension.Substring(installerPath.NameWithoutExtension.IndexOf("_", StringComparison.Ordinal) + 1);
         return new Version(versionString);
     }
 
