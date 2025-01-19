@@ -1,4 +1,4 @@
-﻿namespace Rachkov.InspectaQueue.Abstractions.Config.Migrators;
+﻿namespace Rachkov.InspectaQueue.AutoUpdater.Core.Config.Migrators;
 
 internal interface IMigrator
 {

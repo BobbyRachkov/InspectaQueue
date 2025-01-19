@@ -42,4 +42,8 @@
     <ProjectReference Include="..\Abstractions\Abstractions.csproj" />
     <ProjectReference Include="..\AutoUpdater.Core\AutoUpdater.Core.csproj" />
   </ItemGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="if &quot;$(ConfigurationName)&quot; == &quot;Debug&quot; (&#xD;&#xA;nuke Dev&#xD;&#xA;)" />
+  </Target>
 </Project>

@@ -16,7 +16,7 @@ public class Build : NukeBuild
     ///   - Microsoft VisualStudio     https://nuke.build/visualstudio
     ///   - Microsoft VSCode           https://nuke.build/vscode
 
-    public static int Main() => Execute<Build>(x => x.Zip);
+    public static int Main() => Execute<Build>(x => x.Zip, x => x.PackInstaller);
 
     const bool IsRelease = true;
 
@@ -31,6 +31,8 @@ public class Build : NukeBuild
 
     string AppVersion => GitVersion.SemVer;
 
+    string InstallerVersion => "1.0.0";
+
     Dictionary<Project, string> ProviderVersions => new()
     {
         {Solution.QueueProviders.PulsarProvider,"0.1.3.0"}
@@ -41,8 +43,13 @@ public class Build : NukeBuild
     AbsolutePath AutoUpdaterCompileDirectory => ArtifactsDirectory / "wpf" / "AutoUpdater";
     AbsolutePath ProvidersCompileDirectory => ArtifactsDirectory / "providers";
     AbsolutePath ArtifactsDirectory => RootDirectory / "artifacts";
-    AbsolutePath ProvidersDirectory => WpfCompileDirectory / "Providers";
+    AbsolutePath ProvidersDirectory => ZipDirectory / "Providers";
     AbsolutePath ProdZipName => ArtifactsDirectory / $"InspectaQueue_{AppVersion}.zip";
+    AbsolutePath InstallerBuildDirectory => ArtifactsDirectory / $"Installer";
+    AbsolutePath InstallerPath => ArtifactsDirectory / $"Installer_{InstallerVersion}.exe";
+
+
+    AbsolutePath ProvidersDevDirectory => RootDirectory / "\\Source\\App\\WpfDesktopApp\\bin\\Debug\\Providers";
 
     Target Clean => _ => _
         .Before(Restore)
@@ -80,6 +87,30 @@ public class Build : NukeBuild
             ProvidersDirectory.CreateOrCleanDirectory();
         });
 
+    Target PackInstaller => _ => _
+        .Executes(() =>
+        {
+            DotNetTasks.DotNetPublish(_ => _
+                .SetProject(Solution.AutoUpdater.AutoUpdater_App)
+                .SetSelfContained(true)
+                .SetFramework("net8.0")
+                .SetRuntime("win-x64")
+                .EnablePublishSingleFile()
+                .EnablePublishReadyToRun()
+                .SetConfiguration(Configuration)
+                .SetAssemblyVersion(InstallerVersion)
+                .SetFileVersion(InstallerVersion)
+                .SetInformationalVersion(InstallerVersion)
+                .SetAuthors("Bobi Rachkov")
+                .SetOutput(InstallerBuildDirectory)
+            );
+
+            var installer = (AbsolutePath)Directory.GetFiles(InstallerBuildDirectory).Single(x => x.EndsWith(".exe"));
+            installer.Copy(InstallerPath);
+
+            InstallerBuildDirectory.DeleteDirectory();
+        });
+
     Target CompileProviders => _ => _
         .DependsOn(Compile)
         .Executes(() =>
@@ -102,6 +133,7 @@ public class Build : NukeBuild
             }
 
             ProvidersCompileDirectory.Copy(ProvidersDirectory, ExistsPolicy.MergeAndOverwrite);
+            ProvidersCompileDirectory.DeleteDirectory();
         });
 
     Target CleanPdbs => _ => _
@@ -121,5 +153,34 @@ public class Build : NukeBuild
         .Executes(() =>
         {
             ZipDirectory.ZipTo(ProdZipName);
+            ZipDirectory.DeleteDirectory();
+        });
+
+    Target Dev => _ => _
+        .DependsOn(DebugProviders);
+
+    Target DebugProviders => _ => _
+        .Executes(() =>
+        {
+            if (Configuration == Configuration.Release)
+            {
+                return;
+            }
+
+            foreach (var project in Solution.AllProjects.Where(x => x.Name.EndsWith("Provider")))
+            {
+                Log.Information("Compiling project: {projectName}", project.Name);
+                var providerName = project.Name.Replace("Provider", "");
+                var providerDirectory = ProvidersDevDirectory / $"{providerName}_0.0.0.0-dev";
+                providerDirectory.CreateOrCleanDirectory();
+
+                DotNetTasks.DotNetBuild(_ => _
+                    .SetProjectFile(project)
+                    .SetConfiguration(Configuration)
+                    .SetAssemblyVersion("0.0.0.0")
+                    .SetAuthors("Bobi Rachkov")
+                    .SetOutputDirectory(providerDirectory)
+                );
+            }
         });
 }

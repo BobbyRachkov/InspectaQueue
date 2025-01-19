@@ -1,0 +1,184 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:AutoUpdater.App.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:li="clr-namespace:LoadingIndicators.Avalonia;assembly=LoadingIndicators.Avalonia"
+        mc:Ignorable="d"
+        x:Class="AutoUpdater.App.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/iq.ico"
+        SystemDecorations="None"
+        WindowStartupLocation="CenterScreen"
+        Width="250"
+        Height="400"
+        RequestedThemeVariant="Dark"
+        Foreground="White"
+        Background="{Binding Background}"
+        Title="InspectaQueue Installer">
+
+    <Design.DataContext>
+    <vm:MainWindowViewModel/>
+  </Design.DataContext>
+
+  <Border
+      BorderBrush="{Binding AccentColor}"
+      BorderThickness="1 1 1 1">
+    <Grid RowDefinitions="*,250">
+      <Grid Grid.Row="0">
+        <li:LoadingIndicator
+            Foreground="{Binding AccentColor}"
+            IsActive="{Binding IsBusy}"
+            Mode="DoubleBounce">
+          <li:LoadingIndicator.RenderTransform>
+            <ScaleTransform ScaleX="2.3" ScaleY="2.3"/>
+          </li:LoadingIndicator.RenderTransform>
+        </li:LoadingIndicator>
+        <Image
+            Height="80"
+            VerticalAlignment="Center"
+            HorizontalAlignment="Center"
+            Source="../Assets/iq_logo.png"/>
+      </Grid>
+      <Grid
+            Grid.Row="1">
+        <ItemsControl
+            Background="Transparent"
+            Tag="{Binding AccentColor}"
+            FontSize="13"
+            Margin="20 0"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Top"
+            ItemsSource="{Binding Stages}">
+
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Grid ColumnDefinitions="*,50" Margin="5" Height="20">
+                <TextBlock Text="{Binding Name}"/>
+                <li:LoadingIndicator
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    Padding="0"
+                    Height="50"
+                    Foreground="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type ItemsControl}}, Path=Tag}"
+                    Mode="Arcs"
+                    IsVisible="{Binding IsInProgress}"
+                    Grid.Column="1"/>
+                <Canvas
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    IsVisible="{Binding IsFailed}"
+                    Width="13"
+                    Height="13"
+                    Grid.Column="1">
+                    <Path Data="M13.41,12l4.3-4.29a1,1,0,1,0-1.42-1.42L12,10.59,7.71,6.29A1,1,0,0,0,6.29,7.71L10.59,12l-4.3,4.29a1,1,0,0,0,0,1.42,1,1,0,0,0,1.42,0L12,13.41l4.29,4.3a1,1,0,0,0,1.42,0,1,1,0,0,0,0-1.42Z"
+                          Stroke="{x:Null}"
+                          Fill="Red"
+                          Stretch="Uniform"
+                          Width="13"
+                          Height="13"
+                          UseLayoutRounding="False"
+                          StrokeThickness="0"/>
+                </Canvas>
+                <Canvas
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    IsVisible="{Binding IsDone}"
+                    Width="15"
+                    Height="15"
+                    Grid.Column="1">
+                    <Path Data="M18.71,7.21a1,1,0,0,0-1.42,0L9.84,14.67,6.71,11.53A1,1,0,1,0,5.29,13l3.84,3.84a1,1,0,0,0,1.42,0l8.16-8.16A1,1,0,0,0,18.71,7.21Z"
+                          Stroke="{x:Null}"
+                          Fill="Green"
+                          Stretch="Uniform"
+                          Width="15"
+                          Height="15"
+                          UseLayoutRounding="False"
+                          StrokeThickness="0"/>
+                </Canvas>
+                <Canvas
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    IsVisible="{Binding IsSkipped}"
+                    Width="15"
+                    Height="15"
+                    Grid.Column="1">
+                    <Path Data="M5.79 11.624l-1.326-.088-.088-1.326 5.834-5.834 1.326.088.088 1.326-5.834 5.834zM8 15A7 7 0 108 1a7 7 0 000 14zm5.5-7a5.5 5.5 0 11-11 0 5.5 5.5 0 0111 0z"
+                          Stroke="{x:Null}"
+                          Fill="SlateGray"
+                          Stretch="Uniform"
+                          Width="15"
+                          Height="15"
+                          UseLayoutRounding="False"
+                          StrokeThickness="0"/>
+                </Canvas>
+                <Canvas
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    IsVisible="{Binding IsPending}"
+                    Width="15"
+                    Height="15"
+                    Grid.Column="1">
+                    <Path Data="M13,2.03V2.05L13,4.05C17.39,4.59 20.5,8.58 19.96,12.97C19.5,16.61 16.64,19.5 13,19.93V21.93C18.5,21.38 22.5,16.5 21.95,11C21.5,6.25 17.73,2.5 13,2.03M11,2.06C9.05,2.25 7.19,3 5.67,4.26L7.1,5.74C8.22,4.84 9.57,4.26 11,4.06V2.06M4.26,5.67C3,7.19 2.25,9.04 2.05,11H4.05C4.24,9.58 4.8,8.23 5.69,7.1L4.26,5.67M2.06,13C2.26,14.96 3.03,16.81 4.27,18.33L5.69,16.9C4.81,15.77 4.24,14.42 4.06,13H2.06M7.1,18.37L5.67,19.74C7.18,21 9.04,21.79 11,22V20C9.58,19.82 8.23,19.25 7.1,18.37M12.5,7V12.25L17,14.92L16.25,16.15L11,13V7H12.5Z"
+                          Stroke="{x:Null}"
+                          Fill="LightGray"
+                          Stretch="Uniform"
+                          Width="15"
+                          Height="15"
+                          UseLayoutRounding="False"
+                          StrokeThickness="0"/>
+                </Canvas>
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <StackPanel
+            Margin="0 0 0 25"
+            VerticalAlignment="Bottom"
+            HorizontalAlignment="Center"
+            Width="200"
+            Orientation="Vertical">
+          <StackPanel.Styles>
+            <Style Selector="Button">
+              <Setter Property="HorizontalAlignment" Value="Stretch"/>
+              <Setter Property="HorizontalContentAlignment" Value="Center"/>
+              <Setter Property="Background" Value="{Binding AccentColor}"/>
+              <Setter Property="Margin" Value="0 5 0 0"/>
+            </Style>
+          </StackPanel.Styles>
+          <Button
+              IsVisible="{Binding IsInstallButtonVisible}"
+              Command="{Binding InstallCommand}">
+            Install
+          </Button>
+          <Button
+              IsVisible="{Binding IsUpdateButtonVisible}"
+              Command="{Binding UpdateCommand}">
+            Update
+          </Button>
+          <Button
+              IsVisible="{Binding IsUninstallButtonVisible}"
+              Command="{Binding UninstallCommand}">
+            Uninstall
+          </Button>
+          <Button
+              IsVisible="{Binding IsCancelButtonVisible}"
+              Command="{Binding CloseCommand}">
+            Cancel
+          </Button>
+          <Button
+              IsVisible="{Binding IsCloseButtonVisible}"
+              Command="{Binding CloseCommand}">
+            Close
+          </Button>
+        </StackPanel>
+      </Grid>
+    </Grid>
+  </Border>
+</Window>

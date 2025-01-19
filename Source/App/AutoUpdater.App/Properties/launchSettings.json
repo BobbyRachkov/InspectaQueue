@@ -1,0 +1,19 @@
+{
+  "profiles": {
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    },
+    "Force update": {
+      "commandName": "Project",
+      "commandLineArgs": "-update"
+    },
+    "Normal startup": {
+      "commandName": "Project"
+    },
+    "Quiet update": {
+      "commandName": "Project",
+      "commandLineArgs": "-quiet-update"
+    }
+  }
+}

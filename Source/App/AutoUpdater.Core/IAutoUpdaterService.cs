@@ -1,9 +1,18 @@
-﻿namespace Rachkov.InspectaQueue.Abstractions;
+﻿using Rachkov.InspectaQueue.AutoUpdater.Core.EventArgs;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Models;
+
+namespace Rachkov.InspectaQueue.AutoUpdater.Core;
 
 public interface IAutoUpdaterService
 {
-    Task<(Version version, string? downloadUrl)?> GetLatestVersion(ReleaseType releaseType);
-    Task DownloadVersion(string downloadUrl);
-    Version GetAppVersion();
-    void RunFinalCopyScript();
+    event EventHandler<JobStatusChangedEventArgs>? JobStatusChanged;
+    event EventHandler<StageStatusChangedEventArgs>? StageStatusChanged;
+
+    Task<ReleaseInfo?> GetReleaseInfo(CancellationToken cancellationToken = default);
+    Version GetExecutingAppVersion();
+    Task<bool> EnsureInstallerUpToDate(CancellationToken cancellationToken = default);
+    Task<bool> FreshInstall(CancellationToken cancellationToken = default);
+    Task<bool> Update(bool prerelease = false, CancellationToken cancellationToken = default);
+    Task<bool> SilentUpdate(bool prerelease = false, CancellationToken cancellationToken = default);
+    Task<bool> Uninstall(bool removeConfig = false, CancellationToken cancellationToken = default);
 }

@@ -1,4 +1,4 @@
-﻿namespace Rachkov.InspectaQueue.Abstractions;
+﻿namespace Rachkov.InspectaQueue.AutoUpdater.Core;
 
 public sealed class Version : IComparable<Version>
 {
@@ -88,6 +88,16 @@ public sealed class Version : IComparable<Version>
     public static bool operator <(Version a, Version b)
     {
         return a != b && !(a > b);
+    }
+
+    public static bool operator >=(Version a, Version b)
+    {
+        return a == b || a > b;
+    }
+
+    public static bool operator <=(Version a, Version b)
+    {
+        return a == b || a < b;
     }
 
     public static bool operator ==(Version a, Version b)
