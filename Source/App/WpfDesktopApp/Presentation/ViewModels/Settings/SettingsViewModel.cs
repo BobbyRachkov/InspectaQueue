@@ -1,4 +1,4 @@
-﻿using Rachkov.InspectaQueue.Abstractions;
+﻿using Rachkov.InspectaQueue.AutoUpdater.Core;
 using Rachkov.InspectaQueue.WpfDesktopApp.Extensions;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.DialogManager;
@@ -14,7 +14,6 @@ using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
-using Rachkov.InspectaQueue.AutoUpdater.Core;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 
@@ -45,7 +44,8 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         IErrorManager errorManager,
         IAutoUpdaterService autoUpdater,
         IUpdateMigratorService migratorService,
-        ISettingImportExportService settingImportExportService)
+        ISettingImportExportService settingImportExportService,
+        IApplicationPathsConfiguration applicationPathsConfiguration)
     : base(errorManager)
     {
         _windowManager = windowManager;
@@ -81,7 +81,7 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         DuplicateSourceCommand = new RelayCommand(DuplicateSource, () => SelectedSource is not null);
         RemoveSourceCommand = new RelayCommand(DeleteSource, () => SelectedSource is not null);
 
-        MenuViewModel = new MenuViewModel(configStoreService, autoUpdater, migratorService);
+        MenuViewModel = new MenuViewModel(configStoreService, autoUpdater, migratorService, applicationPathsConfiguration);
 
         OnClosing += (_, _) => _configStoreService.StoreSources(Sources);
         ActionButtonCommand = new RelayCommand(x => _ = PerformAction(x as ActionButtonCommand?));

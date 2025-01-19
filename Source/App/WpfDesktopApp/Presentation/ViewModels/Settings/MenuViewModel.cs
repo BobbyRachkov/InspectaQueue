@@ -1,11 +1,10 @@
-﻿using Rachkov.InspectaQueue.Abstractions;
+﻿using Rachkov.InspectaQueue.AutoUpdater.Core;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.DialogManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings.Models;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
 using System.Diagnostics;
 using System.Windows;
-using Rachkov.InspectaQueue.AutoUpdater.Core;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 
@@ -14,6 +13,7 @@ public class MenuViewModel : ViewModel
     private readonly IConfigStoreService _configService;
     private readonly IAutoUpdaterService _autoUpdater;
     private readonly IUpdateMigratorService _migratorService;
+    private readonly IApplicationPathsConfiguration _applicationPathsConfiguration;
     private bool _isAutoupdaterEnabled;
     private bool _isBetaReleaseChannel;
     private bool _hasCheckedForUpdate;
@@ -22,11 +22,13 @@ public class MenuViewModel : ViewModel
 
     public MenuViewModel(IConfigStoreService configService,
         IAutoUpdaterService autoUpdater,
-        IUpdateMigratorService migratorService)
+        IUpdateMigratorService migratorService,
+        IApplicationPathsConfiguration applicationPathsConfiguration)
     {
         _configService = configService;
         _autoUpdater = autoUpdater;
         _migratorService = migratorService;
+        _applicationPathsConfiguration = applicationPathsConfiguration;
         _isAutoupdaterEnabled = configService.GetSettings().IsAutoUpdaterEnabled;
         _isBetaReleaseChannel = configService.GetSettings().IsAutoUpdaterBetaReleaseChannel;
 
@@ -63,8 +65,43 @@ public class MenuViewModel : ViewModel
         CheckForUpdatesAutomatically();
     }
 
+    private void CheckForUpdatesManually()
+    {
+        TryCheckForUpdates()
+            .ContinueWith(updateResult =>
+            {
+                if (updateResult.Result is UpdateResult.UpToDate)
+                {
+                    DialogManager?.ShowVersionUpToDateDialog(_autoUpdater.GetExecutingAppVersion().ToString());
+                }
+            });
+    }
+
+    private void CheckForUpdatesAutomatically()
+    {
+        if (_hasCheckedForUpdate
+            || !_configService.GetSettings().IsAutoUpdaterEnabled
+            || DialogManager is null)
+        {
+            return;
+        }
+
+        _hasCheckedForUpdate = true;
+        _ = TryCheckForUpdates();
+    }
+
+    private void ShowAboutDialog()
+    {
+        DialogManager?.ShowVersionInfoDialog(_autoUpdater.GetExecutingAppVersion().ToString());
+    }
+
     private async Task<UpdateResult> TryCheckForUpdates()
     {
+        if (!await _autoUpdater.EnsureInstallerUpToDate())
+        {
+            return UpdateResult.MissingInstaller;
+        }
+
         var updateChannel = _configService.GetSettings().IsAutoUpdaterBetaReleaseChannel
             ? ReleaseType.Prerelease
             : ReleaseType.Official;
@@ -100,25 +137,26 @@ public class MenuViewModel : ViewModel
             return UpdateResult.SystemError;
         }
 
-        bool? promptResult = null;
+        UpdateDialogResult? promptResult = null;
 
         OnUiThread(() =>
         {
             promptResult = DialogManager.ShowNewUpdateDialog(currentVersion.ToString(), latestVersion.ToString());
         });
 
-        if (promptResult is not true)
+        if (promptResult is UpdateDialogResult.NotNow)
         {
             return UpdateResult.Rejected;
         }
 
-
+        var args = $"{(promptResult == UpdateDialogResult.InstallOnClose ? Constants.StartupArgs.QuietUpdateArg : Constants.StartupArgs.ForceUpdateArg)} " +
+                   $"{(updateChannel == ReleaseType.Prerelease ? Constants.StartupArgs.PrereleaseVersionArg : string.Empty)}";
 
         ProcessStartInfo psi = new ProcessStartInfo
         {
-            FileName = "cmd.exe",
-            WorkingDirectory = "..\\",
-            Arguments = $"{Constants.StartupArgs.ForceUpdateArg} {(updateChannel == ReleaseType.Prerelease ? Constants.StartupArgs.PrereleaseVersionArg : string.Empty)}",
+            FileName = _applicationPathsConfiguration.InstallerPath,
+            WorkingDirectory = _applicationPathsConfiguration.IqBaseDirectory,
+            Arguments = args,
             UseShellExecute = false,
             CreateNoWindow = false,
             RedirectStandardOutput = false,
@@ -127,44 +165,13 @@ public class MenuViewModel : ViewModel
             WindowStyle = ProcessWindowStyle.Normal
         };
 
-        Process? cmdProcess = Process.Start(psi);
-        Environment.Exit(0);
+        Process.Start(psi);
 
-        //OnUiThread(async () =>
-        //{
-        //    await DialogManager.ShowProgressDialog("Update in progress...", "The program will restart soon...", false, true);
-        //});
-
-        return UpdateResult.Updated;
-    }
-
-    private void CheckForUpdatesManually()
-    {
-        TryCheckForUpdates()
-            .ContinueWith(updateResult =>
-            {
-                if (updateResult.Result is UpdateResult.UpToDate)
-                {
-                    DialogManager?.ShowVersionUpToDateDialog(_autoUpdater.GetExecutingAppVersion().ToString());
-                }
-            });
-    }
-
-    private void CheckForUpdatesAutomatically()
-    {
-        if (_hasCheckedForUpdate
-            || !_configService.GetSettings().IsAutoUpdaterEnabled
-            || DialogManager is null)
+        if (promptResult != UpdateDialogResult.InstallOnClose)
         {
-            return;
+            Environment.Exit(0);
         }
 
-        _hasCheckedForUpdate = true;
-        _ = TryCheckForUpdates();
-    }
-
-    private void ShowAboutDialog()
-    {
-        DialogManager?.ShowVersionInfoDialog(_autoUpdater.GetExecutingAppVersion().ToString());
+        return UpdateResult.Updated;
     }
 }

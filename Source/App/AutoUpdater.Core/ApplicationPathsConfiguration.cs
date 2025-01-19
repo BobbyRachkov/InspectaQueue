@@ -43,7 +43,11 @@ public class ApplicationPathsConfiguration : IApplicationPathsConfiguration
     private AbsolutePath? GetInstallerPath()
     {
         var files = Directory.GetFiles(IqBaseDirectory);
-        return files.FirstOrDefault(x => x.StartsWith("Installer") && x.EndsWith(".exe"));
+        return files.FirstOrDefault(x =>
+        {
+            var file = (AbsolutePath)x;
+            return file.Name.StartsWith("Installer") && file.Extension == ".exe";
+        });
     }
 
     public Version? GetInstallerVersion()

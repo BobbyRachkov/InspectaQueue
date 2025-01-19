@@ -90,14 +90,14 @@ public sealed class DownloadService : IDownloadService
 
         var versionGroups = Regex.Matches(assetName, pattern, RegexOptions.Multiline).FirstOrDefault();
 
-        if (versionGroups?.Groups.Count != 3)
+        if (versionGroups?.Groups.Count != 4)
         {
             return null;
         }
 
-        var major = int.Parse(versionGroups.Groups[0].Value);
-        var minor = int.Parse(versionGroups.Groups[0].Value);
-        var patch = int.Parse(versionGroups.Groups[0].Value);
+        var major = int.Parse(versionGroups.Groups[1].Value);
+        var minor = int.Parse(versionGroups.Groups[2].Value);
+        var patch = int.Parse(versionGroups.Groups[3].Value);
 
         return new Version(major, minor, patch);
     }
