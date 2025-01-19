@@ -41,7 +41,7 @@ namespace AutoUpdater.Tests
 
             if (info?.Latest.WindowsAppZip is not null)
             {
-                var result = await downloader.TryDownloadAssetAsync(info.Latest.WindowsAppZip, "kuramiqnko.zip");
+                var result = await downloader.TryDownloadAssetAsync(info.Latest.WindowsAppZip, "test.zip");
             }
         }
     }
