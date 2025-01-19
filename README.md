@@ -1,16 +1,5 @@
 # InspectaQueue
 
 ## Installation
-### CMD (recommended)
-
-Open command prompt, paste and execute the following command:
-```
-curl -L https://raw.githubusercontent.com/BobbyRachkov/InspectaQueue/master/install.bat -o iq_install.bat && call iq_install.bat
-```
-### Powershell
-
-Open Powershell (Terminal in Windows 11), paste and execute the following command:
-```
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass; iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/BobbyRachkov/InspectaQueue/master/install.ps1'))
-```
+Download and run the installer from the [latest release](https://github.com/BobbyRachkov/InspectaQueue/releases/latest)
 
