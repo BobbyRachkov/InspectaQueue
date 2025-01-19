@@ -39,6 +39,8 @@
                 <MenuItem Header="Use update beta channel" 
                           IsCheckable="True"
                           IsChecked="{Binding MenuViewModel.IsBetaReleaseChannel}"/>
+                <MenuItem Header="Launch Auto Updater" 
+                          Command="{Binding MenuViewModel.LaunchAutoUpdater}"/>
                 <MenuItem Header="About"
                           Command="{Binding MenuViewModel.ShowAboutDialogCommand}"/>
             </MenuItem>
