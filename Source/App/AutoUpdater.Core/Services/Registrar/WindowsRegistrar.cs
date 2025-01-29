@@ -1,5 +1,4 @@
-﻿using Microsoft.Win32;
-using Nuke.Common.IO;
+﻿using Nuke.Common.IO;
 using System.Diagnostics;
 #pragma warning disable CA1416
 
@@ -50,51 +49,63 @@ public class WindowsRegistrar : IRegistrar
         return true;
     }
 
-    public bool RegisterAppInProgramsList(Version? appVersion = null)
+    public async Task<bool> RegisterAppInProgramUninstallList(Version? appVersion = null, CancellationToken cancellationToken = default)
     {
-        using var parent = Registry.LocalMachine.OpenSubKey(
-            @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall", true);
+        var installerPath = _pathsConfiguration.InstallerPath ?? _pathsConfiguration.IqBaseDirectory / "Installer.exe";
+        var args = new Dictionary<string, string>()
+        {
+            {"DisplayName","InspectaQueue"},
+            {"Publisher","Bobi Rachkov"},
+            {"DisplayIcon",_pathsConfiguration.IqAppExecutablePath},
+            {"URLInfoAbout","https://github.com/BobbyRachkov/InspectaQueue"},
+            {"HelpLink","https://github.com/BobbyRachkov/InspectaQueue"},
+            {"URLUpdateInfo","https://github.com/BobbyRachkov/InspectaQueue/releases/latest"},
+            {"UninstallString",installerPath},
+            {"ModifyPath",installerPath}
+        };
 
-        if (parent is null)
+        if (appVersion is not null)
+        {
+            args.Add("DisplayVersion", appVersion.ToString());
+        }
+
+        string psScript =
+            "$RegistryPath = 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\InspectaQueue'; " +
+            "if (-not (Test-Path $RegistryPath)) { New-Item -Path $RegistryPath -Force | Out-Null }; " +
+            "if (-not (Get-ItemProperty -Path $RegistryPath -Name 'InstallDate' -ErrorAction SilentlyContinue)) { Set-ItemProperty -Path $RegistryPath -Name 'InstallDate' -Value (Get-Date -Format 'yyyyMMdd') -Type String }; ";// +
+                                                                                                                                                                                                                                  //"$AppRegistryPath = 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\InspectaQueue.exe'; " +
+                                                                                                                                                                                                                                  //"if (-not (Test-Path $AppRegistryPath)) { New-Item -Path $AppRegistryPath -Force | Out-Null }; " +
+                                                                                                                                                                                                                                  //$"Set-ItemProperty -Path $AppRegistryPath -Name '(Default)' -Value '{_pathsConfiguration.IqAppExecutablePath}' -Type String; " +
+                                                                                                                                                                                                                                  //$"Set-ItemProperty -Path $AppRegistryPath -Name 'Path' -Value '{_pathsConfiguration.IqAppDirectory}' -Type String; " +
+                                                                                                                                                                                                                                  //$"Restart-Service WSearch; ";
+
+        foreach (var arg in args)
+        {
+            psScript += $"Set-ItemProperty -Path $RegistryPath -Name '{arg.Key}' -Value '{arg.Value}' -Type String; ";
+        }
+
+        psScript += "pause;";
+        ProcessStartInfo psi = new ProcessStartInfo
+        {
+            FileName = "powershell.exe",
+            Arguments = $"-NoProfile -ExecutionPolicy Bypass -Command \"{psScript}\"",
+            Verb = "runas",
+            UseShellExecute = true,
+            CreateNoWindow = false,
+            RedirectStandardOutput = false,
+            RedirectStandardError = false,
+            RedirectStandardInput = false,
+            WindowStyle = ProcessWindowStyle.Normal
+        };
+
+        var process = Process.Start(psi);
+
+        if (process is null)
         {
             return false;
         }
 
-        RegistryKey? key = null;
-
-        try
-        {
-            var registryParentName = "InspectaQueue";
-            key = parent.OpenSubKey(registryParentName, true) ??
-                  parent.CreateSubKey(registryParentName);
-
-            if (key is null)
-            {
-                return false;
-            }
-
-            if (appVersion is not null)
-            {
-                key.SetValue("ApplicationVersion", appVersion.ToString());
-            }
-
-            key.SetValue("DisplayName", "InspectaQueue");
-            key.SetValue("Publisher", "Bobi Rachkov");
-            key.SetValue("DisplayIcon", _pathsConfiguration.IqAppExecutablePath);
-            key.SetValue("DisplayVersion", appVersion.ToString());
-            key.SetValue("URLInfoAbout", "https://github.com/BobbyRachkov/InspectaQueue");
-            key.SetValue("InstallDate", DateTime.Now.ToString("yyyyMMdd"));
-            key.SetValue("UninstallString", _pathsConfiguration.InstallerPath ?? _pathsConfiguration.IqBaseDirectory / "Installer.exe");
-
-            return true;
-        }
-        finally
-        {
-            if (key is not null)
-            {
-                key.Close();
-            }
-        }
+        await process.WaitForExitAsync(cancellationToken);
 
         return true;
     }

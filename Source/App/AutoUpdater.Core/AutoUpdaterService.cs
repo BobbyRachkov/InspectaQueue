@@ -85,7 +85,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
             return false;
         }
 
-        _registrar.RegisterAppInProgramsList();
+        _registrar.RegisterAppInProgramUninstallList();
 
         RaiseStageStatusChanged(Stage.DownloadingInstaller, StageStatus.Done);
         RaiseJobStatusChanged(false);
@@ -121,7 +121,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
             return FailJob(Stage.LaunchApp);
         }
 
-        _registrar.RegisterAppInProgramsList(_releaseInfo?.Latest.WindowsAppZip?.Version);
+        _registrar.RegisterAppInProgramUninstallList(_releaseInfo?.Latest.WindowsAppZip?.Version);
 
         if (!LaunchInspectaQueue())
         {
@@ -136,6 +136,9 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
     {
         RaiseJobStatusChanged(true, [Stage.DownloadingRelease, Stage.WaitingAppToClose, Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp]);
 
+        _registrar.RegisterAppInProgramUninstallList(_releaseInfo?.Latest.WindowsAppZip?.Version);
+
+        ;
         if (!await DownloadRelease(prerelease, cancellationToken))
         {
             return FailJob(Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
@@ -163,11 +166,11 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 
         if (prerelease)
         {
-            _registrar.RegisterAppInProgramsList(_releaseInfo?.Latest.WindowsAppZip?.Version);
+            _registrar.RegisterAppInProgramUninstallList(_releaseInfo?.Latest.WindowsAppZip?.Version);
         }
         else
         {
-            _registrar.RegisterAppInProgramsList(_releaseInfo?.Latest.WindowsAppZip?.Version);
+            _registrar.RegisterAppInProgramUninstallList(_releaseInfo?.Latest.WindowsAppZip?.Version);
         }
 
         if (!LaunchInspectaQueue())
@@ -206,11 +209,11 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 
         if (prerelease)
         {
-            _registrar.RegisterAppInProgramsList(_releaseInfo?.Latest.WindowsAppZip?.Version);
+            _registrar.RegisterAppInProgramUninstallList(_releaseInfo?.Latest.WindowsAppZip?.Version);
         }
         else
         {
-            _registrar.RegisterAppInProgramsList(_releaseInfo?.Latest.WindowsAppZip?.Version);
+            _registrar.RegisterAppInProgramUninstallList(_releaseInfo?.Latest.WindowsAppZip?.Version);
         }
 
         if (!await CleanUp(cancellationToken))
