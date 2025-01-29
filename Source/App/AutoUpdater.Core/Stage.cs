@@ -10,5 +10,6 @@ public enum Stage
     CleaningUp,
     WaitingAppToClose,
     LaunchApp,
-    Uninstalling
+    Uninstalling,
+    CreateDesktopShortcut
 }

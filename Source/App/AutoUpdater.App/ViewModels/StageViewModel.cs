@@ -19,6 +19,7 @@ public class StageViewModel : ViewModelBase
         { Stage.WaitingAppToClose ,"Waiting IQ to exit"},
         { Stage.LaunchApp ,"Launching IQ"},
         { Stage.Uninstalling ,"Uninstalling"},
+        { Stage.CreateDesktopShortcut ,"Creating shortcut"},
     };
 
     public Stage Stage

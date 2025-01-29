@@ -1,6 +1,7 @@
 ﻿using Nuke.Common.IO;
 using Rachkov.InspectaQueue.AutoUpdater.Core.EventArgs;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Models;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Registrar;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Reflection;
@@ -11,15 +12,18 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 {
     private readonly IDownloadService _downloadService;
     private readonly IApplicationPathsConfiguration _applicationPathsConfiguration;
+    private readonly IRegistrar _registrar;
     private ReleaseInfo? _releaseInfo;
     private readonly TimeSpan _consistentDelay = TimeSpan.FromMilliseconds(600);
 
     public AutoUpdaterService(
         IDownloadService downloadService,
-        IApplicationPathsConfiguration applicationPathsConfiguration)
+        IApplicationPathsConfiguration applicationPathsConfiguration,
+        IRegistrar registrar)
     {
         _downloadService = downloadService;
         _applicationPathsConfiguration = applicationPathsConfiguration;
+        _registrar = registrar;
     }
 
     public event EventHandler<JobStatusChangedEventArgs>? JobStatusChanged;
@@ -81,6 +85,8 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
             return false;
         }
 
+        _registrar.RegisterAppInProgramsList();
+
         RaiseStageStatusChanged(Stage.DownloadingInstaller, StageStatus.Done);
         RaiseJobStatusChanged(false);
         return true;
@@ -88,27 +94,34 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 
     public async Task<bool> FreshInstall(CancellationToken cancellationToken = default)
     {
-        RaiseJobStatusChanged(true, [Stage.DownloadingRelease, Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp]);
+        RaiseJobStatusChanged(true, [Stage.DownloadingRelease, Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.CreateDesktopShortcut, Stage.LaunchApp]);
 
         if (!await DownloadRelease(cancellationToken: cancellationToken))
         {
-            return FailJob(Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
+            return FailJob(Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.CreateDesktopShortcut, Stage.LaunchApp);
         }
 
         if (!await Unzip(cancellationToken))
         {
-            return FailJob(Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
+            return FailJob(Stage.CopyingFiles, Stage.CleaningUp, Stage.CreateDesktopShortcut, Stage.LaunchApp);
         }
 
         if (!await CopyFiles(cancellationToken))
         {
-            return FailJob(Stage.CleaningUp, Stage.LaunchApp);
+            return FailJob(Stage.CleaningUp, Stage.CreateDesktopShortcut, Stage.LaunchApp);
         }
 
         if (!await CleanUp(cancellationToken))
         {
+            return FailJob(Stage.CreateDesktopShortcut, Stage.LaunchApp);
+        }
+
+        if (!await CreateDesktopShortcut(cancellationToken))
+        {
             return FailJob(Stage.LaunchApp);
         }
+
+        _registrar.RegisterAppInProgramsList(_releaseInfo?.Latest.WindowsAppZip?.Version);
 
         if (!LaunchInspectaQueue())
         {
@@ -148,10 +161,20 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
             return FailJob(Stage.LaunchApp);
         }
 
+        if (prerelease)
+        {
+            _registrar.RegisterAppInProgramsList(_releaseInfo?.Latest.WindowsAppZip?.Version);
+        }
+        else
+        {
+            _registrar.RegisterAppInProgramsList(_releaseInfo?.Latest.WindowsAppZip?.Version);
+        }
+
         if (!LaunchInspectaQueue())
         {
             return FailJob();
         }
+
 
         RaiseJobStatusChanged(false);
         return true;
@@ -179,6 +202,15 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         if (!await CopyFiles(cancellationToken))
         {
             return FailJob(Stage.CleaningUp, Stage.LaunchApp);
+        }
+
+        if (prerelease)
+        {
+            _registrar.RegisterAppInProgramsList(_releaseInfo?.Latest.WindowsAppZip?.Version);
+        }
+        else
+        {
+            _registrar.RegisterAppInProgramsList(_releaseInfo?.Latest.WindowsAppZip?.Version);
         }
 
         if (!await CleanUp(cancellationToken))
@@ -357,6 +389,26 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         catch
         {
             return FailStage(Stage.CleaningUp);
+        }
+    }
+
+    private async Task<bool> CreateDesktopShortcut(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            RaiseStageStatusChanged(Stage.CreateDesktopShortcut, StageStatus.InProgress);
+            await Task.Delay(_consistentDelay, cancellationToken);
+
+            if (!await _registrar.CreateDesktopShortcut(cancellationToken))
+            {
+                return FailStage(Stage.CreateDesktopShortcut);
+            }
+
+            return PassStage(Stage.CreateDesktopShortcut);
+        }
+        catch
+        {
+            return FailStage(Stage.CreateDesktopShortcut);
         }
     }
 
