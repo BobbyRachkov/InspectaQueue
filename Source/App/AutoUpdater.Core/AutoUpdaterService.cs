@@ -55,7 +55,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 
         var releaseInfo = await GetReleaseInfo(cancellationToken);
 
-        if (releaseInfo?.Latest.Installer?.Version is null)
+        if (releaseInfo?.Prerelease.Installer?.Version is null)
         {
             RaiseJobStatusChanged(false);
             return FailStage(Stage.VerifyingInstaller);
@@ -64,7 +64,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         var localInstallerVersion = _applicationPathsConfiguration.GetInstallerVersion();
 
         if (localInstallerVersion is not null
-            && localInstallerVersion >= releaseInfo.Latest.Installer.Version)
+            && localInstallerVersion >= releaseInfo.Prerelease.Installer.Version)
         {
             RaiseStageStatusChanged(Stage.VerifyingInstaller, StageStatus.Done);
             RaiseStageStatusChanged(Stage.DownloadingInstaller, StageStatus.Skipped);
@@ -77,7 +77,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 
         var oldInstallerName = _applicationPathsConfiguration.InstallerPath;
         var temporaryLocation = _applicationPathsConfiguration.IqBaseDirectory / $"{Guid.NewGuid()}.exe";
-        var finalLocation = _applicationPathsConfiguration.GetInstallerPath(releaseInfo.Latest.Installer.Version);
+        var finalLocation = _applicationPathsConfiguration.GetInstallerPath(releaseInfo.Prerelease.Installer.Version);
         var result = await DownloadInstaller(temporaryLocation, cancellationToken);
 
         if (!result)

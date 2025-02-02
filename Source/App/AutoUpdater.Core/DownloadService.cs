@@ -25,7 +25,7 @@ public sealed class DownloadService : IDownloadService
             var allReleases = JsonConvert.DeserializeObject<Contracts.Release[]>(allReleasesJson);
 
             var latest = allReleases?.FirstOrDefault(x => x.Prerelease is false);
-            var prerelease = allReleases?.FirstOrDefault(x => x.Prerelease is true);
+            var prerelease = allReleases?.FirstOrDefault();
 
             Release? latestModel = null, prereleaseModel = null;
 
@@ -57,7 +57,7 @@ public sealed class DownloadService : IDownloadService
                 };
             }
 
-            return latestModel is null
+            return latestModel is null || prereleaseModel is null
                 ? null
                 : new ReleaseInfo { Latest = latestModel, Prerelease = prereleaseModel };
         }
