@@ -85,15 +85,18 @@ public class MenuViewModel : ViewModel
 
     private void CheckForUpdatesAutomatically()
     {
-        if (_hasCheckedForUpdate
-            || !_configService.GetSettings().IsAutoUpdaterEnabled
-            || DialogManager is null)
+        _autoUpdater.EnsureInstallerUpToDate().ContinueWith(task =>
         {
-            return;
-        }
+            if (_hasCheckedForUpdate
+                || !_configService.GetSettings().IsAutoUpdaterEnabled
+                || DialogManager is null)
+            {
+                return;
+            }
 
-        _hasCheckedForUpdate = true;
-        _ = TryCheckForUpdates();
+            _hasCheckedForUpdate = true;
+            _ = TryCheckForUpdates();
+        });
     }
 
     private void ShowAboutDialog()

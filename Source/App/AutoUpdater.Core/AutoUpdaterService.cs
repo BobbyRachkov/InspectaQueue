@@ -87,8 +87,10 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
             return false;
         }
 
-        oldInstallerName.DeleteFile();
-        temporaryLocation.Move(finalLocation);
+        oldInstallerName?.DeleteFile();
+        Rename(temporaryLocation, finalLocation);
+
+        CleanUnsuccessfulInstallerDownloads();
 
         await _registrar.CreateOrUpdateInstallerProxy(cancellationToken);
 
@@ -157,12 +159,22 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 
     public async Task<bool> Uninstall(bool removeConfig = false, CancellationToken cancellationToken = default)
     {
-        var stages = new[] { Stage.Uninstalling };
+        var stages = new[]
+        {
+            Stage.Uninstalling,
+            Stage.FinalizingRemoval
+        };
+
         RaiseJobStatusChanged(true, stages);
 
         await Task.Yield();
 
         if (!await UninstallInternal(cancellationToken: cancellationToken))
+        {
+            return FailJob(stages, Stage.FinalizingRemoval);
+        }
+
+        if (!await FinalizeUninstall(cancellationToken))
         {
             return FailJob();
         }
@@ -492,6 +504,25 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         }
     }
 
+    private async Task<bool> FinalizeUninstall(CancellationToken cancellationToken = default)
+    {
+        RaiseStageStatusChanged(Stage.FinalizingRemoval, StageStatus.InProgress);
+
+        try
+        {
+            if (!await _registrar.UnregisterAppFromSystem(cancellationToken))
+            {
+                return FailStage(Stage.FinalizingRemoval);
+            }
+
+            return PassStage(Stage.FinalizingRemoval);
+        }
+        catch
+        {
+            return FailStage(Stage.FinalizingRemoval);
+        }
+    }
+
     #endregion
 
     private async Task UpdateReleaseInfo(CancellationToken cancellationToken = default)
@@ -545,5 +576,32 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
     {
         RaiseJobStatusChanged(false);
         return false;
+    }
+
+    private void Rename(AbsolutePath temporaryLocation, AbsolutePath finalLocation)
+    {
+        var success = false;
+        while (!success)
+        {
+            try
+            {
+                temporaryLocation.Move(finalLocation, ExistsPolicy.FileOverwrite);
+                success = true;
+                return;
+            }
+            catch
+            {
+                success = false;
+            }
+        }
+    }
+
+    private void CleanUnsuccessfulInstallerDownloads()
+    {
+        var files = _applicationPathsConfiguration.IqBaseDirectory.GetFiles("*.exe");
+        foreach (var file in files.Where(x => Guid.TryParse(x.NameWithoutExtension, out _)))
+        {
+            file.DeleteFile();
+        }
     }
 }

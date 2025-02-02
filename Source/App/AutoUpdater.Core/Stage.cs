@@ -11,5 +11,6 @@ public enum Stage
     WaitingAppToClose,
     LaunchApp,
     Uninstalling,
-    FinalizingSetup
+    FinalizingSetup,
+    FinalizingRemoval
 }

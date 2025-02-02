@@ -54,7 +54,7 @@ public class WindowsRegistrar : IRegistrar
             return true;
         }
 
-        string psScript =
+        var psScript =
             "$RegistryPath = 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\InspectaQueue'; " +
             "if (-not (Test-Path $RegistryPath)) { New-Item -Path $RegistryPath -Force | Out-Null }; " +
             "if (-not (Get-ItemProperty -Path $RegistryPath -Name 'InstallDate' -ErrorAction SilentlyContinue)) { Set-ItemProperty -Path $RegistryPath -Name 'InstallDate' -Value (Get-Date -Format 'yyyyMMdd') -Type String }; ";
@@ -64,18 +64,7 @@ public class WindowsRegistrar : IRegistrar
             psScript += $"Set-ItemProperty -Path $RegistryPath -Name '{arg.Key}' -Value '{arg.Value}' -Type String; ";
         }
 
-        ProcessStartInfo psi = new ProcessStartInfo
-        {
-            FileName = "powershell.exe",
-            Arguments = $"-NoProfile -ExecutionPolicy Bypass -Command \"{psScript}\"",
-            Verb = "runas",
-            UseShellExecute = true,
-            CreateNoWindow = false,
-            RedirectStandardOutput = false,
-            RedirectStandardError = false,
-            RedirectStandardInput = false,
-            WindowStyle = ProcessWindowStyle.Hidden
-        };
+        var psi = GetAdminPowershellProcessStartInfo($"-NoProfile -ExecutionPolicy Bypass -Command \"{psScript}\"");
 
         var process = Process.Start(psi);
 
@@ -103,17 +92,7 @@ public class WindowsRegistrar : IRegistrar
                                     $"$S.Description = 'InspectaQueue Uninstaller'; " +
                                     "$S.Save(); ";
 
-            ProcessStartInfo psi = new ProcessStartInfo
-            {
-                FileName = "powershell.exe",
-                Arguments = powershellCommand,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardOutput = false,
-                RedirectStandardError = false,
-                RedirectStandardInput = false,
-                WindowStyle = ProcessWindowStyle.Hidden
-            };
+            var psi = GetPowershellProcessStartInfo(powershellCommand);
 
             var process = Process.Start(psi);
 
@@ -143,20 +122,11 @@ public class WindowsRegistrar : IRegistrar
             command.AppendLine("$RegistryPath = 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\InspectaQueue';");
             command.AppendLine("if (Test-Path $RegistryPath) {");
             command.AppendLine("    Remove-Item -Path $RegistryPath -Force;");
-            command.AppendLine("    if (-not (Test-Path $RegistryPath)) { Write-Output 'True'; exit; }");
+            command.AppendLine("    if (Test-Path $RegistryPath) { exit 1 }");
             command.AppendLine("}");
-            command.AppendLine("Write-Output 'True';");
+            command.AppendLine("exit 0");
 
-            ProcessStartInfo psi = new ProcessStartInfo
-            {
-                FileName = "powershell.exe",
-                Arguments = $"-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"{command}\"",
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-                WindowStyle = ProcessWindowStyle.Hidden
-            };
+            var psi = GetAdminPowershellProcessStartInfo($"-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"{command}\"");
 
             using var process = Process.Start(psi);
             if (process is null)
@@ -165,9 +135,7 @@ public class WindowsRegistrar : IRegistrar
             }
 
             await process.WaitForExitAsync(cancellationToken);
-            var output = await process.StandardOutput.ReadToEndAsync(cancellationToken);
-
-            return output.Trim().Equals("True", StringComparison.OrdinalIgnoreCase);
+            return process.ExitCode == 0;
         }
         catch
         {
@@ -179,27 +147,17 @@ public class WindowsRegistrar : IRegistrar
     {
         var command = new System.Text.StringBuilder();
         command.AppendLine("$RegistryPath = 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\InspectaQueue';");
-        command.AppendLine("if (-not (Test-Path $RegistryPath)) { Write-Output 'False'; exit; }");
+        command.AppendLine("if (-not (Test-Path $RegistryPath)) { exit 1 }");
         command.AppendLine("$properties = Get-ItemProperty -Path $RegistryPath;");
-        command.AppendLine("Write-Output $properties;");
 
         foreach (var kvp in expectedValues)
         {
-            command.AppendLine($"if ($properties.{kvp.Key} -ne '{kvp.Value}') {{ Write-Output 'False'; exit; }}");
+            command.AppendLine($"if ($properties.{kvp.Key} -ne '{kvp.Value}') {{ exit 1 }}");
         }
 
-        command.AppendLine("Write-Output 'True';");
+        command.AppendLine("exit 0");
 
-        ProcessStartInfo psi = new ProcessStartInfo
-        {
-            FileName = "powershell.exe",
-            Arguments = $"-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"{command}\"",
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true,
-            WindowStyle = ProcessWindowStyle.Hidden
-        };
+        var psi = GetPowershellProcessStartInfo($"-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"{command}\"");
 
         try
         {
@@ -209,10 +167,8 @@ public class WindowsRegistrar : IRegistrar
                 return false;
             }
 
-            var output = await process.StandardOutput.ReadToEndAsync(cancellationToken);
             await process.WaitForExitAsync(cancellationToken);
-
-            return output.Trim().Equals("True", StringComparison.OrdinalIgnoreCase);
+            return process.ExitCode == 0;
         }
         catch
         {
@@ -230,18 +186,7 @@ public class WindowsRegistrar : IRegistrar
                                 $"$S.Description = 'InspectaQueue - Message Queue Inspector'; " +
                                 "$S.Save(); ";
 
-        ProcessStartInfo psi = new ProcessStartInfo
-        {
-            FileName = "powershell.exe",
-            Arguments = powershellCommand,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            RedirectStandardOutput = false,
-            RedirectStandardError = false,
-            RedirectStandardInput = false,
-            WindowStyle = ProcessWindowStyle.Hidden
-        };
-
+        var psi = GetPowershellProcessStartInfo(powershellCommand);
         var process = Process.Start(psi);
 
         if (process is null)
@@ -252,5 +197,36 @@ public class WindowsRegistrar : IRegistrar
         await process.WaitForExitAsync(cancellationToken);
 
         return true;
+    }
+
+    private ProcessStartInfo GetAdminPowershellProcessStartInfo(string arguments)
+    {
+        return new ProcessStartInfo
+        {
+            FileName = "powershell.exe",
+            Arguments = arguments,
+            Verb = "runas",
+            UseShellExecute = true,
+            CreateNoWindow = false,
+            RedirectStandardOutput = false,
+            RedirectStandardError = false,
+            RedirectStandardInput = false,
+            WindowStyle = ProcessWindowStyle.Hidden
+        };
+    }
+
+    private ProcessStartInfo GetPowershellProcessStartInfo(string arguments)
+    {
+        return new ProcessStartInfo
+        {
+            FileName = "powershell.exe",
+            Arguments = arguments,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = false,
+            RedirectStandardError = false,
+            RedirectStandardInput = false,
+            WindowStyle = ProcessWindowStyle.Hidden
+        };
     }
 }

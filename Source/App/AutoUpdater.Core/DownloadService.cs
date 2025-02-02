@@ -128,6 +128,8 @@ public sealed class DownloadService : IDownloadService
             downloadPath.DeleteFile();
             await using var outputFileStream = new FileStream(downloadPath, FileMode.Create);
             await fileStream.CopyToAsync(outputFileStream, cancellationToken);
+            outputFileStream.Close();
+            fileStream.Close();
 
             return true;
         }
