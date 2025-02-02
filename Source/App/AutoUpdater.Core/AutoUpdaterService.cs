@@ -76,7 +76,9 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         RaiseStageStatusChanged(Stage.DownloadingInstaller, StageStatus.InProgress);
 
         var oldInstallerName = _applicationPathsConfiguration.InstallerPath;
-        var result = await DownloadInstaller(cancellationToken);
+        var temporaryLocation = _applicationPathsConfiguration.IqBaseDirectory / $"{Guid.NewGuid()}.exe";
+        var finalLocation = _applicationPathsConfiguration.GetInstallerPath(releaseInfo.Latest.Installer.Version);
+        var result = await DownloadInstaller(temporaryLocation, cancellationToken);
 
         if (!result)
         {
@@ -86,6 +88,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         }
 
         oldInstallerName.DeleteFile();
+        temporaryLocation.Move(finalLocation);
 
         await _registrar.CreateOrUpdateInstallerProxy(cancellationToken);
 
@@ -271,7 +274,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         }
     }
 
-    private async Task<bool> DownloadInstaller(CancellationToken cancellationToken = default)
+    private async Task<bool> DownloadInstaller(AbsolutePath downloadPath, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -290,8 +293,6 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
                 return FailStage(Stage.DownloadingInstaller);
             }
 
-            var downloadPath = _applicationPathsConfiguration.GetInstallerPath(releaseInfo.Latest.Installer.Version);
-
             var downloadResult = await _downloadService.TryDownloadAssetAsync(
                 releaseInfo.Latest.Installer,
                 downloadPath,
@@ -299,7 +300,6 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 
             if (!downloadResult)
             {
-                downloadPath.DeleteFile();
                 return FailStage(Stage.DownloadingInstaller);
             }
 
