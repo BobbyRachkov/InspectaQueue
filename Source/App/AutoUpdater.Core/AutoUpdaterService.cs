@@ -392,12 +392,18 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
             RaiseStageStatusChanged(Stage.Uninstalling, StageStatus.InProgress);
             await Task.Delay(_consistentDelay, cancellationToken);
 
+            if (deleteConfig)
+            {
+                _applicationPathsConfiguration.ConfigFilePath.DeleteFile();
+            }
+
             _applicationPathsConfiguration.IqAppDirectory.DeleteDirectory();
-            _applicationPathsConfiguration.ConfigFilePath.DeleteFile();
             _applicationPathsConfiguration.ProvidersDirectory.DeleteDirectory();
             _applicationPathsConfiguration.IqExtractedZipDirectory.DeleteDirectory();
             _applicationPathsConfiguration.IqUpdateZipPath.DeleteFile();
             _applicationPathsConfiguration.InstallerProxy.DeleteFile();
+
+            await _registrar.UnregisterAppFromSystem(cancellationToken);
 
             return PassStage(Stage.Uninstalling);
         }

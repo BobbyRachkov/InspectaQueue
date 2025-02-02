@@ -7,6 +7,7 @@ namespace Rachkov.InspectaQueue.AutoUpdater.Core.Services.Registrar;
 public class WindowsRegistrar : IRegistrar
 {
     private readonly IApplicationPathsConfiguration _pathsConfiguration;
+    private readonly AbsolutePath _startMenuPath = (AbsolutePath)Environment.GetFolderPath(Environment.SpecialFolder.StartMenu) / "Programs" / "InspectaQueue.lnk";
 
     public WindowsRegistrar(IApplicationPathsConfiguration pathsConfiguration)
     {
@@ -21,14 +22,12 @@ public class WindowsRegistrar : IRegistrar
 
     public async Task<bool> CreateOsSearchIndex(CancellationToken cancellationToken = default)
     {
-        var startMenuPath = (AbsolutePath)Environment.GetFolderPath(Environment.SpecialFolder.StartMenu) / "Programs" / "InspectaQueue.lnk";
-
-        if (startMenuPath.FileExists())
+        if (_startMenuPath.FileExists())
         {
             return true;
         }
 
-        return await CreateShortcut(startMenuPath, cancellationToken);
+        return await CreateShortcut(_startMenuPath, cancellationToken);
     }
 
     public async Task<bool> RegisterAppInProgramUninstallList(Version? appVersion = null, CancellationToken cancellationToken = default)
@@ -125,6 +124,50 @@ public class WindowsRegistrar : IRegistrar
 
             await process.WaitForExitAsync(cancellationToken);
             return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public async Task<bool> UnregisterAppFromSystem(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Remove start menu shortcut
+            _startMenuPath.DeleteFile();
+
+            // Remove registry entry
+            var command = new System.Text.StringBuilder();
+            command.AppendLine("$RegistryPath = 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\InspectaQueue';");
+            command.AppendLine("if (Test-Path $RegistryPath) {");
+            command.AppendLine("    Remove-Item -Path $RegistryPath -Force;");
+            command.AppendLine("    if (-not (Test-Path $RegistryPath)) { Write-Output 'True'; exit; }");
+            command.AppendLine("}");
+            command.AppendLine("Write-Output 'True';");
+
+            ProcessStartInfo psi = new ProcessStartInfo
+            {
+                FileName = "powershell.exe",
+                Arguments = $"-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"{command}\"",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden
+            };
+
+            using var process = Process.Start(psi);
+            if (process is null)
+            {
+                return false;
+            }
+
+            await process.WaitForExitAsync(cancellationToken);
+            var output = await process.StandardOutput.ReadToEndAsync(cancellationToken);
+
+            return output.Trim().Equals("True", StringComparison.OrdinalIgnoreCase);
         }
         catch
         {

@@ -6,4 +6,5 @@ public interface IRegistrar
     Task<bool> CreateOsSearchIndex(CancellationToken cancellationToken = default);
     Task<bool> CreateOrUpdateInstallerProxy(CancellationToken cancellationToken = default);
     Task<bool> RegisterAppInProgramUninstallList(Version? appVersion = null, CancellationToken cancellationToken = default);
+    Task<bool> UnregisterAppFromSystem(CancellationToken cancellationToken = default);
 }
