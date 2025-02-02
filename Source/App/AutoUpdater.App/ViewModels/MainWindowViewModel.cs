@@ -2,6 +2,7 @@
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
 using Rachkov.InspectaQueue.AutoUpdater.Core;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Registrar;
 using ReactiveUI;
 using System;
 using System.Collections.ObjectModel;
@@ -26,9 +27,11 @@ namespace AutoUpdater.App.ViewModels
             UninstallCommand = ReactiveCommand.Create(Uninstall);
             _fileService = new FileService();
 
+            var paths = new ApplicationPathsConfiguration();
             _autoUpdater = new AutoUpdaterService(
                 new DownloadService(new HttpClientFactory()),
-                new ApplicationPathsConfiguration());
+                paths,
+                new WindowsRegistrar(paths));
 
             _autoUpdater.JobStatusChanged += OnJobStatusChanged;
             _autoUpdater.StageStatusChanged += OnStageStatusChanged;

@@ -1,6 +1,7 @@
-﻿using Nuke.Common.IO;
+using Nuke.Common.IO;
 using Rachkov.InspectaQueue.AutoUpdater.Core.EventArgs;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Models;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Registrar;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Reflection;
@@ -11,15 +12,18 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 {
     private readonly IDownloadService _downloadService;
     private readonly IApplicationPathsConfiguration _applicationPathsConfiguration;
+    private readonly IRegistrar _registrar;
     private ReleaseInfo? _releaseInfo;
     private readonly TimeSpan _consistentDelay = TimeSpan.FromMilliseconds(600);
 
     public AutoUpdaterService(
         IDownloadService downloadService,
-        IApplicationPathsConfiguration applicationPathsConfiguration)
+        IApplicationPathsConfiguration applicationPathsConfiguration,
+        IRegistrar registrar)
     {
         _downloadService = downloadService;
         _applicationPathsConfiguration = applicationPathsConfiguration;
+        _registrar = registrar;
     }
 
     public event EventHandler<JobStatusChangedEventArgs>? JobStatusChanged;
@@ -51,7 +55,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 
         var releaseInfo = await GetReleaseInfo(cancellationToken);
 
-        if (releaseInfo?.Latest.Installer?.Version is null)
+        if (releaseInfo?.Prerelease.Installer?.Version is null)
         {
             RaiseJobStatusChanged(false);
             return FailStage(Stage.VerifyingInstaller);
@@ -60,7 +64,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         var localInstallerVersion = _applicationPathsConfiguration.GetInstallerVersion();
 
         if (localInstallerVersion is not null
-            && localInstallerVersion >= releaseInfo.Latest.Installer.Version)
+            && localInstallerVersion >= releaseInfo.Prerelease.Installer.Version)
         {
             RaiseStageStatusChanged(Stage.VerifyingInstaller, StageStatus.Done);
             RaiseStageStatusChanged(Stage.DownloadingInstaller, StageStatus.Skipped);
@@ -71,8 +75,10 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         RaiseStageStatusChanged(Stage.VerifyingInstaller, StageStatus.Done);
         RaiseStageStatusChanged(Stage.DownloadingInstaller, StageStatus.InProgress);
 
-        _applicationPathsConfiguration.InstallerPath.DeleteFile();
-        var result = await DownloadInstaller(cancellationToken);
+        var oldInstallerName = _applicationPathsConfiguration.InstallerPath;
+        var temporaryLocation = _applicationPathsConfiguration.IqBaseDirectory / $"{Guid.NewGuid()}.exe";
+        var finalLocation = _applicationPathsConfiguration.GetInstallerPath(releaseInfo.Prerelease.Installer.Version);
+        var result = await DownloadInstaller(temporaryLocation, cancellationToken);
 
         if (!result)
         {
@@ -81,6 +87,13 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
             return false;
         }
 
+        oldInstallerName?.DeleteFile();
+        Rename(temporaryLocation, finalLocation);
+
+        CleanUnsuccessfulInstallerDownloads();
+
+        await _registrar.CreateOrUpdateInstallerProxy(cancellationToken);
+
         RaiseStageStatusChanged(Stage.DownloadingInstaller, StageStatus.Done);
         RaiseJobStatusChanged(false);
         return true;
@@ -88,26 +101,41 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 
     public async Task<bool> FreshInstall(CancellationToken cancellationToken = default)
     {
-        RaiseJobStatusChanged(true, [Stage.DownloadingRelease, Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp]);
+        var stages = new[]
+        {
+            Stage.DownloadingRelease,
+            Stage.Unzipping,
+            Stage.CopyingFiles,
+            Stage.CleaningUp,
+            Stage.FinalizingSetup,
+            Stage.LaunchApp
+        };
+
+        RaiseJobStatusChanged(true, stages);
 
         if (!await DownloadRelease(cancellationToken: cancellationToken))
         {
-            return FailJob(Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
+            return FailJob(stages, Stage.Unzipping);
         }
 
         if (!await Unzip(cancellationToken))
         {
-            return FailJob(Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
+            return FailJob(stages, Stage.CopyingFiles);
         }
 
         if (!await CopyFiles(cancellationToken))
         {
-            return FailJob(Stage.CleaningUp, Stage.LaunchApp);
+            return FailJob(stages, Stage.CleaningUp);
         }
 
         if (!await CleanUp(cancellationToken))
         {
-            return FailJob(Stage.LaunchApp);
+            return FailJob(stages, Stage.FinalizingSetup);
+        }
+
+        if (!await FinalizeSetup(true, _releaseInfo?.Latest.WindowsAppZip?.Version, cancellationToken))
+        {
+            return FailJob(stages, Stage.LaunchApp);
         }
 
         if (!LaunchInspectaQueue())
@@ -121,34 +149,32 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 
     public async Task<bool> Update(bool prerelease = false, CancellationToken cancellationToken = default)
     {
-        RaiseJobStatusChanged(true, [Stage.DownloadingRelease, Stage.WaitingAppToClose, Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp]);
+        return await UpdateInternal(prerelease, silent: false, cancellationToken);
+    }
 
-        if (!await DownloadRelease(prerelease, cancellationToken))
+    public async Task<bool> SilentUpdate(bool prerelease = false, CancellationToken cancellationToken = default)
+    {
+        return await UpdateInternal(prerelease, silent: true, cancellationToken);
+    }
+
+    public async Task<bool> Uninstall(bool removeConfig = false, CancellationToken cancellationToken = default)
+    {
+        var stages = new[]
         {
-            return FailJob(Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
+            Stage.Uninstalling,
+            Stage.FinalizingRemoval
+        };
+
+        RaiseJobStatusChanged(true, stages);
+
+        await Task.Yield();
+
+        if (!await UninstallInternal(cancellationToken: cancellationToken))
+        {
+            return FailJob(stages, Stage.FinalizingRemoval);
         }
 
-        if (!await WaitInspectaQueueToExit(cancellationToken))
-        {
-            return FailJob(Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
-        }
-
-        if (!await Unzip(cancellationToken))
-        {
-            return FailJob(Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
-        }
-
-        if (!await CopyFiles(cancellationToken))
-        {
-            return FailJob(Stage.CleaningUp, Stage.LaunchApp);
-        }
-
-        if (!await CleanUp(cancellationToken))
-        {
-            return FailJob(Stage.LaunchApp);
-        }
-
-        if (!LaunchInspectaQueue())
+        if (!await FinalizeUninstall(cancellationToken))
         {
             return FailJob();
         }
@@ -157,48 +183,59 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         return true;
     }
 
-    public async Task<bool> SilentUpdate(bool prerelease = false, CancellationToken cancellationToken = default)
+    private async Task<bool> UpdateInternal(bool prerelease, bool silent, CancellationToken cancellationToken = default)
     {
-        RaiseJobStatusChanged(true, [Stage.DownloadingRelease, Stage.WaitingAppToClose, Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp]);
+        var stages = new[]
+        {
+            Stage.DownloadingRelease,
+            Stage.WaitingAppToClose,
+            Stage.Unzipping,
+            Stage.CopyingFiles,
+            Stage.CleaningUp,
+            Stage.FinalizingSetup,
+        };
+
+        if (!silent)
+        {
+            stages = stages.Append(Stage.LaunchApp).ToArray();
+        }
+
+        RaiseJobStatusChanged(true, stages);
 
         if (!await DownloadRelease(prerelease, cancellationToken))
         {
-            return FailJob(Stage.WaitingAppToClose, Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
+            return FailJob(stages, Stage.WaitingAppToClose);
         }
 
         if (!await WaitInspectaQueueToExit(cancellationToken))
         {
-            return FailJob(Stage.Unzipping, Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
+            return FailJob(stages, Stage.Unzipping);
         }
 
         if (!await Unzip(cancellationToken))
         {
-            return FailJob(Stage.CopyingFiles, Stage.CleaningUp, Stage.LaunchApp);
+            return FailJob(stages, Stage.CopyingFiles);
         }
 
         if (!await CopyFiles(cancellationToken))
         {
-            return FailJob(Stage.CleaningUp, Stage.LaunchApp);
+            return FailJob(stages, Stage.CleaningUp);
         }
 
         if (!await CleanUp(cancellationToken))
         {
-            return FailJob(Stage.LaunchApp);
+            return FailJob(stages, Stage.FinalizingSetup);
         }
 
-        RaiseJobStatusChanged(false);
-        return true;
-    }
-
-    public async Task<bool> Uninstall(bool removeConfig = false, CancellationToken cancellationToken = default)
-    {
-        RaiseJobStatusChanged(true, [Stage.Uninstalling]);
-
-        await Task.Yield();
-
-        if (!await UninstallInternal(cancellationToken: cancellationToken))
+        var version = prerelease ? _releaseInfo?.Prerelease?.WindowsAppZip?.Version : _releaseInfo?.Latest.WindowsAppZip?.Version;
+        if (!await FinalizeSetup(false, version, cancellationToken))
         {
-            return FailJob(Stage.Uninstalling);
+            return FailJob(stages, silent ? Stage.FinalizingSetup : Stage.LaunchApp);
+        }
+
+        if (!silent && !LaunchInspectaQueue())
+        {
+            return FailJob();
         }
 
         RaiseJobStatusChanged(false);
@@ -249,7 +286,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         }
     }
 
-    private async Task<bool> DownloadInstaller(CancellationToken cancellationToken = default)
+    private async Task<bool> DownloadInstaller(AbsolutePath downloadPath, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -270,7 +307,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 
             var downloadResult = await _downloadService.TryDownloadAssetAsync(
                 releaseInfo.Latest.Installer,
-                _applicationPathsConfiguration.GetInstallerPath(releaseInfo.Latest.Installer.Version),
+                downloadPath,
                 cancellationToken);
 
             if (!downloadResult)
@@ -367,11 +404,18 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
             RaiseStageStatusChanged(Stage.Uninstalling, StageStatus.InProgress);
             await Task.Delay(_consistentDelay, cancellationToken);
 
+            if (deleteConfig)
+            {
+                _applicationPathsConfiguration.ConfigFilePath.DeleteFile();
+            }
+
             _applicationPathsConfiguration.IqAppDirectory.DeleteDirectory();
-            _applicationPathsConfiguration.ConfigFilePath.DeleteFile();
             _applicationPathsConfiguration.ProvidersDirectory.DeleteDirectory();
             _applicationPathsConfiguration.IqExtractedZipDirectory.DeleteDirectory();
             _applicationPathsConfiguration.IqUpdateZipPath.DeleteFile();
+            _applicationPathsConfiguration.InstallerProxy.DeleteFile();
+
+            await _registrar.UnregisterAppFromSystem(cancellationToken);
 
             return PassStage(Stage.Uninstalling);
         }
@@ -434,6 +478,51 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         }
     }
 
+    private async Task<bool> FinalizeSetup(bool createDesktopShortcut, Version? appVersion = null, CancellationToken cancellationToken = default)
+    {
+        RaiseStageStatusChanged(Stage.FinalizingSetup, StageStatus.InProgress);
+
+        try
+        {
+            if (createDesktopShortcut && !await _registrar.CreateDesktopShortcut(cancellationToken))
+            {
+                return FailStage(Stage.FinalizingSetup);
+            }
+
+            if (!await _registrar.CreateOsSearchIndex(cancellationToken)
+                || !await _registrar.RegisterAppInProgramUninstallList(appVersion, cancellationToken)
+                || !await _registrar.CreateOrUpdateInstallerProxy(cancellationToken))
+            {
+                return FailStage(Stage.FinalizingSetup);
+            }
+
+            return PassStage(Stage.FinalizingSetup);
+        }
+        catch
+        {
+            return FailStage(Stage.FinalizingSetup);
+        }
+    }
+
+    private async Task<bool> FinalizeUninstall(CancellationToken cancellationToken = default)
+    {
+        RaiseStageStatusChanged(Stage.FinalizingRemoval, StageStatus.InProgress);
+
+        try
+        {
+            if (!await _registrar.UnregisterAppFromSystem(cancellationToken))
+            {
+                return FailStage(Stage.FinalizingRemoval);
+            }
+
+            return PassStage(Stage.FinalizingRemoval);
+        }
+        catch
+        {
+            return FailStage(Stage.FinalizingRemoval);
+        }
+    }
+
     #endregion
 
     private async Task UpdateReleaseInfo(CancellationToken cancellationToken = default)
@@ -471,14 +560,48 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         return true;
     }
 
-    private bool FailJob(params Stage[] failStages)
+    private bool FailJob(Stage[] stages, Stage skipFromStage)
     {
-        foreach (var stage in failStages)
+
+        foreach (var stage in stages.SkipWhile(x => x != skipFromStage))
         {
             RaiseStageStatusChanged(stage, StageStatus.Skipped);
         }
 
         RaiseJobStatusChanged(false);
         return false;
+    }
+
+    private bool FailJob()
+    {
+        RaiseJobStatusChanged(false);
+        return false;
+    }
+
+    private void Rename(AbsolutePath temporaryLocation, AbsolutePath finalLocation)
+    {
+        var success = false;
+        while (!success)
+        {
+            try
+            {
+                temporaryLocation.Move(finalLocation, ExistsPolicy.FileOverwrite);
+                success = true;
+                return;
+            }
+            catch
+            {
+                success = false;
+            }
+        }
+    }
+
+    private void CleanUnsuccessfulInstallerDownloads()
+    {
+        var files = _applicationPathsConfiguration.IqBaseDirectory.GetFiles("*.exe");
+        foreach (var file in files.Where(x => Guid.TryParse(x.NameWithoutExtension, out _)))
+        {
+            file.DeleteFile();
+        }
     }
 }

@@ -11,7 +11,7 @@
         SystemDecorations="None"
         WindowStartupLocation="CenterScreen"
         Width="250"
-        Height="400"
+        Height="450"
         RequestedThemeVariant="Dark"
         Foreground="White"
         Background="{Binding Background}"
@@ -24,7 +24,7 @@
   <Border
       BorderBrush="{Binding AccentColor}"
       BorderThickness="1 1 1 1">
-    <Grid RowDefinitions="*,250">
+    <Grid RowDefinitions="*,275">
       <Grid Grid.Row="0">
         <li:LoadingIndicator
             Foreground="{Binding AccentColor}"
