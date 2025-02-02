@@ -1,4 +1,4 @@
-﻿namespace Rachkov.InspectaQueue.AutoUpdater.Core;
+namespace Rachkov.InspectaQueue.AutoUpdater.Core;
 
 public enum Stage
 {
@@ -11,5 +11,5 @@ public enum Stage
     WaitingAppToClose,
     LaunchApp,
     Uninstalling,
-    CreateDesktopShortcut
+    FinalizingSetup
 }

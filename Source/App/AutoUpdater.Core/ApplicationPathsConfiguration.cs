@@ -17,6 +17,7 @@ public class ApplicationPathsConfiguration : IApplicationPathsConfiguration
         IqExtractedZipDirectory = IqBaseDirectory / "Release";
         IqExtractedAppDirectory = IqExtractedZipDirectory / "App";
         IqExtractedProvidersDirectory = IqExtractedZipDirectory / "Providers";
+        InstallerProxy = IqBaseDirectory / "Uninstaller.lnk";
 
         ConfigFilePath = IqBaseDirectory / "config.json";
         OldConfigFilePath = IqAppDirectory / "config.json";
@@ -37,6 +38,7 @@ public class ApplicationPathsConfiguration : IApplicationPathsConfiguration
     public AbsolutePath OldProvidersDirectory { get; }
     public AbsolutePath IqAppExecutablePath { get; }
     public AbsolutePath? InstallerPath => GetInstallerPath();
+    public AbsolutePath InstallerProxy { get; }
     public AbsolutePath IqUpdateZipPath { get; }
     public AbsolutePath IqExtractedZipDirectory { get; }
 
