@@ -3,6 +3,7 @@ using AutoMapper.Contrib.Autofac.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Rachkov.InspectaQueue.Abstractions;
 using Rachkov.InspectaQueue.AutoUpdater.Core;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Registrar;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.MapperProfiles;
@@ -135,6 +136,10 @@ public static class ContainerBuilderExtensions
             .SingleInstance();
 
         builder.RegisterType<UpdateMigratorService>()
+            .AsImplementedInterfaces()
+            .SingleInstance();
+
+        builder.RegisterType<WindowsRegistrar>()
             .AsImplementedInterfaces()
             .SingleInstance();
 

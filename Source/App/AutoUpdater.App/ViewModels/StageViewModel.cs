@@ -19,6 +19,8 @@ public class StageViewModel : ViewModelBase
         { Stage.WaitingAppToClose ,"Waiting IQ to exit"},
         { Stage.LaunchApp ,"Launching IQ"},
         { Stage.Uninstalling ,"Uninstalling"},
+        { Stage.FinalizingSetup ,"Finalizing setup"},
+        { Stage.FinalizingRemoval ,"Finalizing removal"},
     };
 
     public Stage Stage
