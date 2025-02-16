@@ -1,4 +1,5 @@
 using Nuke.Common.IO;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Paths;
 using System.Diagnostics;
 #pragma warning disable CA1416
 

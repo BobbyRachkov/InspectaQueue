@@ -1,4 +1,6 @@
 ﻿using Rachkov.InspectaQueue.AutoUpdater.Core;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.AutoUpdater;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Paths;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.DialogManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings.Models;

@@ -1,6 +1,6 @@
 ﻿using Nuke.Common.IO;
 
-namespace Rachkov.InspectaQueue.AutoUpdater.Core;
+namespace Rachkov.InspectaQueue.AutoUpdater.Core.Services.Paths;
 
 public class ApplicationPathsConfiguration : IApplicationPathsConfiguration
 {

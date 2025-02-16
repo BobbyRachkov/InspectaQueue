@@ -1,5 +1,6 @@
 using Moq;
 using Rachkov.InspectaQueue.AutoUpdater.Core;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.AutoUpdater;
 using RichardSzalay.MockHttp;
 
 namespace AutoUpdater.Tests

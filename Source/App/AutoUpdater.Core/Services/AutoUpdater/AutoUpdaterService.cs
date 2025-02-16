@@ -1,12 +1,14 @@
 using Nuke.Common.IO;
 using Rachkov.InspectaQueue.AutoUpdater.Core.EventArgs;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Models;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Download;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Paths;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Registrar;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Reflection;
 
-namespace Rachkov.InspectaQueue.AutoUpdater.Core;
+namespace Rachkov.InspectaQueue.AutoUpdater.Core.Services.AutoUpdater;
 
 public sealed class AutoUpdaterService : IAutoUpdaterService
 {

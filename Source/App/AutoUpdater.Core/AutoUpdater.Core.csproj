@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Config\Migrators\" />
     <Folder Include="EventArgs\" />
   </ItemGroup>
 </Project>

@@ -2,6 +2,7 @@
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
 using Rachkov.InspectaQueue.AutoUpdater.Core;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.AutoUpdater;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Registrar;
 using ReactiveUI;
 using System;

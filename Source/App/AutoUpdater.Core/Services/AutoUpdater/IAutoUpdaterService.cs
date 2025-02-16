@@ -1,7 +1,7 @@
 ﻿using Rachkov.InspectaQueue.AutoUpdater.Core.EventArgs;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Models;
 
-namespace Rachkov.InspectaQueue.AutoUpdater.Core;
+namespace Rachkov.InspectaQueue.AutoUpdater.Core.Services.AutoUpdater;
 
 public interface IAutoUpdaterService
 {

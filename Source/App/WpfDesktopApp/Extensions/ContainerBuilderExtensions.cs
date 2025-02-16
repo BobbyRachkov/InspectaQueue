@@ -2,7 +2,9 @@
 using AutoMapper.Contrib.Autofac.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Rachkov.InspectaQueue.Abstractions;
-using Rachkov.InspectaQueue.AutoUpdater.Core;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.AutoUpdater;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Download;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Paths;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Registrar;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
