@@ -73,7 +73,11 @@ public static class ContainerBuilderExtensions
 
     public static ContainerBuilder RegisterConfigStore(this ContainerBuilder builder)
     {
-        builder.RegisterType<JsonFileConfigStoreService>()
+        builder.Register(context =>
+            {
+                var version = context.Resolve<IAutoUpdaterService>().GetExecutingAppVersion().ToString();
+                return new JsonFileConfigStoreService(version);
+            })
             .AsImplementedInterfaces()
             .SingleInstance();
 

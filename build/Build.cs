@@ -81,7 +81,7 @@ public class Build : NukeBuild
             DotNetTasks.DotNetBuild(_ => _
                 .SetProjectFile(Solution.App.WpfDesktopApp)
                 .SetConfiguration(Configuration)
-                .SetAssemblyVersion(GitVersion.AssemblySemVer)
+                .SetAssemblyVersion(AppVersion)
                 .SetFileVersion(AppVersion)
                 .SetInformationalVersion(AppVersion)
                 .SetAuthors("Bobi Rachkov")
