@@ -137,10 +137,6 @@ public static class ContainerBuilderExtensions
             .AsImplementedInterfaces()
             .SingleInstance();
 
-        builder.RegisterType<UpdateMigratorService>()
-            .AsImplementedInterfaces()
-            .SingleInstance();
-
         builder.RegisterType<WindowsRegistrar>()
             .AsImplementedInterfaces()
             .SingleInstance();

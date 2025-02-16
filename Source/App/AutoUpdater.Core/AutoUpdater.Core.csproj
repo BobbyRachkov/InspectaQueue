@@ -15,7 +15,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Config\Migrators\" />
     <Folder Include="EventArgs\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AutoUpdater.Migrations\AutoUpdater.Migrations.csproj" />
   </ItemGroup>
 </Project>

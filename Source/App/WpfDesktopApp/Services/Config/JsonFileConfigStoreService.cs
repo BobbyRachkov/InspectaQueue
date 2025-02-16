@@ -53,6 +53,10 @@ public class JsonFileConfigStoreService : IConfigStoreService
         lock (_settingsWriteLock)
         {
             _settingsCache = null;
+
+            var version = Environment.Version;
+            settings.AppVersion = $"{version.Major}.{version.Minor}.{version.Build}";
+
             var text = JsonConvert.SerializeObject(settings, Formatting.Indented, _serializerSettings);
             File.WriteAllText(StorageFileName, text);
             _settingsCache = settings;

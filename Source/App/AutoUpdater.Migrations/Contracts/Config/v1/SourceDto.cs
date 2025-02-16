@@ -1,6 +1,6 @@
-﻿namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.Config.Models;
+﻿namespace AutoUpdater.Migrations.Models.Config.v1;
 
-public class SourceDto
+internal class SourceDto
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public required string Name { get; set; }
