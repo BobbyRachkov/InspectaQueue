@@ -15,6 +15,7 @@ public class ApplicationPathsConfiguration : IApplicationPathsConfiguration
         IqAppExecutablePath = IqAppDirectory / "InspectaQueue.exe";
         IqUpdateZipPath = IqBaseDirectory / "release.zip";
         IqExtractedZipDirectory = IqBaseDirectory / "Release";
+        MigrationsDllPath = IqExtractedZipDirectory / "Migrations.dll";
         IqExtractedAppDirectory = IqExtractedZipDirectory / "App";
         IqExtractedProvidersDirectory = IqExtractedZipDirectory / "Providers";
         InstallerProxy = IqBaseDirectory / "Uninstaller.lnk";
@@ -41,6 +42,7 @@ public class ApplicationPathsConfiguration : IApplicationPathsConfiguration
     public AbsolutePath InstallerProxy { get; }
     public AbsolutePath IqUpdateZipPath { get; }
     public AbsolutePath IqExtractedZipDirectory { get; }
+    public AbsolutePath MigrationsDllPath { get; }
 
     private AbsolutePath? GetInstallerPath()
     {

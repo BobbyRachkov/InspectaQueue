@@ -2,8 +2,11 @@ using Nuke.Common.IO;
 using Rachkov.InspectaQueue.AutoUpdater.Core.EventArgs;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Models;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Download;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Migrations;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Paths;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Registrar;
+using Rachkov.InspectaQueue.AutoUpdater.Migrations.Contracts.Config;
+using Rachkov.InspectaQueue.AutoUpdater.Migrations.Helpers;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Reflection;
@@ -15,17 +18,20 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
     private readonly IDownloadService _downloadService;
     private readonly IApplicationPathsConfiguration _applicationPathsConfiguration;
     private readonly IRegistrar _registrar;
+    private readonly IMigrationService _migrationService;
     private ReleaseInfo? _releaseInfo;
     private readonly TimeSpan _consistentDelay = TimeSpan.FromMilliseconds(600);
 
     public AutoUpdaterService(
         IDownloadService downloadService,
         IApplicationPathsConfiguration applicationPathsConfiguration,
-        IRegistrar registrar)
+        IRegistrar registrar,
+        IMigrationService migrationService)
     {
         _downloadService = downloadService;
         _applicationPathsConfiguration = applicationPathsConfiguration;
         _registrar = registrar;
+        _migrationService = migrationService;
     }
 
     public event EventHandler<JobStatusChangedEventArgs>? JobStatusChanged;
@@ -107,6 +113,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         {
             Stage.DownloadingRelease,
             Stage.Unzipping,
+            Stage.InstallPrerequisites,
             Stage.CopyingFiles,
             Stage.CleaningUp,
             Stage.FinalizingSetup,
@@ -121,6 +128,11 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         }
 
         if (!await Unzip(cancellationToken))
+        {
+            return FailJob(stages, Stage.InstallPrerequisites);
+        }
+
+        if (!await InstallPrerequisites(cancellationToken))
         {
             return FailJob(stages, Stage.CopyingFiles);
         }
@@ -190,8 +202,8 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         var stages = new[]
         {
             Stage.DownloadingRelease,
-            Stage.WaitingAppToClose,
             Stage.Unzipping,
+            Stage.WaitingAppToClose,
             Stage.CopyingFiles,
             Stage.CleaningUp,
             Stage.FinalizingSetup,
@@ -206,15 +218,22 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 
         if (!await DownloadRelease(prerelease, cancellationToken))
         {
-            return FailJob(stages, Stage.WaitingAppToClose);
-        }
-
-        if (!await WaitInspectaQueueToExit(cancellationToken))
-        {
             return FailJob(stages, Stage.Unzipping);
         }
 
         if (!await Unzip(cancellationToken))
+        {
+            return FailJob(stages, Stage.WaitingAppToClose);
+        }
+
+        _migrationService.Init(GetCurrentAppVersion());
+
+        if (!await WaitInspectaQueueToExit(cancellationToken))
+        {
+            return FailJob(stages, Stage.InstallPrerequisites);
+        }
+
+        if (!await InstallPrerequisites(cancellationToken))
         {
             return FailJob(stages, Stage.CopyingFiles);
         }
@@ -345,6 +364,23 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         }
     }
 
+    private async Task<bool> InstallPrerequisites(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            RaiseStageStatusChanged(Stage.InstallPrerequisites, StageStatus.InProgress);
+            await Task.Delay(_consistentDelay, cancellationToken);
+
+            await _migrationService.InstallPrerequisites(cancellationToken);
+
+            return PassStage(Stage.InstallPrerequisites);
+        }
+        catch
+        {
+            return FailStage(Stage.InstallPrerequisites);
+        }
+    }
+
     private async Task<bool> CopyFiles(CancellationToken cancellationToken = default)
     {
         try
@@ -364,14 +400,18 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 
             _applicationPathsConfiguration.IqAppDirectory.DeleteDirectory();
 
-            (_applicationPathsConfiguration.IqExtractedZipDirectory / "App").CopyToDirectory(
+            (_applicationPathsConfiguration.IqExtractedAppDirectory).CopyToDirectory(
                 _applicationPathsConfiguration.IqBaseDirectory);
 
+            _migrationService.DeleteProvidersIfNeeded();
 
             if (_applicationPathsConfiguration.IqExtractedProvidersDirectory.DirectoryExists())
             {
                 _applicationPathsConfiguration.IqExtractedProvidersDirectory.CopyToDirectory(_applicationPathsConfiguration.IqBaseDirectory, ExistsPolicy.MergeAndOverwrite);
             }
+
+            _migrationService.DeleteOldProviderVersionsIfNeeded();
+            await _migrationService.MigrateConfigFiles(cancellationToken);
 
             return PassStage(Stage.CopyingFiles);
         }
@@ -605,5 +645,16 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         {
             file.DeleteFile();
         }
+    }
+
+    private string? GetCurrentAppVersion()
+    {
+        if (!_applicationPathsConfiguration.ConfigFilePath.FileExists())
+        {
+            return null;
+        }
+
+        var text = File.ReadAllText(_applicationPathsConfiguration.ConfigFilePath);
+        return text.ParseJson<Base>()?.AppVersion;
     }
 }

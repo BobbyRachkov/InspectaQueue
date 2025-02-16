@@ -1,6 +1,6 @@
-﻿using AutoUpdater.Migrations.Models.Interfaces;
+﻿using Rachkov.InspectaQueue.AutoUpdater.Migrations.Models.Interfaces;
 
-namespace AutoUpdater.Migrations.Models;
+namespace Rachkov.InspectaQueue.AutoUpdater.Migrations.Models;
 
 public class Prerequisite : IPrerequisite
 {

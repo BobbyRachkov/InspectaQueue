@@ -1,4 +1,4 @@
-﻿namespace AutoUpdater.Migrations.Models.Config.v1;
+﻿namespace Rachkov.InspectaQueue.AutoUpdater.Migrations.Contracts.Config.v1;
 
 internal class SourceSettingEntryDto
 {

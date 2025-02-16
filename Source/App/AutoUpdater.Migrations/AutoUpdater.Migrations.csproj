@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Rachkov.InspectaQueue.AutoUpdater.Migrations</RootNamespace>
+    <DefaultNamespace>Rachkov.InspectaQueue.AutoUpdater.Migrations</DefaultNamespace>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 </Project>

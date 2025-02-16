@@ -10,6 +10,7 @@ public interface IApplicationPathsConfiguration
     AbsolutePath? InstallerPath { get; }
     AbsolutePath IqUpdateZipPath { get; }
     AbsolutePath IqExtractedZipDirectory { get; }
+    AbsolutePath MigrationsDllPath { get; }
     AbsolutePath IqExtractedAppDirectory { get; }
     AbsolutePath IqExtractedProvidersDirectory { get; }
     AbsolutePath InstallerProxy { get; }

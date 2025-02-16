@@ -1,4 +1,4 @@
-﻿namespace AutoUpdater.Migrations.Models.Interfaces;
+﻿namespace Rachkov.InspectaQueue.AutoUpdater.Migrations.Models.Interfaces;
 
 public interface IMigration
 {
@@ -16,6 +16,11 @@ public interface IMigration
     /// Flag whether to clear all old provider versions on installation. Keeps the latest one only per provider.
     /// </summary>
     bool KeepOnlyLatestProviderVersion { get; }
+
+    /// <summary>
+    /// Function that is executed to migrate the schema of the config file. Takes the old file json and has to return the new json.
+    /// </summary>
+    Func<string, string>? MigrateConfig { get; }
 
     /// <summary>
     /// List of prerequisites to be installed on the host machine.

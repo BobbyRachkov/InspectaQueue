@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace AutoUpdater.Migrations.Helpers;
+namespace Rachkov.InspectaQueue.AutoUpdater.Migrations.Helpers;
 
 public static class DotNetHelper
 {

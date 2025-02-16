@@ -1,4 +1,4 @@
-﻿namespace AutoUpdater.Migrations.Models.Interfaces;
+﻿namespace Rachkov.InspectaQueue.AutoUpdater.Migrations.Models.Interfaces;
 
 public interface IPrerequisite
 {

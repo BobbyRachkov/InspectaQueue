@@ -1,6 +1,6 @@
-﻿using AutoUpdater.Migrations.Helpers;
-using AutoUpdater.Migrations.Models;
-using AutoUpdater.Migrations.Models.Interfaces;
+﻿using Rachkov.InspectaQueue.AutoUpdater.Migrations.Helpers;
+using Rachkov.InspectaQueue.AutoUpdater.Migrations.Models;
+using Rachkov.InspectaQueue.AutoUpdater.Migrations.Models.Interfaces;
 
 namespace AutoUpdater.Migrations.Migrations;
 
@@ -9,6 +9,8 @@ public class Migration_2_2_0 : IMigration
     public (int major, int minor, int patch) AppVersion => (2, 2, 0);
     public bool ClearAllProviders => true;
     public bool KeepOnlyLatestProviderVersion => false;
+    public Func<string, string>? MigrateConfig { get; }
+
     public IPrerequisite[] Prerequisites { get; init; } = [
     new Prerequisite
     {

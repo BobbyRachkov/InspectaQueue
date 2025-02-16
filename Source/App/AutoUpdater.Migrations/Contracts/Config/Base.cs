@@ -1,6 +1,6 @@
-﻿namespace AutoUpdater.Migrations.Models.Config;
+﻿namespace Rachkov.InspectaQueue.AutoUpdater.Migrations.Contracts.Config;
 
-internal class Base
+public class Base
 {
     public string? AppVersion { get; set; }
 }

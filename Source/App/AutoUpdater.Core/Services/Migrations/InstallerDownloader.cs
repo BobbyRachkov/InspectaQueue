@@ -10,7 +10,7 @@ public class InstallerDownloader : IDisposable, IInstallerDownloader
 
     public async Task<bool> DownloadInstaller(string url, AbsolutePath downloadPath, CancellationToken cancellationToken = default)
     {
-        for (int attempt = 1; attempt <= MaxRetries; attempt++)
+        for (var attempt = 1; attempt <= MaxRetries; attempt++)
         {
             try
             {
