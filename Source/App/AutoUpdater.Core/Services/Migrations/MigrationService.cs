@@ -2,7 +2,6 @@ using Nuke.Common.IO;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Extensions;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Paths;
 using Rachkov.InspectaQueue.AutoUpdater.Migrations.Models.Interfaces;
-using System.Reflection;
 
 namespace Rachkov.InspectaQueue.AutoUpdater.Core.Services.Migrations;
 
@@ -22,36 +21,30 @@ public class MigrationService : IMigrationService
 
     public void Init(string? currentVersion)
     {
-        if (!_pathsConfiguration.MigrationsDllPath.FileExists())
-        {
-            return;
-        }
+        //if (!_pathsConfiguration.MigrationsDllPath.FileExists())
+        //{
+        //    return;
+        //}
 
         var current = string.IsNullOrWhiteSpace(currentVersion) ? null : new Version(currentVersion);
-        Assembly migrationsAssembly = null;
         try
         {
-            migrationsAssembly = Assembly.LoadFile(_pathsConfiguration.MigrationsDllPath);
-
-
             var interfaceType = typeof(IMigration);
+            var migrationsAssembly = interfaceType.Assembly;
             var migrations = migrationsAssembly.GetTypes()
-                .Where(t => t.GetInterfaces().Any(x => x.Name == nameof(IMigration))/*interfaceType.IsAssignableFrom(t) */&& t is { IsInterface: false, IsAbstract: false }).ToList();
-
-            var kur = migrations
-                .Select(t => migrationsAssembly.CreateInstance(t.FullName) as IMigration/*Activator.CreateInstance(t) as IMigration*/).ToList();
-
-            var kur2 = kur
+                .Where(t => interfaceType.IsAssignableFrom(t) && t is { IsInterface: false, IsAbstract: false })
+                .Select(t => (IMigration)Activator.CreateInstance(t)!)
                 .Where(m => m.AppVersion.ToVersion() > current)
                 .OrderBy(m => m.AppVersion.ToVersion())
                 .ToList();
 
             _pendingMigrations.Clear();
-            _pendingMigrations.AddRange(kur2);
+            _pendingMigrations.AddRange(migrations);
 
         }
         catch (Exception ex)
         {
+            return;
         }
     }
 
