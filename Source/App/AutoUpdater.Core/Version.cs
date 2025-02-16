@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 public sealed class Version : IComparable<Version>
 {
     private static readonly Regex VersionPattern = new(
-        @"^(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)(\.(?<build>\d+))?(-(?<pre>[^-]+))?$",
+        @"^(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)(\.(?<build>\d+))?(-(?<pre>.+))?$",
         RegexOptions.Compiled);
 
     public int Major { get; }
