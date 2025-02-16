@@ -47,6 +47,9 @@ public class Build : NukeBuild
     AbsolutePath ProdZipName => ArtifactsDirectory / $"InspectaQueue_{AppVersion}.zip";
     AbsolutePath InstallerBuildDirectory => ArtifactsDirectory / $"Installer";
     AbsolutePath InstallerPath => ArtifactsDirectory / $"Installer_{InstallerVersion}.exe";
+    AbsolutePath MigrationsCompileDirectory => ArtifactsDirectory / $"migrations";
+    AbsolutePath MigrationsCompiledName => MigrationsCompileDirectory / $"AutoUpdater.Migrations.dll";
+    AbsolutePath MigrationsProdName => ZipDirectory / $"Migrations.dll";
 
 
     AbsolutePath ProvidersDevDirectory => RootDirectory / "\\Source\\App\\WpfDesktopApp\\bin\\Debug\\Providers";
@@ -150,6 +153,7 @@ public class Build : NukeBuild
     Target Zip => _ => _
         .DependsOn(CompileProviders)
         .DependsOn(CleanPdbs)
+        .DependsOn(CompileMigrations)
         .Executes(() =>
         {
             ZipDirectory.ZipTo(ProdZipName);
@@ -182,5 +186,27 @@ public class Build : NukeBuild
                     .SetOutputDirectory(providerDirectory)
                 );
             }
+        });
+
+    Target CompileMigrations => _ => _
+        .After(Compile)
+        .Executes(() =>
+        {
+            var project = Solution.AutoUpdater.AutoUpdater_Migrations;
+
+            Log.Information("Compiling migrations");
+
+            DotNetTasks.DotNetBuild(_ => _
+                .SetProjectFile(project)
+                .SetConfiguration(Configuration)
+                .SetAssemblyVersion(GitVersion.AssemblySemVer)
+                .SetFileVersion(AppVersion)
+                .SetInformationalVersion(AppVersion)
+                .SetAuthors("Bobi Rachkov")
+                .SetOutputDirectory(MigrationsCompileDirectory)
+            );
+
+            MigrationsCompiledName.Copy(MigrationsProdName, ExistsPolicy.FileOverwrite);
+            MigrationsCompileDirectory.DeleteDirectory();
         });
 }
