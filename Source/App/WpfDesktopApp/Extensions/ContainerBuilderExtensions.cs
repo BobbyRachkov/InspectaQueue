@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Rachkov.InspectaQueue.Abstractions;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.AutoUpdater;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Download;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Migrations;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Paths;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Registrar;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
@@ -139,6 +140,19 @@ public static class ContainerBuilderExtensions
 
         builder.RegisterType<WindowsRegistrar>()
             .AsImplementedInterfaces()
+            .SingleInstance();
+
+        builder.RegisterType<MigrationService>()
+            .AsImplementedInterfaces()
+            .SingleInstance();
+
+        builder.RegisterType<WindowsInstallerRunner>()
+            .AsImplementedInterfaces()
+            .SingleInstance();
+
+        builder.RegisterType<InstallerDownloader>()
+            .AsImplementedInterfaces()
+            .AsSelf()
             .SingleInstance();
 
         return builder;
