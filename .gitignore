@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /Source/OldConfigs
 /ignore/Pulsar_0.1.3.0
+/ignore/working
