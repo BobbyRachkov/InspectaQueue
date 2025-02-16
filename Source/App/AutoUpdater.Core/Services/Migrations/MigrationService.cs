@@ -28,17 +28,31 @@ public class MigrationService : IMigrationService
         }
 
         var current = string.IsNullOrWhiteSpace(currentVersion) ? null : new Version(currentVersion);
-        var migrationsAssembly = Assembly.LoadFile(_pathsConfiguration.MigrationsDllPath);
+        Assembly migrationsAssembly = null;
+        try
+        {
+            migrationsAssembly = Assembly.LoadFile(_pathsConfiguration.MigrationsDllPath);
 
-        var migrations = migrationsAssembly.GetTypes()
-            .Where(t => typeof(IMigration).IsAssignableFrom(t) && t is { IsInterface: false, IsAbstract: false })
-            .Select(t => (IMigration)Activator.CreateInstance(t)!)
-            .Where(m => m.AppVersion.ToVersion() > current)
-            .OrderBy(m => m.AppVersion.ToVersion())
-            .ToList();
 
-        _pendingMigrations.Clear();
-        _pendingMigrations.AddRange(migrations);
+            var interfaceType = typeof(IMigration);
+            var migrations = migrationsAssembly.GetTypes()
+                .Where(t => t.GetInterfaces().Any(x => x.Name == nameof(IMigration))/*interfaceType.IsAssignableFrom(t) */&& t is { IsInterface: false, IsAbstract: false }).ToList();
+
+            var kur = migrations
+                .Select(t => migrationsAssembly.CreateInstance(t.FullName) as IMigration/*Activator.CreateInstance(t) as IMigration*/).ToList();
+
+            var kur2 = kur
+                .Where(m => m.AppVersion.ToVersion() > current)
+                .OrderBy(m => m.AppVersion.ToVersion())
+                .ToList();
+
+            _pendingMigrations.Clear();
+            _pendingMigrations.AddRange(kur2);
+
+        }
+        catch (Exception ex)
+        {
+        }
     }
 
     public async Task<bool> InstallPrerequisites(CancellationToken cancellationToken = default)

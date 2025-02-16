@@ -122,6 +122,8 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 
         RaiseJobStatusChanged(true, stages);
 
+        _applicationPathsConfiguration.IqExtractedZipDirectory.DeleteDirectory();
+
         if (!await DownloadRelease(cancellationToken: cancellationToken))
         {
             return FailJob(stages, Stage.Unzipping);
@@ -131,6 +133,8 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         {
             return FailJob(stages, Stage.InstallPrerequisites);
         }
+
+        _migrationService.Init(null);
 
         if (!await InstallPrerequisites(cancellationToken))
         {
@@ -204,6 +208,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
             Stage.DownloadingRelease,
             Stage.Unzipping,
             Stage.WaitingAppToClose,
+            Stage.InstallPrerequisites,
             Stage.CopyingFiles,
             Stage.CleaningUp,
             Stage.FinalizingSetup,
@@ -216,6 +221,8 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 
         RaiseJobStatusChanged(true, stages);
 
+        _applicationPathsConfiguration.IqExtractedZipDirectory.DeleteDirectory();
+
         if (!await DownloadRelease(prerelease, cancellationToken))
         {
             return FailJob(stages, Stage.Unzipping);
@@ -226,12 +233,12 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
             return FailJob(stages, Stage.WaitingAppToClose);
         }
 
-        _migrationService.Init(GetCurrentAppVersion());
-
         if (!await WaitInspectaQueueToExit(cancellationToken))
         {
             return FailJob(stages, Stage.InstallPrerequisites);
         }
+
+        _migrationService.Init(GetCurrentAppVersion());
 
         if (!await InstallPrerequisites(cancellationToken))
         {
@@ -428,7 +435,8 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
             RaiseStageStatusChanged(Stage.CleaningUp, StageStatus.InProgress);
             await Task.Delay(_consistentDelay, cancellationToken);
 
-            _applicationPathsConfiguration.IqExtractedZipDirectory.DeleteDirectory();
+            _applicationPathsConfiguration.IqExtractedAppDirectory.DeleteDirectory();
+            _applicationPathsConfiguration.IqExtractedProvidersDirectory.DeleteDirectory();
             _applicationPathsConfiguration.IqUpdateZipPath.DeleteFile();
 
             return PassStage(Stage.CleaningUp);

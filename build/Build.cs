@@ -32,6 +32,7 @@ public class Build : NukeBuild
     string AppVersion => GitVersion.SemVer;
 
     string InstallerVersion => "1.1.0";
+    string MigrationVersion => "1.0.0";
 
     Dictionary<Project, string> ProviderVersions => new()
     {
@@ -199,9 +200,9 @@ public class Build : NukeBuild
             DotNetTasks.DotNetBuild(_ => _
                 .SetProjectFile(project)
                 .SetConfiguration(Configuration)
-                .SetAssemblyVersion(GitVersion.AssemblySemVer)
-                .SetFileVersion(AppVersion)
-                .SetInformationalVersion(AppVersion)
+                .SetAssemblyVersion(MigrationVersion)
+                .SetFileVersion(MigrationVersion)
+                .SetInformationalVersion(MigrationVersion)
                 .SetAuthors("Bobi Rachkov")
                 .SetOutputDirectory(MigrationsCompileDirectory)
             );
