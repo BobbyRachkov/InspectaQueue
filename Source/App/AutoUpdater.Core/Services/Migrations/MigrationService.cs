@@ -232,11 +232,49 @@ internal class MigrationWrapper : IMigration
     public MigrationWrapper(dynamic instance)
     {
         _instance = instance;
+        Prerequisites = ((IEnumerable<dynamic>)_instance.Prerequisites)
+            .Select(p => new PrerequisiteWrapper(p))
+            .Cast<IPrerequisite>()
+            .ToArray();
     }
 
     public (int major, int minor, int patch) AppVersion => _instance.AppVersion;
     public bool ClearAllProviders => _instance.ClearAllProviders;
     public bool KeepOnlyLatestProviderVersion => _instance.KeepOnlyLatestProviderVersion;
-    public IPrerequisite[] Prerequisites => _instance.Prerequisites;
+    public IPrerequisite[] Prerequisites { get; }
     public Func<string, string>? MigrateConfig => _instance.MigrateConfig;
+}
+
+internal class PrerequisiteWrapper : IPrerequisite
+{
+    private readonly dynamic _instance;
+
+    public PrerequisiteWrapper(dynamic instance)
+    {
+        _instance = instance;
+        WindowsProcedure = new ProcedureWrapper(_instance.WindowsProcedure);
+        LinuxProcedure = LinuxProcedure is null ? null : new ProcedureWrapper(_instance.LinuxProcedure);
+        MacProcedure = MacProcedure is null ? null : new ProcedureWrapper(_instance.MacProcedure);
+    }
+
+    public IProcedure WindowsProcedure { get; init; }
+    public IProcedure? LinuxProcedure { get; init; }
+    public IProcedure? MacProcedure { get; init; }
+}
+
+internal class ProcedureWrapper : IProcedure
+{
+    private readonly dynamic _instance;
+
+    public ProcedureWrapper(dynamic instance)
+    {
+        _instance = instance;
+        HasToBePerformed = _instance.HasToBePerformed;
+        UrlOfInstaller = _instance.UrlOfInstaller;
+        InstallerArgs = _instance.InstallerArgs;
+    }
+
+    public Func<bool> HasToBePerformed { get; init; }
+    public string UrlOfInstaller { get; init; }
+    public string? InstallerArgs { get; init; }
 }
