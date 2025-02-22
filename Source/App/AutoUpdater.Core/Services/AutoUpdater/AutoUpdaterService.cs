@@ -1,11 +1,11 @@
 using Nuke.Common.IO;
+using Rachkov.InspectaQueue.AutoUpdater.Abstractions.Contracts;
 using Rachkov.InspectaQueue.AutoUpdater.Core.EventArgs;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Models;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Download;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Migrations;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Paths;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Registrar;
-using Rachkov.InspectaQueue.AutoUpdater.Migrations.Contracts.Config;
 using Rachkov.InspectaQueue.AutoUpdater.Migrations.Helpers;
 using System.Diagnostics;
 using System.IO.Compression;

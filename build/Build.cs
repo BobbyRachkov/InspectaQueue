@@ -32,7 +32,7 @@ public class Build : NukeBuild
     string AppVersion => GitVersion.SemVer;
 
     string InstallerVersion => "1.2.0";
-    string MigrationVersion => "1.2.0";
+    string MigrationVersion => "1.5.0";
 
     Dictionary<Project, string> ProviderVersions => new()
     {
@@ -208,6 +208,6 @@ public class Build : NukeBuild
             );
 
             MigrationsCompiledName.Copy(MigrationsProdName, ExistsPolicy.FileOverwrite);
-            MigrationsCompileDirectory.DeleteDirectory();
+            //MigrationsCompileDirectory.DeleteDirectory();
         });
 }

@@ -1,4 +1,4 @@
-﻿namespace Rachkov.InspectaQueue.AutoUpdater.Migrations.Models.Interfaces;
+﻿namespace Rachkov.InspectaQueue.AutoUpdater.Abstractions.Migrations.Interfaces;
 
 public interface IProcedure
 {

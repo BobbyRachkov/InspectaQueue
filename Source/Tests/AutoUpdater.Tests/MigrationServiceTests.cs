@@ -1,8 +1,8 @@
 using Moq;
 using Nuke.Common.IO;
+using Rachkov.InspectaQueue.AutoUpdater.Abstractions.Migrations.Interfaces;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Migrations;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Paths;
-using Rachkov.InspectaQueue.AutoUpdater.Migrations.Models.Interfaces;
 
 namespace AutoUpdater.Tests;
 

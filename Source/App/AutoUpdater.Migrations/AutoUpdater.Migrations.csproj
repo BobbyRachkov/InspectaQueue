@@ -6,5 +6,13 @@
     <RootNamespace>Rachkov.InspectaQueue.AutoUpdater.Migrations</RootNamespace>
     <DefaultNamespace>Rachkov.InspectaQueue.AutoUpdater.Migrations</DefaultNamespace>
     <Nullable>enable</Nullable>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AutoUpdater.Abstractions\AutoUpdater.Abstractions.csproj" >
+      <Private>false</Private>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </ProjectReference>
+  </ItemGroup>
 </Project>

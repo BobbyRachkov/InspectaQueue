@@ -1,6 +1,6 @@
-﻿using Rachkov.InspectaQueue.AutoUpdater.Migrations.Helpers;
-using Rachkov.InspectaQueue.AutoUpdater.Migrations.Models;
-using Rachkov.InspectaQueue.AutoUpdater.Migrations.Models.Interfaces;
+﻿using Rachkov.InspectaQueue.AutoUpdater.Abstractions.Migrations;
+using Rachkov.InspectaQueue.AutoUpdater.Abstractions.Migrations.Interfaces;
+using Rachkov.InspectaQueue.AutoUpdater.Migrations.Helpers;
 
 namespace AutoUpdater.Migrations.Migrations;
 

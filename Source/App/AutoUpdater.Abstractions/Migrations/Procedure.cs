@@ -1,6 +1,6 @@
-﻿using Rachkov.InspectaQueue.AutoUpdater.Migrations.Models.Interfaces;
+﻿using Rachkov.InspectaQueue.AutoUpdater.Abstractions.Migrations.Interfaces;
 
-namespace Rachkov.InspectaQueue.AutoUpdater.Migrations.Models;
+namespace Rachkov.InspectaQueue.AutoUpdater.Abstractions.Migrations;
 
 public class Procedure : IProcedure
 {

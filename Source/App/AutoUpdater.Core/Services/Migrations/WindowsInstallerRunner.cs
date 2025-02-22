@@ -1,5 +1,5 @@
 using Nuke.Common.IO;
-using Rachkov.InspectaQueue.AutoUpdater.Migrations.Models.Interfaces;
+using Rachkov.InspectaQueue.AutoUpdater.Abstractions.Migrations.Interfaces;
 using System.Diagnostics;
 
 namespace Rachkov.InspectaQueue.AutoUpdater.Core.Services.Migrations;
