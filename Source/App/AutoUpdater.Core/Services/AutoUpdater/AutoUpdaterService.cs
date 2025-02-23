@@ -6,7 +6,6 @@ using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Download;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Migrations;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Paths;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Registrar;
-using Rachkov.InspectaQueue.AutoUpdater.Migrations.Helpers;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Reflection;
@@ -218,8 +217,6 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
         }
 
         RaiseJobStatusChanged(true, stages);
-
-        _applicationPathsConfiguration.IqExtractedZipDirectory.DeleteDirectory();
 
         if (!await DownloadRelease(prerelease, cancellationToken))
         {

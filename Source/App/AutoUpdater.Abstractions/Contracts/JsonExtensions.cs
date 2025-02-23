@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace Rachkov.InspectaQueue.AutoUpdater.Migrations.Helpers;
+namespace Rachkov.InspectaQueue.AutoUpdater.Abstractions.Contracts;
 
 public static class JsonExtensions
 {
