@@ -122,8 +122,6 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
 
         RaiseJobStatusChanged(true, stages);
 
-        _applicationPathsConfiguration.IqExtractedZipDirectory.DeleteDirectory();
-
         if (!await DownloadRelease(cancellationToken: cancellationToken))
         {
             return FailJob(stages, Stage.Unzipping);
@@ -435,8 +433,7 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
             RaiseStageStatusChanged(Stage.CleaningUp, StageStatus.InProgress);
             await Task.Delay(_consistentDelay, cancellationToken);
 
-            _applicationPathsConfiguration.IqExtractedAppDirectory.DeleteDirectory();
-            _applicationPathsConfiguration.IqExtractedProvidersDirectory.DeleteDirectory();
+            _applicationPathsConfiguration.IqExtractedZipDirectory.DeleteDirectory();
             _applicationPathsConfiguration.IqUpdateZipPath.DeleteFile();
 
             return PassStage(Stage.CleaningUp);

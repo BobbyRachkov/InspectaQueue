@@ -6,13 +6,21 @@
     <RootNamespace>Rachkov.InspectaQueue.AutoUpdater.Migrations</RootNamespace>
     <DefaultNamespace>Rachkov.InspectaQueue.AutoUpdater.Migrations</DefaultNamespace>
     <Nullable>enable</Nullable>
-    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <!-- <EnableDynamicLoading>true</EnableDynamicLoading> -->
+    
+    <!-- Single-file publishing -->
+    <!-- <PublishSingleFile>true</PublishSingleFile> -->
+    <!-- <SelfContained>false</SelfContained> -->
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    
+    <!-- Trim unused assemblies -->
+    <!-- <PublishTrimmed>true</PublishTrimmed> -->
+    <!-- <TrimMode>link</TrimMode> -->
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AutoUpdater.Abstractions\AutoUpdater.Abstractions.csproj" >
-      <Private>false</Private>
-      <ExcludeAssets>runtime</ExcludeAssets>
-    </ProjectReference>
+    <ProjectReference Include="..\AutoUpdater.Abstractions\AutoUpdater.Abstractions.csproj"/>
+      <!-- <Private>false</Private> -->
+      <!-- <ExcludeAssets>runtime</ExcludeAssets> -->
   </ItemGroup>
 </Project>

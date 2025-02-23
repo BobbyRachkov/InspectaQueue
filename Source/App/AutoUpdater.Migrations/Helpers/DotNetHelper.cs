@@ -43,8 +43,7 @@ public static class DotNetHelper
                 var output = process.StandardOutput.ReadToEnd();
                 process.WaitForExit();
 
-                return output.Contains($"Microsoft.NETCore.App {version}") ||
-                       output.Contains($"Microsoft.WindowsDesktop.App {version}");
+                return output.Contains($"Microsoft.WindowsDesktop.App {version}");
             }
 
             return false;

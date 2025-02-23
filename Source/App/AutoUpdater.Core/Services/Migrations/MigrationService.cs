@@ -1,6 +1,7 @@
 using Nuke.Common.IO;
 using Rachkov.InspectaQueue.AutoUpdater.Abstractions.Migrations.Interfaces;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Extensions;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Migrations.Wrappers;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Paths;
 using System.Reflection;
 
@@ -22,7 +23,8 @@ public class MigrationService : IMigrationService
 
     public void Init(string? currentVersion)
     {
-        if (!_pathsConfiguration.MigrationsDllPath.FileExists())
+        if (!_pathsConfiguration.MigrationsDllPath.FileExists()
+            || !_pathsConfiguration.MigrationsAbstractionsDllPath.FileExists())
         {
             return;
         }
@@ -32,14 +34,11 @@ public class MigrationService : IMigrationService
         try
         {
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
-            var assembly = LoadMigrationAssembly(_pathsConfiguration.MigrationsDllPath);
-            if (assembly is null)
-            {
-                return;
-            }
+            var assembly = LoadAssemblyLoose(_pathsConfiguration.MigrationsDllPath);
 
-            var interfaceType = typeof(IMigration);
-            var migrations = GetCompatibleMigrations(assembly, interfaceType, current);
+            var migrations = GetCompatibleMigrations(assembly, typeof(IMigration), current);
+
+            AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
 
             _pendingMigrations.Clear();
             _pendingMigrations.AddRange(migrations);
@@ -52,7 +51,7 @@ public class MigrationService : IMigrationService
 
     private Assembly? CurrentDomain_AssemblyResolve(object? sender, ResolveEventArgs args)
     {
-        return Assembly.LoadFile(_pathsConfiguration.MigrationsDllPath.Parent / "AutoUpdater.Abstractions.dll");
+        return LoadAssemblyLoose(_pathsConfiguration.MigrationsAbstractionsDllPath);
     }
 
     public async Task<bool> InstallPrerequisites(CancellationToken cancellationToken = default)
@@ -174,24 +173,17 @@ public class MigrationService : IMigrationService
         }
     }
 
-    private static Assembly? LoadMigrationAssembly(string path)
+    private static Assembly LoadAssemblyLoose(string path)
     {
-        try
-        {
-            var assemblyBytes = File.ReadAllBytes(path);
-            return Assembly.Load(assemblyBytes);
-        }
-        catch
-        {
-            return null;
-        }
+        var assemblyBytes = File.ReadAllBytes(path);
+        return Assembly.Load(assemblyBytes);
     }
 
     private static List<IMigration> GetCompatibleMigrations(Assembly assembly, Type interfaceType, Version? currentVersion)
     {
         return assembly.GetTypes()
-            .Where(t => !t.IsInterface && !t.IsAbstract &&
-                t.GetInterfaces().Any(i => i.FullName == interfaceType.FullName))
+            .Where(t => t is { IsInterface: false, IsAbstract: false } &&
+                        t.GetInterfaces().Any(i => i.FullName == interfaceType.FullName))
             .Select(t =>
             {
                 try
@@ -204,10 +196,10 @@ public class MigrationService : IMigrationService
 
                     // Use dynamic to bypass assembly version mismatch
                     dynamic dynamicInstance = instance;
-                    var version = dynamicInstance.AppVersion;
+                    (int major, int minor, int patch) version = dynamicInstance.AppVersion;
 
                     // Only create IMigration wrapper if version check passes
-                    if (currentVersion is null || new Version(version).CompareTo(currentVersion) > 0)
+                    if (currentVersion is null || version.ToVersion().CompareTo(currentVersion) > 0)
                     {
                         return new MigrationWrapper(dynamicInstance);
                     }
@@ -223,58 +215,4 @@ public class MigrationService : IMigrationService
             .Cast<IMigration>()
             .ToList()!;
     }
-}
-
-internal class MigrationWrapper : IMigration
-{
-    private readonly dynamic _instance;
-
-    public MigrationWrapper(dynamic instance)
-    {
-        _instance = instance;
-        Prerequisites = ((IEnumerable<dynamic>)_instance.Prerequisites)
-            .Select(p => new PrerequisiteWrapper(p))
-            .Cast<IPrerequisite>()
-            .ToArray();
-    }
-
-    public (int major, int minor, int patch) AppVersion => _instance.AppVersion;
-    public bool ClearAllProviders => _instance.ClearAllProviders;
-    public bool KeepOnlyLatestProviderVersion => _instance.KeepOnlyLatestProviderVersion;
-    public IPrerequisite[] Prerequisites { get; }
-    public Func<string, string>? MigrateConfig => _instance.MigrateConfig;
-}
-
-internal class PrerequisiteWrapper : IPrerequisite
-{
-    private readonly dynamic _instance;
-
-    public PrerequisiteWrapper(dynamic instance)
-    {
-        _instance = instance;
-        WindowsProcedure = new ProcedureWrapper(_instance.WindowsProcedure);
-        LinuxProcedure = LinuxProcedure is null ? null : new ProcedureWrapper(_instance.LinuxProcedure);
-        MacProcedure = MacProcedure is null ? null : new ProcedureWrapper(_instance.MacProcedure);
-    }
-
-    public IProcedure WindowsProcedure { get; init; }
-    public IProcedure? LinuxProcedure { get; init; }
-    public IProcedure? MacProcedure { get; init; }
-}
-
-internal class ProcedureWrapper : IProcedure
-{
-    private readonly dynamic _instance;
-
-    public ProcedureWrapper(dynamic instance)
-    {
-        _instance = instance;
-        HasToBePerformed = _instance.HasToBePerformed;
-        UrlOfInstaller = _instance.UrlOfInstaller;
-        InstallerArgs = _instance.InstallerArgs;
-    }
-
-    public Func<bool> HasToBePerformed { get; init; }
-    public string UrlOfInstaller { get; init; }
-    public string? InstallerArgs { get; init; }
 }

@@ -50,7 +50,9 @@ public class Build : NukeBuild
     AbsolutePath InstallerPath => ArtifactsDirectory / $"Installer_{InstallerVersion}.exe";
     AbsolutePath MigrationsCompileDirectory => ArtifactsDirectory / $"migrations";
     AbsolutePath MigrationsCompiledName => MigrationsCompileDirectory / $"AutoUpdater.Migrations.dll";
-    AbsolutePath MigrationsProdName => ZipDirectory / $"Migrations.dll";
+    AbsolutePath MigrationsAbstractionsCompiledName => MigrationsCompileDirectory / $"AutoUpdater.Abstractions.dll";
+    AbsolutePath MigrationsProdName => ZipDirectory / "Migration" / $"Migrations.dll";
+    AbsolutePath MigrationsAbstractionsProdName => ZipDirectory / "Migration" / $"Abstractions.dll";
 
 
     AbsolutePath ProvidersDevDirectory => RootDirectory / "\\Source\\App\\WpfDesktopApp\\bin\\Debug\\Providers";
@@ -194,20 +196,21 @@ public class Build : NukeBuild
         .Executes(() =>
         {
             var project = Solution.AutoUpdater.AutoUpdater_Migrations;
-
+            MigrationsCompileDirectory.CreateOrCleanDirectory();
             Log.Information("Compiling migrations");
 
-            DotNetTasks.DotNetBuild(_ => _
-                .SetProjectFile(project)
+            DotNetTasks.DotNetPublish(_ => _
+                .SetProject(project)
                 .SetConfiguration(Configuration)
                 .SetAssemblyVersion(MigrationVersion)
                 .SetFileVersion(MigrationVersion)
                 .SetInformationalVersion(MigrationVersion)
                 .SetAuthors("Bobi Rachkov")
-                .SetOutputDirectory(MigrationsCompileDirectory)
+                .SetOutput(MigrationsCompileDirectory)
             );
 
             MigrationsCompiledName.Copy(MigrationsProdName, ExistsPolicy.FileOverwrite);
-            //MigrationsCompileDirectory.DeleteDirectory();
+            MigrationsAbstractionsCompiledName.Copy(MigrationsAbstractionsProdName, ExistsPolicy.FileOverwrite);
+            MigrationsCompileDirectory.DeleteDirectory();
         });
 }

@@ -15,7 +15,7 @@ public class WindowsInstallerRunner : IInstallerRunner
 
     public async Task<bool> TryInstallPrerequisiteIfNeeded(IPrerequisite prerequisite, AbsolutePath tempDirectory, CancellationToken cancellationToken = default)
     {
-        if (prerequisite.WindowsProcedure.HasToBePerformed())
+        if (!prerequisite.WindowsProcedure.HasToBePerformed())
         {
             return true;
         }
