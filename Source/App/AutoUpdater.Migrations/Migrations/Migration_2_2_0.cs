@@ -9,7 +9,7 @@ public class Migration_2_2_0 : IMigration
     public (int major, int minor, int patch) AppVersion => (2, 2, 0);
     public bool ClearAllProviders => true;
     public bool KeepOnlyLatestProviderVersion => false;
-    public Func<string, string>? MigrateConfig { get; }
+    public Func<string, string>? MigrateConfig => null;
 
     public IPrerequisite[] Prerequisites { get; init; } = [
     new Prerequisite

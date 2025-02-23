@@ -36,6 +36,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoUpdater.Migrations", "S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoUpdater.Abstractions", "Source\App\AutoUpdater.Abstractions\AutoUpdater.Abstractions.csproj", "{3E9D73E0-F6B9-4495-B5EC-19A026D330CA}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{BE1E7B86-7161-4872-A873-50E8FAEF53B8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Utils", "Source\App\Utils\Utils.csproj", "{4031A9AF-E303-42AB-9D4F-89A8E6300956}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -76,6 +80,10 @@ Global
 		{3E9D73E0-F6B9-4495-B5EC-19A026D330CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3E9D73E0-F6B9-4495-B5EC-19A026D330CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3E9D73E0-F6B9-4495-B5EC-19A026D330CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4031A9AF-E303-42AB-9D4F-89A8E6300956}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4031A9AF-E303-42AB-9D4F-89A8E6300956}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4031A9AF-E303-42AB-9D4F-89A8E6300956}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4031A9AF-E303-42AB-9D4F-89A8E6300956}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -90,6 +98,7 @@ Global
 		{2A72B228-ABC7-4C14-9D2A-9CBDDCADFF5C} = {F1E517E7-E444-402D-A61E-4FA979EA825B}
 		{8F80CE53-3220-4BE4-B84E-102AF52E357E} = {F1E517E7-E444-402D-A61E-4FA979EA825B}
 		{3E9D73E0-F6B9-4495-B5EC-19A026D330CA} = {F1E517E7-E444-402D-A61E-4FA979EA825B}
+		{4031A9AF-E303-42AB-9D4F-89A8E6300956} = {BE1E7B86-7161-4872-A873-50E8FAEF53B8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6BE8A64B-6ECF-4A90-8F3D-835B1B9D3153}

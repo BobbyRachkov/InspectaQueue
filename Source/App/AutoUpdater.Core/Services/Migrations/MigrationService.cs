@@ -3,6 +3,7 @@ using Rachkov.InspectaQueue.AutoUpdater.Abstractions.Migrations.Interfaces;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Extensions;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Migrations.Wrappers;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Paths;
+using Rachkov.InspectaQueue.Common.Utils;
 using System.Reflection;
 
 namespace Rachkov.InspectaQueue.AutoUpdater.Core.Services.Migrations;
@@ -34,11 +35,9 @@ public class MigrationService : IMigrationService
         try
         {
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
-            var assembly = LoadAssemblyLoose(_pathsConfiguration.MigrationsDllPath);
+            var assembly = AssemblyHelpers.LoadAssemblyLoose(_pathsConfiguration.MigrationsDllPath);
 
             var migrations = GetCompatibleMigrations(assembly, typeof(IMigration), current);
-
-            AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
 
             _pendingMigrations.Clear();
             _pendingMigrations.AddRange(migrations);
@@ -47,11 +46,15 @@ public class MigrationService : IMigrationService
         {
             _pendingMigrations.Clear();
         }
+        finally
+        {
+            AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
+        }
     }
 
     private Assembly? CurrentDomain_AssemblyResolve(object? sender, ResolveEventArgs args)
     {
-        return LoadAssemblyLoose(_pathsConfiguration.MigrationsAbstractionsDllPath);
+        return AssemblyHelpers.LoadAssemblyLoose(_pathsConfiguration.MigrationsAbstractionsDllPath);
     }
 
     public async Task<bool> InstallPrerequisites(CancellationToken cancellationToken = default)
@@ -171,12 +174,6 @@ public class MigrationService : IMigrationService
                 }
             }
         }
-    }
-
-    private static Assembly LoadAssemblyLoose(string path)
-    {
-        var assemblyBytes = File.ReadAllBytes(path);
-        return Assembly.Load(assemblyBytes);
     }
 
     private static List<IMigration> GetCompatibleMigrations(Assembly assembly, Type interfaceType, Version? currentVersion)
