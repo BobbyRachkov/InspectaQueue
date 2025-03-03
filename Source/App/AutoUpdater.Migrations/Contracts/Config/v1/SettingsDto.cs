@@ -8,7 +8,7 @@ internal class SettingsDto
 
     public int SelectedActionIndex { get; set; } = 0;
 
-    public string ConfigVersion { get; set; } = "v1";
+    public string AppVersion { get; set; } = "0.0.0";
 
     public SourceDto[] Sources { get; set; } = [];
 }
