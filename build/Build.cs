@@ -32,7 +32,7 @@ public class Build : NukeBuild
     string AppVersion => GitVersion.SemVer;
 
     string InstallerVersion => "1.2.0";
-    string MigrationVersion => "1.5.0";
+    string MigrationVersion => InstallerVersion;
 
     Dictionary<Project, string> ProviderVersions => new()
     {

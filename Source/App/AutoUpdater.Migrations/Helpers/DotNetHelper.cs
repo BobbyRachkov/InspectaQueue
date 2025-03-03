@@ -38,15 +38,15 @@ public static class DotNetHelper
 
             using var process = Process.Start(psi);
 
-            if (process is not null)
+            if (process is null)
             {
-                var output = process.StandardOutput.ReadToEnd();
-                process.WaitForExit();
-
-                return output.Contains($"Microsoft.WindowsDesktop.App {version}");
+                return false;
             }
 
-            return false;
+            var output = process.StandardOutput.ReadToEnd();
+            process.WaitForExit();
+
+            return output.Contains($"Microsoft.WindowsDesktop.App {version}");
         }
         catch
         {
