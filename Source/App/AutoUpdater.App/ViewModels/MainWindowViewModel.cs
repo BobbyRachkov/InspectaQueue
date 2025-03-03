@@ -2,6 +2,10 @@
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
 using Rachkov.InspectaQueue.AutoUpdater.Core;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.AutoUpdater;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Download;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Migrations;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Paths;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Registrar;
 using ReactiveUI;
 using System;
@@ -31,7 +35,8 @@ namespace AutoUpdater.App.ViewModels
             _autoUpdater = new AutoUpdaterService(
                 new DownloadService(new HttpClientFactory()),
                 paths,
-                new WindowsRegistrar(paths));
+                new WindowsRegistrar(paths),
+                new MigrationService(paths, new WindowsInstallerRunner(new InstallerDownloader())));
 
             _autoUpdater.JobStatusChanged += OnJobStatusChanged;
             _autoUpdater.StageStatusChanged += OnStageStatusChanged;

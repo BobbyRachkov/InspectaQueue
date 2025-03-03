@@ -1,4 +1,6 @@
 ﻿using Rachkov.InspectaQueue.AutoUpdater.Core;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.AutoUpdater;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Paths;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.DialogManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings.Models;
@@ -13,7 +15,6 @@ public class MenuViewModel : ViewModel
 {
     private readonly IConfigStoreService _configService;
     private readonly IAutoUpdaterService _autoUpdater;
-    private readonly IUpdateMigratorService _migratorService;
     private readonly IApplicationPathsConfiguration _applicationPathsConfiguration;
     private bool _isAutoupdaterEnabled;
     private bool _isBetaReleaseChannel;
@@ -23,12 +24,10 @@ public class MenuViewModel : ViewModel
 
     public MenuViewModel(IConfigStoreService configService,
         IAutoUpdaterService autoUpdater,
-        IUpdateMigratorService migratorService,
         IApplicationPathsConfiguration applicationPathsConfiguration)
     {
         _configService = configService;
         _autoUpdater = autoUpdater;
-        _migratorService = migratorService;
         _applicationPathsConfiguration = applicationPathsConfiguration;
         _isAutoupdaterEnabled = configService.GetSettings().IsAutoUpdaterEnabled;
         _isBetaReleaseChannel = configService.GetSettings().IsAutoUpdaterBetaReleaseChannel;

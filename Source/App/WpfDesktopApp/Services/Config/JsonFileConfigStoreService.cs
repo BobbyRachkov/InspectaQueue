@@ -7,6 +7,7 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.Config;
 
 public class JsonFileConfigStoreService : IConfigStoreService
 {
+    private readonly string _currentAppVersion;
     private const string StorageFileName = ".\\..\\config.json";
     private readonly JsonSerializerSettings _serializerSettings = new()
     {
@@ -18,6 +19,11 @@ public class JsonFileConfigStoreService : IConfigStoreService
 
     private SettingsDto? _settingsCache;
     private readonly object _settingsWriteLock = new();
+
+    public JsonFileConfigStoreService(string currentAppVersion)
+    {
+        _currentAppVersion = currentAppVersion;
+    }
 
     public void StoreSources(SourceDto[] sources)
     {
@@ -53,6 +59,9 @@ public class JsonFileConfigStoreService : IConfigStoreService
         lock (_settingsWriteLock)
         {
             _settingsCache = null;
+
+            settings.AppVersion = _currentAppVersion;
+
             var text = JsonConvert.SerializeObject(settings, Formatting.Indented, _serializerSettings);
             File.WriteAllText(StorageFileName, text);
             _settingsCache = settings;

@@ -1,4 +1,5 @@
-﻿using Rachkov.InspectaQueue.AutoUpdater.Core;
+﻿using Rachkov.InspectaQueue.AutoUpdater.Core.Services.AutoUpdater;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Paths;
 using Rachkov.InspectaQueue.WpfDesktopApp.Extensions;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.DialogManager;
@@ -25,7 +26,6 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
     private readonly ISettingsManager _settingsManager;
     private readonly IErrorManager _errorManager;
     private readonly IAutoUpdaterService _autoUpdater;
-    private readonly IUpdateMigratorService _migratorService;
     private readonly ISettingImportExportService _settingImportExportService;
     private ProviderViewModel? _selectedProvider;
     private ProviderVersionViewModel? _selectedVersion;
@@ -43,7 +43,6 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         ISourceReader sourceReader,
         IErrorManager errorManager,
         IAutoUpdaterService autoUpdater,
-        IUpdateMigratorService migratorService,
         ISettingImportExportService settingImportExportService,
         IApplicationPathsConfiguration applicationPathsConfiguration)
     : base(errorManager)
@@ -53,7 +52,6 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         _providerManager = providerManager;
         _errorManager = errorManager;
         _autoUpdater = autoUpdater;
-        _migratorService = migratorService;
         _settingImportExportService = settingImportExportService;
         _settingsManager = settingsManager;
 
@@ -81,7 +79,7 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         DuplicateSourceCommand = new RelayCommand(DuplicateSource, () => SelectedSource is not null);
         RemoveSourceCommand = new RelayCommand(DeleteSource, () => SelectedSource is not null);
 
-        MenuViewModel = new MenuViewModel(configStoreService, autoUpdater, migratorService, applicationPathsConfiguration);
+        MenuViewModel = new MenuViewModel(configStoreService, autoUpdater, applicationPathsConfiguration);
 
         OnClosing += (_, _) => _configStoreService.StoreSources(Sources);
         ActionButtonCommand = new RelayCommand(x => _ = PerformAction(x as ActionButtonCommand?));

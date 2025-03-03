@@ -12,5 +12,6 @@ public enum Stage
     LaunchApp,
     Uninstalling,
     FinalizingSetup,
-    FinalizingRemoval
+    FinalizingRemoval,
+    InstallPrerequisites
 }

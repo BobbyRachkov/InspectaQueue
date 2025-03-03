@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>Rachkov.InspectaQueue.AutoUpdater.Abstractions</RootNamespace>
+    <DefaultNamespace>Rachkov.InspectaQueue.AutoUpdater.Abstractions</DefaultNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

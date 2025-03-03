@@ -21,6 +21,7 @@ public class StageViewModel : ViewModelBase
         { Stage.Uninstalling ,"Uninstalling"},
         { Stage.FinalizingSetup ,"Finalizing setup"},
         { Stage.FinalizingRemoval ,"Finalizing removal"},
+        { Stage.InstallPrerequisites ,"Installing prerequisites"},
     };
 
     public Stage Stage

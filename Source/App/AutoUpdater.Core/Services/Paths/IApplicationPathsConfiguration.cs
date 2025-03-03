@@ -1,6 +1,6 @@
 ﻿using Nuke.Common.IO;
 
-namespace Rachkov.InspectaQueue.AutoUpdater.Core;
+namespace Rachkov.InspectaQueue.AutoUpdater.Core.Services.Paths;
 
 public interface IApplicationPathsConfiguration
 {
@@ -10,6 +10,8 @@ public interface IApplicationPathsConfiguration
     AbsolutePath? InstallerPath { get; }
     AbsolutePath IqUpdateZipPath { get; }
     AbsolutePath IqExtractedZipDirectory { get; }
+    AbsolutePath MigrationsDllPath { get; }
+    AbsolutePath MigrationsAbstractionsDllPath { get; }
     AbsolutePath IqExtractedAppDirectory { get; }
     AbsolutePath IqExtractedProvidersDirectory { get; }
     AbsolutePath InstallerProxy { get; }
