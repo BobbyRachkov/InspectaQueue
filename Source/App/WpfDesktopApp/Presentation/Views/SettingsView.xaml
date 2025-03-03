@@ -61,7 +61,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="50"/>
                     <RowDefinition Height="*"/>
-                    <RowDefinition Height="200"/>
+                    <RowDefinition Height="100"/>
                 </Grid.RowDefinitions>
                 <StackPanel
                 HorizontalAlignment="Center"

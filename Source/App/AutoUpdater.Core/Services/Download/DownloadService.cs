@@ -4,7 +4,7 @@ using Rachkov.InspectaQueue.AutoUpdater.Core.Models;
 using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
 
-namespace Rachkov.InspectaQueue.AutoUpdater.Core;
+namespace Rachkov.InspectaQueue.AutoUpdater.Core.Services.Download;
 
 public sealed class DownloadService : IDownloadService
 {

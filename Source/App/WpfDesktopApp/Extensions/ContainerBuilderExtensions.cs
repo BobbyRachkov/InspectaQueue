@@ -2,7 +2,10 @@
 using AutoMapper.Contrib.Autofac.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Rachkov.InspectaQueue.Abstractions;
-using Rachkov.InspectaQueue.AutoUpdater.Core;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.AutoUpdater;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Download;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Migrations;
+using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Paths;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Registrar;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
@@ -70,7 +73,11 @@ public static class ContainerBuilderExtensions
 
     public static ContainerBuilder RegisterConfigStore(this ContainerBuilder builder)
     {
-        builder.RegisterType<JsonFileConfigStoreService>()
+        builder.Register(context =>
+            {
+                var version = context.Resolve<IAutoUpdaterService>().GetExecutingAppVersion().ToString();
+                return new JsonFileConfigStoreService(version);
+            })
             .AsImplementedInterfaces()
             .SingleInstance();
 
@@ -135,12 +142,21 @@ public static class ContainerBuilderExtensions
             .AsImplementedInterfaces()
             .SingleInstance();
 
-        builder.RegisterType<UpdateMigratorService>()
+        builder.RegisterType<WindowsRegistrar>()
             .AsImplementedInterfaces()
             .SingleInstance();
 
-        builder.RegisterType<WindowsRegistrar>()
+        builder.RegisterType<MigrationService>()
             .AsImplementedInterfaces()
+            .SingleInstance();
+
+        builder.RegisterType<WindowsInstallerRunner>()
+            .AsImplementedInterfaces()
+            .SingleInstance();
+
+        builder.RegisterType<InstallerDownloader>()
+            .AsImplementedInterfaces()
+            .AsSelf()
             .SingleInstance();
 
         return builder;

@@ -1,7 +1,7 @@
 ﻿using Nuke.Common.IO;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Models;
 
-namespace Rachkov.InspectaQueue.AutoUpdater.Core;
+namespace Rachkov.InspectaQueue.AutoUpdater.Core.Services.Download;
 
 public interface IDownloadService
 {

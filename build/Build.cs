@@ -31,7 +31,8 @@ public class Build : NukeBuild
 
     string AppVersion => GitVersion.SemVer;
 
-    string InstallerVersion => "1.1.0";
+    string InstallerVersion => "1.2.0";
+    string MigrationVersion => InstallerVersion;
 
     Dictionary<Project, string> ProviderVersions => new()
     {
@@ -47,6 +48,11 @@ public class Build : NukeBuild
     AbsolutePath ProdZipName => ArtifactsDirectory / $"InspectaQueue_{AppVersion}.zip";
     AbsolutePath InstallerBuildDirectory => ArtifactsDirectory / $"Installer";
     AbsolutePath InstallerPath => ArtifactsDirectory / $"Installer_{InstallerVersion}.exe";
+    AbsolutePath MigrationsCompileDirectory => ArtifactsDirectory / $"migrations";
+    AbsolutePath MigrationsCompiledName => MigrationsCompileDirectory / $"AutoUpdater.Migrations.dll";
+    AbsolutePath MigrationsAbstractionsCompiledName => MigrationsCompileDirectory / $"AutoUpdater.Abstractions.dll";
+    AbsolutePath MigrationsProdName => ZipDirectory / "Migration" / $"Migrations.dll";
+    AbsolutePath MigrationsAbstractionsProdName => ZipDirectory / "Migration" / $"Abstractions.dll";
 
 
     AbsolutePath ProvidersDevDirectory => RootDirectory / "\\Source\\App\\WpfDesktopApp\\bin\\Debug\\Providers";
@@ -150,6 +156,7 @@ public class Build : NukeBuild
     Target Zip => _ => _
         .DependsOn(CompileProviders)
         .DependsOn(CleanPdbs)
+        .DependsOn(CompileMigrations)
         .Executes(() =>
         {
             ZipDirectory.ZipTo(ProdZipName);
@@ -182,5 +189,28 @@ public class Build : NukeBuild
                     .SetOutputDirectory(providerDirectory)
                 );
             }
+        });
+
+    Target CompileMigrations => _ => _
+        .After(Compile)
+        .Executes(() =>
+        {
+            var project = Solution.AutoUpdater.AutoUpdater_Migrations;
+            MigrationsCompileDirectory.CreateOrCleanDirectory();
+            Log.Information("Compiling migrations");
+
+            DotNetTasks.DotNetPublish(_ => _
+                .SetProject(project)
+                .SetConfiguration(Configuration)
+                .SetAssemblyVersion(MigrationVersion)
+                .SetFileVersion(MigrationVersion)
+                .SetInformationalVersion(MigrationVersion)
+                .SetAuthors("Bobi Rachkov")
+                .SetOutput(MigrationsCompileDirectory)
+            );
+
+            MigrationsCompiledName.Copy(MigrationsProdName, ExistsPolicy.FileOverwrite);
+            MigrationsAbstractionsCompiledName.Copy(MigrationsAbstractionsProdName, ExistsPolicy.FileOverwrite);
+            MigrationsCompileDirectory.DeleteDirectory();
         });
 }
