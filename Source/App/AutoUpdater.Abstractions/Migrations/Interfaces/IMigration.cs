@@ -18,7 +18,7 @@ public interface IMigration
     bool KeepOnlyLatestProviderVersion { get; }
 
     /// <summary>
-    /// Function that is executed to migrate the schema of the config file. Takes the old file json and has to return the new json.
+    /// Customized function that is executed to migrate the schema of the config file. Takes the old file json and has to return the new json.
     /// </summary>
     Func<string, string>? MigrateConfig { get; }
 
@@ -26,4 +26,9 @@ public interface IMigration
     /// List of prerequisites to be installed on the host machine.
     /// </summary>
     IPrerequisite[] Prerequisites { get; }
+
+    /// <summary>
+    /// The main method to be called when migrating the schema of the config file. Takes the old file json and has to return the new json.
+    /// </summary>
+    string PerformConfigMigration(string config);
 }

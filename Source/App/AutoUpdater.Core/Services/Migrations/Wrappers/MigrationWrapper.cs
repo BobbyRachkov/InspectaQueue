@@ -18,6 +18,13 @@ internal class MigrationWrapper : IMigration
     public (int major, int minor, int patch) AppVersion => _instance.AppVersion;
     public bool ClearAllProviders => _instance.ClearAllProviders;
     public bool KeepOnlyLatestProviderVersion => _instance.KeepOnlyLatestProviderVersion;
+
     public IPrerequisite[] Prerequisites { get; }
+
     public Func<string, string>? MigrateConfig => _instance.MigrateConfig;
+
+    public string PerformConfigMigration(string config)
+    {
+        return (string)_instance.PerformConfigMigration(config);
+    }
 }

@@ -95,10 +95,9 @@ public class MigrationService : IMigrationService
             }
 
             configJson = _pendingMigrations
-                .Where(x => x.MigrateConfig is not null)
                 .Aggregate(configJson,
-                    (current, migration) => migration.MigrateConfig!.Invoke(current)
-                );
+                    (current, migration) => migration.PerformConfigMigration(current)
+                    );
 
             await File.WriteAllTextAsync(_pathsConfiguration.ConfigFilePath, configJson, cancellationToken);
 

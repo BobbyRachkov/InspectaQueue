@@ -1,5 +1,6 @@
 using Moq;
 using Nuke.Common.IO;
+using Rachkov.InspectaQueue.AutoUpdater.Abstractions.Migrations;
 using Rachkov.InspectaQueue.AutoUpdater.Abstractions.Migrations.Interfaces;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Migrations;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Paths;
@@ -83,22 +84,16 @@ public class MigrationServiceTests
         await File.WriteAllTextAsync(_tempConfigPath, originalContent);
         _pathsConfigMock.Setup(x => x.ConfigFilePath).Returns(_tempConfigPath);
 
-        var migration1 = new Mock<IMigration>();
-        migration1.Setup(x => x.MigrateConfig).Returns(json => json.Replace("oldSetting", "newSetting"));
-
-        var migration2 = new Mock<IMigration>();
-        migration2.Setup(x => x.MigrateConfig).Returns(json => json.Replace("value", "newValue"));
-
         var pendingMigrations = GetPendingMigrations();
-        pendingMigrations.Add(migration1.Object);
-        pendingMigrations.Add(migration2.Object);
+        pendingMigrations.Add(new TestMigrationReplaceOldSetting());
+        pendingMigrations.Add(new TestMigrationReplaceValue());
 
         // Act
         var result = await _migrationService.MigrateConfigFiles();
 
         // Assert
         Assert.That(result, Is.True);
-        Assert.That(await File.ReadAllTextAsync(_tempConfigPath), Is.EqualTo("{\"newSetting\":\"newValue\"}"));
+        Assert.That(await File.ReadAllTextAsync(_tempConfigPath), Is.EqualTo("{\r\n  \"newSetting\": \"newValue\",\r\n  \"AppVersion\": \"2.0.0\"\r\n}"));
     }
 
     [Test]
@@ -109,11 +104,8 @@ public class MigrationServiceTests
         await File.WriteAllTextAsync(_tempConfigPath, originalContent);
         _pathsConfigMock.Setup(x => x.ConfigFilePath).Returns(_tempConfigPath);
 
-        var migration = new Mock<IMigration>();
-        migration.Setup(x => x.MigrateConfig).Returns(() => (Func<string, string>)(json => throw new Exception("Migration failed")));
-
         var pendingMigrations = GetPendingMigrations();
-        pendingMigrations.Add(migration.Object);
+        pendingMigrations.Add(new TestMigrationThatThrows());
 
         // Act
         var result = await _migrationService.MigrateConfigFiles();
@@ -131,22 +123,16 @@ public class MigrationServiceTests
         await File.WriteAllTextAsync(_tempConfigPath, originalContent);
         _pathsConfigMock.Setup(x => x.ConfigFilePath).Returns(_tempConfigPath);
 
-        var migration1 = new Mock<IMigration>();
-        migration1.Setup(x => x.MigrateConfig).Returns(() => null);
-
-        var migration2 = new Mock<IMigration>();
-        migration2.Setup(x => x.MigrateConfig).Returns(json => json.Replace("value", "newValue"));
-
         var pendingMigrations = GetPendingMigrations();
-        pendingMigrations.Add(migration1.Object);
-        pendingMigrations.Add(migration2.Object);
+        pendingMigrations.Add(new TestMigrationWithNullMigrateConfig());
+        pendingMigrations.Add(new TestMigrationReplaceValue());
 
         // Act
         var result = await _migrationService.MigrateConfigFiles();
 
         // Assert
         Assert.That(result, Is.True);
-        Assert.That(await File.ReadAllTextAsync(_tempConfigPath), Is.EqualTo("{\"setting\":\"newValue\"}"));
+        Assert.That(await File.ReadAllTextAsync(_tempConfigPath), Is.EqualTo("{\r\n  \"setting\": \"newValue\",\r\n  \"AppVersion\": \"2.0.0\"\r\n}"));
     }
 
     private List<IMigration> GetPendingMigrations()
@@ -155,4 +141,44 @@ public class MigrationServiceTests
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         return (List<IMigration>)field.GetValue(_migrationService);
     }
+
+    #region Test Migration Implementations
+
+    private class TestMigrationReplaceOldSetting : MigrationBase
+    {
+        public override (int major, int minor, int patch) AppVersion => (1, 0, 0);
+        public override bool ClearAllProviders => false;
+        public override bool KeepOnlyLatestProviderVersion => false;
+        public override Func<string, string>? MigrateConfig => json => json.Replace("oldSetting", "newSetting");
+        public override IPrerequisite[] Prerequisites { get; init; } = [];
+    }
+
+    private class TestMigrationThatThrows : MigrationBase
+    {
+        public override (int major, int minor, int patch) AppVersion => (1, 0, 0);
+        public override bool ClearAllProviders => false;
+        public override bool KeepOnlyLatestProviderVersion => false;
+        public override Func<string, string>? MigrateConfig => json => throw new Exception("Migration failed");
+        public override IPrerequisite[] Prerequisites { get; init; } = [];
+    }
+
+    private class TestMigrationWithNullMigrateConfig : MigrationBase
+    {
+        public override (int major, int minor, int patch) AppVersion => (1, 5, 0);
+        public override bool ClearAllProviders => false;
+        public override bool KeepOnlyLatestProviderVersion => false;
+        public override Func<string, string>? MigrateConfig => null;
+        public override IPrerequisite[] Prerequisites { get; init; } = [];
+    }
+
+    private class TestMigrationReplaceValue : MigrationBase
+    {
+        public override (int major, int minor, int patch) AppVersion => (2, 0, 0);
+        public override bool ClearAllProviders => false;
+        public override bool KeepOnlyLatestProviderVersion => false;
+        public override Func<string, string>? MigrateConfig => json => json.Replace("value", "newValue");
+        public override IPrerequisite[] Prerequisites { get; init; } = [];
+    }
+
+    #endregion
 }

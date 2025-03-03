@@ -423,6 +423,10 @@ public class VersionTests
             Assert.That(() => new Version("1.2.3-alpha.1"), Throws.Nothing);
             Assert.That(() => new Version("1.2.3.4-beta"), Throws.Nothing);
             Assert.That(() => new Version("1.2.3.4-rc.1"), Throws.Nothing);
+
+            // Multiple hyphen segments
+            Assert.That(() => new Version("1.2.3-alpha-beta"), Throws.Nothing);
+            Assert.That(() => new Version("1.2.3.4-pre-extra"), Throws.Nothing);
         });
 
         // Invalid formats - should throw ArgumentException
@@ -438,16 +442,12 @@ public class VersionTests
             Assert.That(() => new Version("1_2_3"), Throws.ArgumentException);
             Assert.That(() => new Version("v1.2.3"), Throws.ArgumentException);
 
-            // Multiple pre-release segments
-            Assert.That(() => new Version("1.2.3-alpha-beta"), Throws.ArgumentException);
-
             // Invalid characters
             Assert.That(() => new Version("1.2.3.a"), Throws.ArgumentException);
             Assert.That(() => new Version("a.b.c"), Throws.ArgumentException);
 
             // Extra parts
             Assert.That(() => new Version("1.2.3.4.5"), Throws.ArgumentException);
-            Assert.That(() => new Version("1.2.3.4-pre-extra"), Throws.ArgumentException);
         });
     }
 
