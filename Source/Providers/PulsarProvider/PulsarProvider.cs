@@ -1,6 +1,7 @@
 ﻿using Pulsar.Client.Api;
 using Pulsar.Client.Common;
-using Rachkov.InspectaQueue.Abstractions;
+using Rachkov.InspectaQueue.Abstractions.Messaging;
+using Rachkov.InspectaQueue.Abstractions.Notifications.Errors;
 using Rachkov.InspectaQueue.Providers.Pulsar.Extensions;
 using System.Diagnostics;
 using System.Text;

@@ -1,4 +1,4 @@
-﻿using Rachkov.InspectaQueue.Abstractions;
+﻿using Rachkov.InspectaQueue.Abstractions.Notifications.Errors;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -76,7 +76,7 @@ public abstract class PresenterViewModel : ViewModel, IPresenterViewModel
         ErrorManager.ErrorsCleared -= OnErrorsCleared;
     }
 
-    private void OnErrorRaised(object? sender, Abstractions.Error e)
+    private void OnErrorRaised(object? sender, Error e)
     {
         OnUiThread(() =>
         {

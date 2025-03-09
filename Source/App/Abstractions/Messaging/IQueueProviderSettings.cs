@@ -1,4 +1,4 @@
-﻿namespace Rachkov.InspectaQueue.Abstractions;
+﻿namespace Rachkov.InspectaQueue.Abstractions.Messaging;
 
 public interface IQueueProviderSettings
 {
@@ -11,6 +11,6 @@ public interface IQueueProviderSettings
     /// the list. They will not get deleted from the queue if not explicitly stated.
     /// </summary>
     int HideMessagesAfter { get; set; }
-    
+
     bool AcknowledgeOnReceive { get; set; }
 }

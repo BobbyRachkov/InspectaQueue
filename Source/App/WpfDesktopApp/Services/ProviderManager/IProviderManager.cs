@@ -1,4 +1,4 @@
-﻿using Rachkov.InspectaQueue.Abstractions;
+﻿using Rachkov.InspectaQueue.Abstractions.Messaging;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager;

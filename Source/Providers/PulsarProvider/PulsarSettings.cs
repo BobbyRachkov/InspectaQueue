@@ -1,5 +1,5 @@
-﻿using Rachkov.InspectaQueue.Abstractions;
-using Rachkov.InspectaQueue.Abstractions.Attributes;
+﻿using Rachkov.InspectaQueue.Abstractions.Attributes;
+using Rachkov.InspectaQueue.Abstractions.Messaging;
 using Rachkov.InspectaQueue.Providers.Pulsar.Models;
 
 namespace Rachkov.InspectaQueue.Providers.Pulsar;

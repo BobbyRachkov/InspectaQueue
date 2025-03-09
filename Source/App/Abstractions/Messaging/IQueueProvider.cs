@@ -1,6 +1,6 @@
 ﻿using System.Threading.Channels;
 
-namespace Rachkov.InspectaQueue.Abstractions;
+namespace Rachkov.InspectaQueue.Abstractions.Messaging;
 
 public interface IQueueProvider
 {
