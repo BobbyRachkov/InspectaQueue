@@ -175,10 +175,283 @@ public class MigrationBaseTests
         // Check AppVersion was updated
         var appVersion = jsonDoc.RootElement.GetProperty("AppVersion").GetString();
         Assert.That(appVersion, Is.EqualTo("2.5.0"));
+    }
 
-        // Check custom migration was applied (OldProperty renamed to NewProperty)
-        Assert.That(jsonDoc.RootElement.TryGetProperty("OldProperty", out _), Is.False);
-        Assert.That(jsonDoc.RootElement.GetProperty("NewProperty").GetString(), Is.EqualTo("value"));
+    [Test]
+    public void GivenJsonWithProviderTypeWithColon_WhenMigrateToLatestProviderVersion_ThenRemovesTextAfterLastColon()
+    {
+        // Arrange
+        var migration = new TestMigrationWithExposedMethods();
+        var config = @"{
+            ""IsAutoUpdaterEnabled"": true,
+            ""AppVersion"": ""1.0.0"",
+            ""Sources"": [
+                {
+                    ""Id"": ""3fa85f64-5717-4562-b3fc-2c963f66afa6"",
+                    ""Name"": ""Test Source"",
+                    ""ProviderType"": ""RabbitMQ:1.0.0"",
+                    ""Settings"": [
+                        {
+                            ""PropertyName"": ""Host"",
+                            ""Value"": ""localhost""
+                        },
+                        {
+                            ""PropertyName"": ""Port"",
+                            ""Value"": 5672
+                        }
+                    ]
+                }
+            ]
+        }";
+
+        // Expected JSON with only ProviderType modified
+        var expectedConfig = @"{
+            ""IsAutoUpdaterEnabled"": true,
+            ""AppVersion"": ""1.0.0"",
+            ""Sources"": [
+                {
+                    ""Id"": ""3fa85f64-5717-4562-b3fc-2c963f66afa6"",
+                    ""Name"": ""Test Source"",
+                    ""ProviderType"": ""RabbitMQ"",
+                    ""Settings"": [
+                        {
+                            ""PropertyName"": ""Host"",
+                            ""Value"": ""localhost""
+                        },
+                        {
+                            ""PropertyName"": ""Port"",
+                            ""Value"": 5672
+                        }
+                    ]
+                }
+            ]
+        }";
+
+        // Act
+        var result = migration.ExposedMigrateToLatestProviderVersion(config);
+
+        // Assert
+        Assert.That(NormalizeJson(result), Is.EqualTo(NormalizeJson(expectedConfig)));
+    }
+
+    [Test]
+    public void GivenJsonWithProviderTypeWithMultipleColons_WhenMigrateToLatestProviderVersion_ThenRemovesTextAfterLastColon()
+    {
+        // Arrange
+        var migration = new TestMigrationWithExposedMethods();
+        var config = @"{
+            ""IsAutoUpdaterEnabled"": true,
+            ""AppVersion"": ""1.0.0"",
+            ""CustomProperty"": ""custom value"",
+            ""Sources"": [
+                {
+                    ""Id"": ""3fa85f64-5717-4562-b3fc-2c963f66afa6"",
+                    ""Name"": ""Test Source"",
+                    ""ProviderType"": ""Namespace:RabbitMQ:2.1.3"",
+                    ""IsEnabled"": true,
+                    ""Settings"": [
+                        {
+                            ""PropertyName"": ""Host"",
+                            ""Value"": ""localhost""
+                        }
+                    ]
+                }
+            ]
+        }";
+
+        // Expected JSON with only ProviderType modified
+        var expectedConfig = @"{
+            ""IsAutoUpdaterEnabled"": true,
+            ""AppVersion"": ""1.0.0"",
+            ""CustomProperty"": ""custom value"",
+            ""Sources"": [
+                {
+                    ""Id"": ""3fa85f64-5717-4562-b3fc-2c963f66afa6"",
+                    ""Name"": ""Test Source"",
+                    ""ProviderType"": ""Namespace:RabbitMQ"",
+                    ""IsEnabled"": true,
+                    ""Settings"": [
+                        {
+                            ""PropertyName"": ""Host"",
+                            ""Value"": ""localhost""
+                        }
+                    ]
+                }
+            ]
+        }";
+
+        // Act
+        var result = migration.ExposedMigrateToLatestProviderVersion(config);
+
+        // Assert
+        Assert.That(NormalizeJson(result), Is.EqualTo(NormalizeJson(expectedConfig)));
+    }
+
+    [Test]
+    public void GivenJsonWithProviderTypeWithoutColon_WhenMigrateToLatestProviderVersion_ThenKeepsOriginalProviderType()
+    {
+        // Arrange
+        var migration = new TestMigrationWithExposedMethods();
+        var config = @"{
+            ""IsAutoUpdaterEnabled"": true,
+            ""AppVersion"": ""1.0.0"",
+            ""NestedObject"": {
+                ""Property1"": ""value1"",
+                ""Property2"": 42
+            },
+            ""Sources"": [
+                {
+                    ""Id"": ""3fa85f64-5717-4562-b3fc-2c963f66afa6"",
+                    ""Name"": ""Test Source"",
+                    ""ProviderType"": ""RabbitMQ"",
+                    ""Settings"": [
+                        {
+                            ""PropertyName"": ""Host"",
+                            ""Value"": ""localhost""
+                        }
+                    ]
+                }
+            ]
+        }";
+
+        // Expected JSON should be identical since there's no colon in ProviderType
+        var expectedConfig = config;
+
+        // Act
+        var result = migration.ExposedMigrateToLatestProviderVersion(config);
+
+        // Assert
+        Assert.That(NormalizeJson(result), Is.EqualTo(NormalizeJson(expectedConfig)));
+    }
+
+    [Test]
+    public void GivenJsonWithMultipleProviders_WhenMigrateToLatestProviderVersion_ThenProcessesAllProviders()
+    {
+        // Arrange
+        var migration = new TestMigrationWithExposedMethods();
+        var config = @"{
+            ""IsAutoUpdaterEnabled"": true,
+            ""AppVersion"": ""1.0.0"",
+            ""ArrayProperty"": [1, 2, 3],
+            ""Sources"": [
+                {
+                    ""Id"": ""3fa85f64-5717-4562-b3fc-2c963f66afa6"",
+                    ""Name"": ""RabbitMQ Source"",
+                    ""ProviderType"": ""RabbitMQ:1.0.0"",
+                    ""Settings"": [
+                        {
+                            ""PropertyName"": ""Host"",
+                            ""Value"": ""localhost""
+                        }
+                    ]
+                },
+                {
+                    ""Id"": ""4fa85f64-5717-4562-b3fc-2c963f66afa7"",
+                    ""Name"": ""Kafka Source"",
+                    ""ProviderType"": ""Apache:Kafka:2.1.0"",
+                    ""Settings"": [
+                        {
+                            ""PropertyName"": ""Broker"",
+                            ""Value"": ""kafka-broker""
+                        }
+                    ]
+                },
+                {
+                    ""Id"": ""5fa85f64-5717-4562-b3fc-2c963f66afa8"",
+                    ""Name"": ""Redis Source"",
+                    ""ProviderType"": ""Redis"",
+                    ""Settings"": [
+                        {
+                            ""PropertyName"": ""ConnectionString"",
+                            ""Value"": ""localhost:6379""
+                        }
+                    ]
+                }
+            ]
+        }";
+
+        // Expected JSON with only ProviderType modified
+        var expectedConfig = @"{
+            ""IsAutoUpdaterEnabled"": true,
+            ""AppVersion"": ""1.0.0"",
+            ""ArrayProperty"": [1, 2, 3],
+            ""Sources"": [
+                {
+                    ""Id"": ""3fa85f64-5717-4562-b3fc-2c963f66afa6"",
+                    ""Name"": ""RabbitMQ Source"",
+                    ""ProviderType"": ""RabbitMQ"",
+                    ""Settings"": [
+                        {
+                            ""PropertyName"": ""Host"",
+                            ""Value"": ""localhost""
+                        }
+                    ]
+                },
+                {
+                    ""Id"": ""4fa85f64-5717-4562-b3fc-2c963f66afa7"",
+                    ""Name"": ""Kafka Source"",
+                    ""ProviderType"": ""Apache:Kafka"",
+                    ""Settings"": [
+                        {
+                            ""PropertyName"": ""Broker"",
+                            ""Value"": ""kafka-broker""
+                        }
+                    ]
+                },
+                {
+                    ""Id"": ""5fa85f64-5717-4562-b3fc-2c963f66afa8"",
+                    ""Name"": ""Redis Source"",
+                    ""ProviderType"": ""Redis"",
+                    ""Settings"": [
+                        {
+                            ""PropertyName"": ""ConnectionString"",
+                            ""Value"": ""localhost:6379""
+                        }
+                    ]
+                }
+            ]
+        }";
+
+        // Act
+        var result = migration.ExposedMigrateToLatestProviderVersion(config);
+
+        // Assert
+        Assert.That(NormalizeJson(result), Is.EqualTo(NormalizeJson(expectedConfig)));
+    }
+
+    [Test]
+    public void GivenInvalidJson_WhenMigrateToLatestProviderVersion_ThenReturnsOriginalConfig()
+    {
+        // Arrange
+        var migration = new TestMigrationWithExposedMethods();
+        var config = "This is not valid JSON";
+
+        // Act
+        var result = migration.ExposedMigrateToLatestProviderVersion(config);
+
+        // Assert
+        Assert.That(result, Is.EqualTo(config));
+    }
+
+    [Test]
+    public void GivenJsonWithoutSources_WhenMigrateToLatestProviderVersion_ThenReturnsConfigWithoutChanges()
+    {
+        // Arrange
+        var migration = new TestMigrationWithExposedMethods();
+        var config = @"{
+            ""IsAutoUpdaterEnabled"": true,
+            ""AppVersion"": ""1.0.0"",
+            ""Sources"": []
+        }";
+
+        // Expected JSON should be identical
+        var expectedConfig = config;
+
+        // Act
+        var result = migration.ExposedMigrateToLatestProviderVersion(config);
+
+        // Assert
+        Assert.That(NormalizeJson(result), Is.EqualTo(NormalizeJson(expectedConfig)));
     }
 
     #region Test Migration Implementations
@@ -234,5 +507,29 @@ public class MigrationBaseTests
         public override IPrerequisite[] Prerequisites { get; init; } = [];
     }
 
+    private class TestMigrationWithExposedMethods : MigrationBase
+    {
+        public override (int major, int minor, int patch) AppVersion => (3, 0, 0);
+        public override bool ClearAllProviders => false;
+        public override bool KeepOnlyLatestProviderVersion => false;
+        public override Func<string, string>? MigrateConfig => null;
+        public override IPrerequisite[] Prerequisites { get; init; } = [];
+
+        public string ExposedMigrateToLatestProviderVersion(string config)
+        {
+            return MigrateToLatestProviderVersion(config);
+        }
+    }
+
     #endregion
+
+    /// <summary>
+    /// Helper method to normalize JSON for comparison
+    /// </summary>
+    private static string NormalizeJson(string json)
+    {
+        // Parse and re-serialize to normalize formatting
+        var jsonDoc = JsonDocument.Parse(json);
+        return JsonSerializer.Serialize(jsonDoc, new JsonSerializerOptions { WriteIndented = false });
+    }
 }

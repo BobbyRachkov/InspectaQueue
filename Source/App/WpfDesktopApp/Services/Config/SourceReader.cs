@@ -28,13 +28,35 @@ public class SourceReader : ISourceReader
     public IEnumerable<SourceViewModel> ReadSources(Action saveSourcesCallback)
     {
         var storedSources = _configStore.GetSettings().Sources;
-        var activeProvidersArray = _providerManager.GetAllProviderVersions().ToArray();
+        var activeProvidersArray = _providerManager.GetAllProvidersVersions().ToArray();
 
 
         foreach (var storedSource in storedSources)
         {
             var provider = activeProvidersArray.FirstOrDefault(x =>
                 ProviderTypeConverter.GetProviderStringRepresentation(x.GetType()) == storedSource.ProviderType);
+
+            if (provider is null)
+            {
+                var possibleProviderVersions = activeProvidersArray.Where(x =>
+                    storedSource.ProviderType.Contains(ProviderTypeConverter.GetProviderStringRepresentationWithoutVersion(x.GetType())));
+
+                provider = possibleProviderVersions
+                    .Select(x =>
+                    {
+                        var versionString = x.GetType().Assembly.GetName().Version?.ToString();
+                        versionString ??= "0.0.0.0";
+                        return new
+                        {
+                            Instance = x,
+                            Version = new Version(versionString)
+                        };
+                    })
+                    .OrderByDescending(x => x.Version)
+                    .FirstOrDefault()
+                    ?.Instance;
+
+            }
 
             if (provider is null)
             {

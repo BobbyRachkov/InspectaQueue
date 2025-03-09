@@ -31,12 +31,12 @@ public class Build : NukeBuild
 
     string AppVersion => GitVersion.SemVer;
 
-    string InstallerVersion => "1.2.0";
+    string InstallerVersion => "1.3.0";
     string MigrationVersion => InstallerVersion;
 
     Dictionary<Project, string> ProviderVersions => new()
     {
-        {Solution.QueueProviders.PulsarProvider,"0.1.3.0"}
+        {Solution.QueueProviders.PulsarProvider,"0.1.4.0"}
     };
 
     AbsolutePath ZipDirectory => ArtifactsDirectory / "wpf";
@@ -171,15 +171,27 @@ public class Build : NukeBuild
         {
             if (Configuration == Configuration.Release)
             {
+                Log.Information("Searching providers");
                 return;
             }
 
-            foreach (var project in Solution.AllProjects.Where(x => x.Name.EndsWith("Provider")))
+            ProvidersDevDirectory.CreateOrCleanDirectory();
+
+            Log.Information("Searching providers");
+
+            var projects = Solution.AllProjects.Where(x => x.Name.EndsWith("Provider")).ToList();
+
+            Log.Information("Found projects: {projects}", string.Join(", ", projects.Select(x => x.Name)));
+
+            foreach (var project in projects)
             {
                 Log.Information("Compiling project: {projectName}", project.Name);
+
                 var providerName = project.Name.Replace("Provider", "");
                 var providerDirectory = ProvidersDevDirectory / $"{providerName}_0.0.0.0-dev";
                 providerDirectory.CreateOrCleanDirectory();
+
+                Log.Information("Project path: {providerDirectory}", providerDirectory);
 
                 DotNetTasks.DotNetBuild(_ => _
                     .SetProjectFile(project)

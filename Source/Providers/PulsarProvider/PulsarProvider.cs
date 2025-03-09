@@ -115,11 +115,23 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
             return;
         }
 
+        var filterByKeyEnabled = !string.IsNullOrEmpty(_settings.FilterByKey);
+
         while (!cancellationToken.IsCancellationRequested)
         {
             try
             {
                 var message = await _consumer.ReceiveAsync(cancellationToken);
+
+                if (filterByKeyEnabled && message.Key.Contains(_settings.FilterByKey))
+                {
+                    if (_settings.AcknowledgeOnReceive)
+                    {
+                        await _consumer.AcknowledgeAsync(message.MessageId);
+                    }
+
+                    continue;
+                }
 
                 var messageString = Encoding.UTF8.GetString(message.Data);
                 var frame = new MessageFrame
@@ -132,6 +144,7 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
                 };
 
                 _messagesChannel.Writer.TryWrite(frame);
+
 
                 if (_settings.AcknowledgeOnReceive)
                 {

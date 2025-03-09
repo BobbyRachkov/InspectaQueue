@@ -8,6 +8,7 @@ public abstract class MigrationBase : IMigration
 {
     public abstract (int major, int minor, int patch) AppVersion { get; }
     public abstract bool ClearAllProviders { get; }
+    public virtual bool ForceUseLatestProviderVersionWithoutDeletingProviders => true;
     public abstract bool KeepOnlyLatestProviderVersion { get; }
     public abstract Func<string, string>? MigrateConfig { get; }
 
@@ -17,6 +18,50 @@ public abstract class MigrationBase : IMigration
     {
         var newConfig = MigrateConfig?.Invoke(config) ?? config;
 
+        if (ForceUseLatestProviderVersionWithoutDeletingProviders)
+        {
+            newConfig = MigrateToLatestProviderVersion(newConfig);
+        }
+
+        return UpdateAppVersion(newConfig);
+    }
+
+    protected virtual string MigrateToLatestProviderVersion(string newConfig)
+    {
+        try
+        {
+            var jsonNode = JsonNode.Parse(newConfig);
+
+            if (jsonNode is null)
+            {
+                return newConfig;
+            }
+
+            foreach (var source in jsonNode["Sources"]!.AsArray())
+            {
+                var providerTypeString = source!["ProviderType"]!.AsValue().ToString();
+                var lastColonIndex = providerTypeString.LastIndexOf(':');
+
+                if (lastColonIndex >= 0)
+                {
+                    source!["ProviderType"] = providerTypeString.Substring(0, lastColonIndex);
+                }
+                else
+                {
+                    source!["ProviderType"] = providerTypeString;
+                }
+            }
+
+            return jsonNode.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
+        }
+        catch
+        {
+            return newConfig;
+        }
+    }
+
+    private string UpdateAppVersion(string newConfig)
+    {
         try
         {
             var jsonNode = JsonNode.Parse(newConfig);
