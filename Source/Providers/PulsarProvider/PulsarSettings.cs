@@ -39,6 +39,10 @@ public class PulsarSettings : IQueueProviderSettings
         ToolTip = "Hides the messages after the desired threshold is reached")]
     public int HideMessagesAfter { get; set; } = 1000;
 
+    [Exposed(DisplayName = "Filter by key contents",
+        ToolTip = "Messages are shown if key contains the given string. Empty means no filtering.")]
+    public string FilterByKey { get; set; } = string.Empty;
+
     [Exposed(
         DisplayName = "Auto acknowledge on receive")]
     public bool AcknowledgeOnReceive { get; set; } = false;
