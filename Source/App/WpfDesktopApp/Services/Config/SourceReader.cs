@@ -48,13 +48,13 @@ public class SourceReader : ISourceReader
                         versionString ??= "0.0.0.0";
                         return new
                         {
-                            instance = x,
-                            version = new Version(versionString)
+                            Instance = x,
+                            Version = new Version(versionString)
                         };
                     })
-                    .OrderByDescending(x => x.version)
+                    .OrderByDescending(x => x.Version)
                     .FirstOrDefault()
-                    ?.instance;
+                    ?.Instance;
 
             }
 
