@@ -57,7 +57,12 @@ public class ProviderManager : IProviderManager
         return _providers.First(x => x.IsMatch(instance));
     }
 
-    public IEnumerable<IQueueProvider> GetAllProviderVersions()
+    public Provider? GetProviderByType(Type providerType)
+    {
+        return _providers.FirstOrDefault(x => x.IsMatch(providerType));
+    }
+
+    public IEnumerable<IQueueProvider> GetAllProvidersVersions()
     {
         foreach (var provider in _providers)
         {

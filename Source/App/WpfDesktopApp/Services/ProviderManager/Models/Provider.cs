@@ -32,7 +32,12 @@ public class Provider
 
     public bool IsMatch(IQueueProvider provider)
     {
-        return GetComparableName(provider.GetType()) == ComparableName;
+        return IsMatch(provider.GetType());
+    }
+
+    public bool IsMatch(Type providerType)
+    {
+        return GetComparableName(providerType) == ComparableName;
     }
 
     private static string GetComparableName(Type provider)
