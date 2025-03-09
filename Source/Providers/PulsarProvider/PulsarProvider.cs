@@ -42,11 +42,6 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
 
     public IQueueProviderSettings Settings => _settings;
 
-    public Task UpdateSettings(IQueueProviderSettings settings)
-    {
-        throw new NotImplementedException();
-    }
-
     public ChannelReader<MessageFrame> Messages => _messagesChannel.Reader;
 
     public Task Connect()
