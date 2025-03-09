@@ -171,7 +171,7 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.SourceView
 
             var name = new Label
             {
-                Content = settingEntryViewModel.Name,
+                Content = settingEntryViewModel.Name + (settingEntryViewModel.ToolTip is null ? string.Empty : " \u2753"),
                 VerticalAlignment = VerticalAlignment.Center,
                 ToolTip = settingEntryViewModel.ToolTip
             };
