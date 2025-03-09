@@ -31,12 +31,12 @@ public class Build : NukeBuild
 
     string AppVersion => GitVersion.SemVer;
 
-    string InstallerVersion => "1.2.0";
+    string InstallerVersion => "1.3.0";
     string MigrationVersion => InstallerVersion;
 
     Dictionary<Project, string> ProviderVersions => new()
     {
-        {Solution.QueueProviders.PulsarProvider,"0.1.3.0"}
+        {Solution.QueueProviders.PulsarProvider,"0.1.4.0"}
     };
 
     AbsolutePath ZipDirectory => ArtifactsDirectory / "wpf";

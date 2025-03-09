@@ -17,6 +17,9 @@ internal class MigrationWrapper : IMigration
 
     public (int major, int minor, int patch) AppVersion => _instance.AppVersion;
     public bool ClearAllProviders => _instance.ClearAllProviders;
+
+    public bool ForceUseLatestProviderVersionWithoutDeletingProviders =>
+        _instance.ForceUseLatestProviderVersionWithoutDeletingProviders;
     public bool KeepOnlyLatestProviderVersion => _instance.KeepOnlyLatestProviderVersion;
 
     public IPrerequisite[] Prerequisites { get; }

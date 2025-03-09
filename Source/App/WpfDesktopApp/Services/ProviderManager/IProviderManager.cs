@@ -11,6 +11,7 @@ public interface IProviderManager
     IQueueProvider GetNewInstance(IQueueProvider provider, IEnumerable<ISettingPack> settings);
     IEnumerable<Provider> GetProviders();
     Provider GetProviderByInstance(IQueueProvider instance);
-    IEnumerable<IQueueProvider> GetAllProviderVersions();
+    IEnumerable<IQueueProvider> GetAllProvidersVersions();
     IQueueProvider FillSettings(IQueueProvider provider, IEnumerable<ISettingPack> settings);
+    Provider? GetProviderByType(Type providerType);
 }

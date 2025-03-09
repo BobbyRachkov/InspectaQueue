@@ -13,6 +13,11 @@ public interface IMigration
     bool ClearAllProviders { get; }
 
     /// <summary>
+    /// Flag whether to migrate all sources to the newest provider version without deleting any providers.
+    /// </summary>
+    bool ForceUseLatestProviderVersionWithoutDeletingProviders { get; }
+
+    /// <summary>
     /// Flag whether to clear all old provider versions on installation. Keeps the latest one only per provider.
     /// </summary>
     bool KeepOnlyLatestProviderVersion { get; }
