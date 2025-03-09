@@ -169,7 +169,6 @@ public class Build : NukeBuild
     Target DebugProviders => _ => _
         .Executes(() =>
         {
-            return;
             if (Configuration == Configuration.Release)
             {
                 Log.Information("Searching providers");
