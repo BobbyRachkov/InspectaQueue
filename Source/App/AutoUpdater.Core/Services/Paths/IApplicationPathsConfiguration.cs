@@ -16,6 +16,7 @@ public interface IApplicationPathsConfiguration
     AbsolutePath IqExtractedProvidersDirectory { get; }
     AbsolutePath InstallerProxy { get; }
     AbsolutePath ConfigFilePath { get; }
+    AbsolutePath ConfigBackupFilePath { get; }
     AbsolutePath OldConfigFilePath { get; }
     AbsolutePath ProvidersDirectory { get; }
     AbsolutePath OldProvidersDirectory { get; }

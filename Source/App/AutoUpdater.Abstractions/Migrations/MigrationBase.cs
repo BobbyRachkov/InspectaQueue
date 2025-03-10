@@ -40,6 +40,12 @@ public abstract class MigrationBase : IMigration
             foreach (var source in jsonNode["Sources"]!.AsArray())
             {
                 var providerTypeString = source!["ProviderType"]!.AsValue().ToString();
+
+                if (providerTypeString.Count(x => x == ':') != 2)
+                {
+                    continue;
+                }
+
                 var lastColonIndex = providerTypeString.LastIndexOf(':');
 
                 if (lastColonIndex >= 0)
