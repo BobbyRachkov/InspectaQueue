@@ -22,6 +22,7 @@ public class ApplicationPathsConfiguration : IApplicationPathsConfiguration
         InstallerProxy = IqBaseDirectory / "Uninstaller.lnk";
 
         ConfigFilePath = IqBaseDirectory / "config.json";
+        ConfigBackupFilePath = IqBaseDirectory / "config-backup.json";
         OldConfigFilePath = IqAppDirectory / "config.json";
         ProvidersDirectory = IqBaseDirectory / "Providers";
         OldProvidersDirectory = IqAppDirectory / "Providers";
@@ -35,6 +36,7 @@ public class ApplicationPathsConfiguration : IApplicationPathsConfiguration
     public AbsolutePath IqExtractedAppDirectory { get; }
     public AbsolutePath IqExtractedProvidersDirectory { get; }
     public AbsolutePath ConfigFilePath { get; }
+    public AbsolutePath ConfigBackupFilePath { get; }
     public AbsolutePath OldConfigFilePath { get; }
     public AbsolutePath ProvidersDirectory { get; }
     public AbsolutePath OldProvidersDirectory { get; }
