@@ -178,7 +178,7 @@ public class MigrationBaseTests
     }
 
     [Test]
-    public void GivenJsonWithProviderTypeWithColon_WhenMigrateToLatestProviderVersion_ThenRemovesTextAfterLastColon()
+    public void GivenJsonWithProviderTypeWithOneColon_WhenMigrateToLatestProviderVersion_ThenDoeNotRemoveTextAfterLastColon()
     {
         // Arrange
         var migration = new TestMigrationWithExposedMethods();
@@ -212,7 +212,7 @@ public class MigrationBaseTests
                 {
                     ""Id"": ""3fa85f64-5717-4562-b3fc-2c963f66afa6"",
                     ""Name"": ""Test Source"",
-                    ""ProviderType"": ""RabbitMQ"",
+                    ""ProviderType"": ""RabbitMQ:1.0.0"",
                     ""Settings"": [
                         {
                             ""PropertyName"": ""Host"",
@@ -379,7 +379,7 @@ public class MigrationBaseTests
                 {
                     ""Id"": ""3fa85f64-5717-4562-b3fc-2c963f66afa6"",
                     ""Name"": ""RabbitMQ Source"",
-                    ""ProviderType"": ""RabbitMQ"",
+                    ""ProviderType"": ""RabbitMQ:1.0.0"",
                     ""Settings"": [
                         {
                             ""PropertyName"": ""Host"",
