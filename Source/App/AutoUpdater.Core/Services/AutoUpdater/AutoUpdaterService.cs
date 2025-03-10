@@ -400,6 +400,10 @@ public sealed class AutoUpdaterService : IAutoUpdaterService
                 _applicationPathsConfiguration.OldProvidersDirectory.CopyToDirectory(_applicationPathsConfiguration.IqBaseDirectory, ExistsPolicy.MergeAndOverwrite);
             }
 
+            _applicationPathsConfiguration.ConfigFilePath.Copy(
+                _applicationPathsConfiguration.ConfigBackupFilePath,
+                ExistsPolicy.FileOverwrite);
+
             _applicationPathsConfiguration.IqAppDirectory.DeleteDirectory();
 
             (_applicationPathsConfiguration.IqExtractedAppDirectory).CopyToDirectory(
