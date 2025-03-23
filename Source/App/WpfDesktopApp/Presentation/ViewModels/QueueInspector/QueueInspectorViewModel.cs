@@ -22,7 +22,8 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
     private bool? _formatJson;
     private readonly MessageReceiver _messageReceiver;
     private readonly ProgressNotificationService _progressNotificationService;
-    private long _sequence = 0;
+    private long _sequence;
+    private bool _isFirstMessage = true;
 
 
     public QueueInspectorViewModel(
@@ -35,13 +36,14 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
         Name = string.IsNullOrWhiteSpace(nameSuffix) ? "Queue Inspector" : $"Queue Inspector | {nameSuffix}";
         _queueProvider = queueProvider;
 
-        _messageReceiver = new MessageReceiver(queueProvider.Settings.HideMessagesAfter, _cts.Token);
+        _messageReceiver = new MessageReceiver(queueProvider.Settings.HideMessagesAfter + 1, _cts.Token);
         _progressNotificationService = new ProgressNotificationService();
 
         //GenerateFakeData();
         queueProvider.Connect(_messageReceiver, _progressNotificationService);
 
         _messageReceiver.MessageDispatched += MessageReceived;
+        _progressNotificationService.MessageDispatched += OnReceivingProgressNotification;
 
         OnClosing += (_, _) =>
         {
@@ -54,10 +56,23 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
         DisconnectCommand = new RelayCommand(() => windowManager.Close(this));
     }
 
+    private void OnReceivingProgressNotification(object? sender, Abstractions.Notifications.ProgressStatus.IProgressNotification e)
+    {
+        ProgressStatusViewModel.UpdateReceiving(e);
+    }
+
     private void MessageReceived(object? sender, IInboundMessage message)
     {
-        var entry = new QueueEntryViewModel(_sequence++, message);
-        AddMessage(entry);
+        var delay = _isFirstMessage ? 1000 : 0;
+
+        Task.Delay(TimeSpan.FromMilliseconds(delay)).ContinueWith((t) =>
+        {
+            OnUiThread(() =>
+            {
+                var entry = new QueueEntryViewModel(_sequence++, message);
+                AddMessage(entry);
+            });
+        }).Wait();
     }
 
     private void EnsureValidMessageOverflowThreshold()
@@ -86,6 +101,7 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
         }
     }
 
+    public ProgressStatusViewModel ProgressStatusViewModel { get; } = new();
     public ObservableCollection<QueueEntryViewModel> Entries { get; } = [];
 
     public ICommand DisconnectCommand { get; }
@@ -165,6 +181,8 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
 
     public void Dispose()
     {
+        _messageReceiver.MessageDispatched -= MessageReceived;
+        _progressNotificationService.MessageDispatched -= OnReceivingProgressNotification;
         _queueProvider.DisposeAsync();
     }
 }
