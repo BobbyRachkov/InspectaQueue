@@ -10,5 +10,5 @@ public interface IAsyncCommunicationService<T>
     /// <summary>
     /// Sends item to subscribers, without waiting for them to finish processing
     /// </summary>
-    Task<bool> SendAsync(object sender, T item);
+    Task<bool> SendAsync(object? sender, T item);
 }

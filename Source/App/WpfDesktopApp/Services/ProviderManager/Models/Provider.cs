@@ -18,7 +18,7 @@ public class Provider
 
     public string ComparableName => GetComparableName(Type);
 
-    public string DisplayName => $"{_providerInstance.Settings.Name}";
+    public string DisplayName => $"{_providerInstance.Details.Name}";
 
     public IReadOnlyDictionary<string, IQueueProvider> Versions => VersionsInternal;
 

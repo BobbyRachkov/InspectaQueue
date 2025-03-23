@@ -4,22 +4,22 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.DataChannel;
 
 public class UnboundedChannelAsyncCommunicationService<T> : IAsyncCommunicationService<T>
 {
-    private readonly Channel<(object Sender, T Payload)> _channel;
+    private readonly Channel<(object? Sender, T Payload)> _channel;
 
     public event EventHandler<T>? ItemDispatched;
 
-    public UnboundedChannelAsyncCommunicationService(int maxItems, BoundedChannelFullMode fullMode, CancellationToken cancellationToken = default)
+    public UnboundedChannelAsyncCommunicationService(CancellationToken cancellationToken = default)
     {
-        _channel = Channel.CreateUnbounded<(object, T)>(new UnboundedChannelOptions
+        _channel = Channel.CreateUnbounded<(object?, T)>(new UnboundedChannelOptions
         {
             SingleReader = true,
             SingleWriter = true
         });
 
-        Task.Run(() => Receive(cancellationToken), cancellationToken);
+        Task.Factory.StartNew(() => Receive(cancellationToken), cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
     }
 
-    public Task<bool> SendAsync(object sender, T item)
+    public Task<bool> SendAsync(object? sender, T item)
     {
         return Task.FromResult(_channel.Writer.TryWrite((sender, item)));
     }
