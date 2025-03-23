@@ -1,4 +1,4 @@
-﻿using Rachkov.InspectaQueue.Abstractions.Messaging.Models;
+﻿using Rachkov.InspectaQueue.Abstractions.Messaging.Interfaces;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector.EventArgs;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector.Extensions;
@@ -8,24 +8,24 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspe
 
 public class QueueEntryViewModel : ViewModel
 {
-    private readonly InboundMessageFrame _inboundMessage;
+    private readonly IInboundMessage _inboundMessage;
     private readonly bool _isValidJson;
     private string _displayableMessageText;
 
-    public QueueEntryViewModel(long number, InboundMessageFrame inboundMessage)
+    public QueueEntryViewModel(long number, IInboundMessage inboundMessage)
     {
         _inboundMessage = inboundMessage;
         RawMessageText = _inboundMessage.Content;
         MessageId = _inboundMessage.Id;
         MessageKey = _inboundMessage.Key;
         MessageInternalId = number;
-        DisplayableMessageText = RawMessageText;
+        _displayableMessageText = RawMessageText;
 
         _isValidJson = RawMessageText.IsValidJson();
     }
 
     public long MessageInternalId { get; }
-    public long? MessageId { get; }
+    public string? MessageId { get; }
 
     public string? MessageKey { get; }
 

@@ -1,5 +1,5 @@
-﻿using Rachkov.InspectaQueue.Abstractions.Messaging;
-using Rachkov.InspectaQueue.Abstractions.Messaging.Interfaces;
+﻿using Rachkov.InspectaQueue.Abstractions.Messaging.Interfaces;
+using Rachkov.InspectaQueue.Abstractions.Messaging.Models;
 using Rachkov.InspectaQueue.Abstractions.Notifications.Errors;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
@@ -39,7 +39,7 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
             () => ListenForMessages(_cts.Token),
             TaskCreationOptions.LongRunning);
 
-        OnClosing += (_, _) => _queueProvider.Disconnect();
+        OnClosing += (_, _) => _queueProvider.DisconnectSubscriber();
 
         EnsureValidMessageOverflowThreshold();
 
@@ -102,7 +102,7 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
                 {
                     Content =
                         $"{{\r\n          \"PropertyName\": \"IssuerUrl\",\r\n          \"Type\": \"System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e\",\r\n          \"Value\": \"sdfsdf\"\r\n        }}",
-                    Id = i
+                    Id = i.ToString()
 
                 }));
                 await Task.Delay(500);
