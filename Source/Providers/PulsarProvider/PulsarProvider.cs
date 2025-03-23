@@ -1,6 +1,7 @@
 ﻿using Pulsar.Client.Api;
 using Pulsar.Client.Common;
-using Rachkov.InspectaQueue.Abstractions.Messaging;
+using Rachkov.InspectaQueue.Abstractions.Messaging.Interfaces;
+using Rachkov.InspectaQueue.Abstractions.Messaging.Models;
 using Rachkov.InspectaQueue.Abstractions.Notifications.Errors;
 using Rachkov.InspectaQueue.Providers.Pulsar.Extensions;
 using System.Diagnostics;
@@ -12,7 +13,7 @@ namespace Rachkov.InspectaQueue.Providers.Pulsar;
 public class PulsarProvider : IQueueProvider, IAsyncDisposable
 {
     private readonly IErrorReporter _errorReporter;
-    private readonly Channel<MessageFrame> _messagesChannel;
+    private readonly Channel<InboundMessageFrame> _messagesChannel;
     private Task? _readerTask;
     private CancellationTokenSource? _cancellationTokenSource;
     private readonly PulsarSettings _settings;
@@ -25,7 +26,7 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
         _errorReporter = errorReporter;
         Debug.WriteLine($"==========> Constructing: {_id}");
         _settings = new PulsarSettings();
-        _messagesChannel = Channel.CreateUnbounded<MessageFrame>(new UnboundedChannelOptions
+        _messagesChannel = Channel.CreateUnbounded<InboundMessageFrame>(new UnboundedChannelOptions
         {
             SingleReader = true,
             SingleWriter = true
@@ -42,7 +43,7 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
 
     public IQueueProviderSettings Settings => _settings;
 
-    public ChannelReader<MessageFrame> Messages => _messagesChannel.Reader;
+    public ChannelReader<InboundMessageFrame> Messages => _messagesChannel.Reader;
 
     public Task Connect()
     {
@@ -60,7 +61,7 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
         }
     }
 
-    public async Task<bool> TryAcknowledge(MessageFrame frame)
+    public async Task<bool> TryAcknowledge(InboundMessageFrame frame)
     {
         var message = frame.Message as Message<byte[]>;
         if (message is null || _consumer is null)
@@ -130,7 +131,7 @@ public class PulsarProvider : IQueueProvider, IAsyncDisposable
                 }
 
                 var messageString = Encoding.UTF8.GetString(message.Data);
-                var frame = new MessageFrame
+                var frame = new InboundMessageFrame
                 {
                     Content = messageString,
                     JsonRepresentation = messageString,

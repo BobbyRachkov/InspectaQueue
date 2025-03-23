@@ -1,8 +1,10 @@
-﻿namespace Rachkov.InspectaQueue.Abstractions.Messaging;
+﻿using Rachkov.InspectaQueue.Abstractions.Messaging.Interfaces;
 
-public record MessageFrame
+namespace Rachkov.InspectaQueue.Abstractions.Messaging.Models;
+
+public record InboundMessageFrame : IInboundMessage
 {
-    public long? Id { get; init; }
+    public string? Id { get; init; }
 
     public string? Key { get; init; }
 
@@ -11,7 +13,6 @@ public record MessageFrame
     public object? Message { get; init; }
 
     public string? JsonRepresentation { get; init; }
-
 
     public bool IsAcknowledged { get; set; }
 }

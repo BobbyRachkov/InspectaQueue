@@ -1,5 +1,5 @@
 ﻿using Autofac;
-using Rachkov.InspectaQueue.Abstractions.Messaging;
+using Rachkov.InspectaQueue.Abstractions.Messaging.Interfaces;
 using Rachkov.InspectaQueue.Abstractions.Notifications.Errors;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models;

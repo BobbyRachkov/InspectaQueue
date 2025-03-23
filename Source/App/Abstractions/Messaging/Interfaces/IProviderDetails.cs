@@ -1,4 +1,6 @@
-﻿namespace Rachkov.InspectaQueue.Abstractions.Messaging;
+﻿using Rachkov.InspectaQueue.Abstractions.Messaging.Models;
+
+namespace Rachkov.InspectaQueue.Abstractions.Messaging.Interfaces;
 
 public interface IProviderDetails
 {

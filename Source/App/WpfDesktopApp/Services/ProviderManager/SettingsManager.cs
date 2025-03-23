@@ -1,5 +1,5 @@
 ﻿using Rachkov.InspectaQueue.Abstractions.Attributes;
-using Rachkov.InspectaQueue.Abstractions.Messaging;
+using Rachkov.InspectaQueue.Abstractions.Messaging.Interfaces;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models.Modifiers;
 using System.Reflection;

@@ -1,4 +1,4 @@
-﻿namespace Rachkov.InspectaQueue.Abstractions.Messaging;
+﻿namespace Rachkov.InspectaQueue.Abstractions.Messaging.Models;
 
 public enum QueueType
 {

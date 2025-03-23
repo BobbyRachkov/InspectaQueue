@@ -1,4 +1,5 @@
 ﻿using Rachkov.InspectaQueue.Abstractions.Messaging;
+using Rachkov.InspectaQueue.Abstractions.Messaging.Interfaces;
 using Rachkov.InspectaQueue.Abstractions.Notifications.Errors;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
@@ -97,7 +98,7 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
         {
             for (int i = 0; i < 500; i++)
             {
-                AddMessage(new(i, new MessageFrame
+                AddMessage(new(i, new InboundMessageFrame
                 {
                     Content =
                         $"{{\r\n          \"PropertyName\": \"IssuerUrl\",\r\n          \"Type\": \"System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e\",\r\n          \"Value\": \"sdfsdf\"\r\n        }}",

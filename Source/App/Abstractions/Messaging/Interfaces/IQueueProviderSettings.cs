@@ -1,4 +1,4 @@
-﻿namespace Rachkov.InspectaQueue.Abstractions.Messaging;
+﻿namespace Rachkov.InspectaQueue.Abstractions.Messaging.Interfaces;
 
 public interface IQueueProviderSettings
 {
@@ -8,5 +8,8 @@ public interface IQueueProviderSettings
     /// </summary>
     int HideMessagesAfter { get; set; }
 
+    /// <summary>
+    /// if set to true. the provider will auto acknowledge the message, as soon as it is received
+    /// </summary>
     bool AcknowledgeOnReceive { get; set; }
 }

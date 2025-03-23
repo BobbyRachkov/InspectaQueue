@@ -1,4 +1,4 @@
-﻿using Rachkov.InspectaQueue.Abstractions.Messaging;
+﻿using Rachkov.InspectaQueue.Abstractions.Messaging.Interfaces;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings;
 
