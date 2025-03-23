@@ -6,9 +6,6 @@ namespace Rachkov.InspectaQueue.Providers.Pulsar;
 
 public class PulsarSettings : IQueueProviderSettings
 {
-    public string Name => "Apache Pulsar";
-    public string Description => "Pulsar Queue Provider";
-
     [Exposed(DisplayName = "Issuer URL")]
     public string IssuerUrl { get; set; } = string.Empty;
 

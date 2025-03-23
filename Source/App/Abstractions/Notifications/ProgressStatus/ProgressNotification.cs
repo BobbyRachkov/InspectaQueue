@@ -1,9 +1,25 @@
 ﻿namespace Rachkov.InspectaQueue.Abstractions.Notifications.ProgressStatus;
 
-public class ProgressNotification : IProgressNotification
+public record ProgressNotification : IProgressNotification
 {
-    public required long Received { get; init; }
-    public required long Processed { get; init; }
+    public long Received { get; init; }
+    public long Processed { get; init; }
     public string? ConnectionStatusMessage { get; init; }
-    public required Status Status { get; init; }
+    public Status Status { get; init; }
+
+    public ProgressNotification(Status status)
+    {
+        Status = status;
+    }
+
+    public ProgressNotification(string connectionStatusMessage, Status status) : this(status)
+    {
+        ConnectionStatusMessage = connectionStatusMessage;
+    }
+
+    public ProgressNotification(long received, long processed, string connectionStatusMessage, Status status) : this(connectionStatusMessage, status)
+    {
+        Received = received;
+        Processed = processed;
+    }
 }
