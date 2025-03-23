@@ -8,8 +8,9 @@ public class ProgressStatusViewModel : ViewModel
     private long _shownMessages;
     private long _dispatchedMessages;
     private long _receivedMessages;
-    private string _statusMessage = string.Empty;
-    private Status _receivingStatus;
+    private string _statusMessage = "Initializing...";
+    private Status _receivingStatus = Status.InProgress;
+    private bool _isMasterLoadingIndicatorOn = true;
 
     public long ShownMessages
     {
@@ -62,6 +63,12 @@ public class ProgressStatusViewModel : ViewModel
         {
             if (value == _receivingStatus) return;
             _receivingStatus = value;
+
+            if (value is Status.Failed)
+            {
+                IsMasterLoadingIndicatorOn = false;
+            }
+
             OnPropertyChanged();
             OnPropertyChanged(nameof(IsReceivingOk));
             OnPropertyChanged(nameof(IsReceivingInProgress));
@@ -72,6 +79,17 @@ public class ProgressStatusViewModel : ViewModel
     public bool IsReceivingOk => _receivingStatus == Status.Ok;
     public bool IsReceivingInProgress => _receivingStatus == Status.InProgress;
     public bool IsReceivingFailed => _receivingStatus == Status.Failed;
+
+    public bool IsMasterLoadingIndicatorOn
+    {
+        get => _isMasterLoadingIndicatorOn;
+        set
+        {
+            if (value == _isMasterLoadingIndicatorOn) return;
+            _isMasterLoadingIndicatorOn = value;
+            OnPropertyChanged();
+        }
+    }
 
     public void UpdateReceiving(IProgressNotification notification)
     {

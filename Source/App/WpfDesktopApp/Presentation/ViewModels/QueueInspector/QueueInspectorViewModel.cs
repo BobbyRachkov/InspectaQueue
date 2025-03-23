@@ -70,6 +70,7 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
             OnUiThread(() =>
             {
                 var entry = new QueueEntryViewModel(_sequence++, message);
+                ProgressStatusViewModel.IsMasterLoadingIndicatorOn = false;
                 AddMessage(entry);
             });
         }).Wait();

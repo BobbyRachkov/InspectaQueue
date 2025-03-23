@@ -32,7 +32,7 @@
                     <Button Command="{Binding DisconnectCommand}">Disconnect</Button>
                 </StackPanel>
             </Grid>
-        </Expander>
+        </Expander><!--Visibility="{Binding ProgressStatusViewModel.IsReceivingInProgress,Converter={StaticResource BooleanToVisibilityConverter}}"-->
         <DataGrid x:Name="MetroDataGrid"
                   ScrollViewer.CanContentScroll="False"
                   Grid.Row="1"
@@ -110,6 +110,14 @@
                 </ContextMenu>
             </DataGrid.ContextMenu>
         </DataGrid>
+        <mah:ProgressRing 
+            EllipseDiameterScale="0.7"
+            Grid.Row="1"
+            IsLarge="True"
+            IsActive="{Binding ProgressStatusViewModel.IsMasterLoadingIndicatorOn}"
+            VerticalAlignment="Center" 
+            Foreground="White" 
+            Width="100"/>
         <StatusBar Grid.Row="2" VerticalContentAlignment="Center">
             <StatusBarItem>@Bobi Rachkov</StatusBarItem>
             <StatusBarItem>
@@ -131,7 +139,7 @@
                     <mah:ProgressRing 
                         Visibility="{Binding ProgressStatusViewModel.IsReceivingInProgress,Converter={StaticResource BooleanToVisibilityConverter}}"
                         VerticalAlignment="Center" 
-                        Foreground="Blue" 
+                        Foreground="SkyBlue" 
                         Width="10"/>
                     <TextBlock Text=" "/>
                     <TextBlock Text="{Binding ProgressStatusViewModel.StatusMessage}"/>
