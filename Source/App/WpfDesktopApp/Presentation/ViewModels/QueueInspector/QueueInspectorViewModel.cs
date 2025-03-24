@@ -16,7 +16,8 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspe
 
 public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTopmost
 {
-    private const int FirstMessageDelayMilliseconds = 2000;
+    private const double FirstMessageDelayMilliseconds = 2000;
+    private const double RemainingMessagesDelayMilliseconds = 0.7;
 
     private readonly IQueueProvider _queueProvider;
     private readonly CancellationTokenSource _cts = new();
@@ -64,28 +65,17 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
 
     private void MessageReceived(object? sender, IInboundMessage message)
     {
-        if (_isFirstMessage)
+        var delay = _isFirstMessage ? FirstMessageDelayMilliseconds : RemainingMessagesDelayMilliseconds;
+        Task.Delay(TimeSpan.FromMilliseconds(delay)).ContinueWith((t) =>
         {
             _isFirstMessage = false;
-            Task.Delay(TimeSpan.FromMilliseconds(FirstMessageDelayMilliseconds)).ContinueWith((t) =>
-            {
-                AppendMessage();
-            }).Wait();
-            return;
-        }
-
-        AppendMessage();
-        return;
-
-        void AppendMessage()
-        {
             OnUiThread(() =>
             {
                 var entry = new QueueEntryViewModel(_sequence++, message);
                 ProgressStatusViewModel.IsMasterLoadingIndicatorOn = false;
                 AddMessage(entry);
             });
-        }
+        }).Wait();
     }
 
     private void EnsureValidMessageOverflowThreshold()
