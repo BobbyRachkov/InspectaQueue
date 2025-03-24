@@ -1,14 +1,11 @@
-﻿using Rachkov.InspectaQueue.Abstractions;
-using Rachkov.InspectaQueue.Abstractions.Attributes;
+﻿using Rachkov.InspectaQueue.Abstractions.Attributes;
+using Rachkov.InspectaQueue.Abstractions.Messaging.Interfaces;
 using Rachkov.InspectaQueue.Providers.Pulsar.Models;
 
 namespace Rachkov.InspectaQueue.Providers.Pulsar;
 
 public class PulsarSettings : IQueueProviderSettings
 {
-    public string Name => "Apache Pulsar";
-    public string Description => "Pulsar Queue Provider";
-
     [Exposed(DisplayName = "Issuer URL")]
     public string IssuerUrl { get; set; } = string.Empty;
 

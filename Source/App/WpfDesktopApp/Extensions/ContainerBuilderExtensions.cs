@@ -1,7 +1,7 @@
 ﻿using Autofac;
 using AutoMapper.Contrib.Autofac.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
-using Rachkov.InspectaQueue.Abstractions;
+using Rachkov.InspectaQueue.Abstractions.Messaging.Interfaces;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.AutoUpdater;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Download;
 using Rachkov.InspectaQueue.AutoUpdater.Core.Services.Migrations;

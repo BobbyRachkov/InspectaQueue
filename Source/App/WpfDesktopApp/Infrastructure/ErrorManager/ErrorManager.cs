@@ -1,5 +1,5 @@
 ﻿using System.Threading.Channels;
-using Rachkov.InspectaQueue.Abstractions;
+using Rachkov.InspectaQueue.Abstractions.Notifications.Errors;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
 
