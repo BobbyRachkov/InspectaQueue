@@ -25,6 +25,7 @@ public class QueueEntryViewModel : ViewModel
     }
 
     public long MessageInternalId { get; }
+
     public string? MessageId { get; }
 
     public string? MessageKey { get; }

@@ -16,6 +16,8 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspe
 
 public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTopmost
 {
+    private const int FirstMessageDelayMilliseconds = 2000;
+
     private readonly IQueueProvider _queueProvider;
     private readonly CancellationTokenSource _cts = new();
     private bool _topmost;
@@ -24,7 +26,6 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
     private readonly ProgressNotificationService _progressNotificationService;
     private long _sequence;
     private bool _isFirstMessage = true;
-
 
     public QueueInspectorViewModel(
         string? nameSuffix,
@@ -63,9 +64,20 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
 
     private void MessageReceived(object? sender, IInboundMessage message)
     {
-        var delay = _isFirstMessage ? 1000 : 0;
+        if (_isFirstMessage)
+        {
+            _isFirstMessage = false;
+            Task.Delay(TimeSpan.FromMilliseconds(FirstMessageDelayMilliseconds)).ContinueWith((t) =>
+            {
+                AppendMessage();
+            }).Wait();
+            return;
+        }
 
-        Task.Delay(TimeSpan.FromMilliseconds(delay)).ContinueWith((t) =>
+        AppendMessage();
+        return;
+
+        void AppendMessage()
         {
             OnUiThread(() =>
             {
@@ -73,7 +85,7 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
                 ProgressStatusViewModel.IsMasterLoadingIndicatorOn = false;
                 AddMessage(entry);
             });
-        }).Wait();
+        }
     }
 
     private void EnsureValidMessageOverflowThreshold()
@@ -182,6 +194,11 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
 
     public void Dispose()
     {
+        while (Entries.Count != 0)
+        {
+            RemoveMessage(Entries[0]);
+        }
+
         _messageReceiver.MessageDispatched -= MessageReceived;
         _progressNotificationService.MessageDispatched -= OnReceivingProgressNotification;
         _queueProvider.DisposeAsync();

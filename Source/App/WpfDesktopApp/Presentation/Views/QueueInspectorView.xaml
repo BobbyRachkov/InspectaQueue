@@ -147,6 +147,8 @@
                     <TextBlock Text="{Binding ProgressStatusViewModel.ReceivedMessages}"/>
                     <TextBlock Text="    After filtering: "/>
                     <TextBlock Text="{Binding ProgressStatusViewModel.DispatchedMessages}"/>
+                    <TextBlock Text="    Displayed: "/>
+                    <TextBlock Text="{Binding Entries.Count}"/>
                 </StackPanel>
             </StatusBarItem>
         </StatusBar>

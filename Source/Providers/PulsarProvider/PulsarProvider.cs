@@ -130,8 +130,7 @@ public class PulsarProvider : IQueueProvider
                 var message = await _consumer.ReceiveAsync(cancellationToken);
                 messagesReceived++;
 
-
-                if (filterByKeyEnabled && message.Key.Contains(_settings.FilterByKey))
+                if (filterByKeyEnabled && !message.Key.Contains(_settings.FilterByKey))
                 {
                     await progressNotificationService.SendProgressUpdateNotification(new ProgressNotification(
                         messagesReceived,
@@ -215,7 +214,10 @@ public class PulsarProvider : IQueueProvider
 
     private async Task DisposeConsumerAndClient()
     {
-        _readerTask?.Dispose();
+        if (_readerTask?.IsCompleted == true)
+        {
+            _readerTask?.Dispose();
+        }
 
         if (_consumer is not null)
         {

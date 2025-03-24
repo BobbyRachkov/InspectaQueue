@@ -5,23 +5,11 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspe
 
 public class ProgressStatusViewModel : ViewModel
 {
-    private long _shownMessages;
     private long _dispatchedMessages;
     private long _receivedMessages;
     private string _statusMessage = "Initializing...";
     private Status _receivingStatus = Status.InProgress;
     private bool _isMasterLoadingIndicatorOn = true;
-
-    public long ShownMessages
-    {
-        get => _shownMessages;
-        set
-        {
-            if (value == _shownMessages) return;
-            _shownMessages = value;
-            OnPropertyChanged();
-        }
-    }
 
     public long DispatchedMessages
     {
