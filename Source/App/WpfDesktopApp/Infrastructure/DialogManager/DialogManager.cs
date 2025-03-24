@@ -7,7 +7,7 @@ public class DialogManager
     private readonly Func<string, string, MessageDialogStyle, MetroDialogSettings, MessageDialogResult> _simpleDialogHandle;
     private readonly Func<string, string, bool, MetroDialogSettings, Task<ProgressDialogController>> _progressDialogHandle;
     private readonly Func<string, string, MetroDialogSettings, Task<string?>> _inputDialogHandle;
-    private readonly Func<BaseMetroDialog, MetroDialogSettings, Task> _showMetroDialogHandle;
+    private readonly Func<BaseMetroDialog, MetroDialogSettings?, Task> _showMetroDialogHandle;
     private readonly Func<BaseMetroDialog, MetroDialogSettings, Task> _hideDialogHandle;
 
     public DialogManager(

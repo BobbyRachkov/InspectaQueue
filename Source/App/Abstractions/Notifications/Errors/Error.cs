@@ -1,4 +1,4 @@
-﻿namespace Rachkov.InspectaQueue.Abstractions;
+﻿namespace Rachkov.InspectaQueue.Abstractions.Notifications.Errors;
 
 public class Error
 {

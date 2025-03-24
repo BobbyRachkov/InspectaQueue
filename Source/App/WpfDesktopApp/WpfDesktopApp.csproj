@@ -43,6 +43,10 @@
     <ProjectReference Include="..\AutoUpdater.Core\AutoUpdater.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Services\Messaging\" />
+  </ItemGroup>
+
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
     <Exec Command="if &quot;$(ConfigurationName)&quot; == &quot;Debug&quot; (&#xD;&#xA;nuke Dev --Configuration Debug&#xD;&#xA;)" />
   </Target>

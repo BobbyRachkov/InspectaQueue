@@ -196,7 +196,7 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         var settings = _settingsManager.ExtractSettings(SelectedVersion.Instance);
         var source = new SourceViewModel(
             Guid.NewGuid(),
-            SelectedVersion.Instance.Name,
+            SelectedVersion.Instance.Details.Name,
             _settingsManager,
             SelectedVersion.Instance,
             SelectedProvider.AssociatedProvider.Versions,

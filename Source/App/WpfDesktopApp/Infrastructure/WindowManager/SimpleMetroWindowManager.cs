@@ -1,17 +1,10 @@
 ﻿using System.Windows;
-using MahApps.Metro.Controls;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.WindowManager;
 
 public class SimpleMetroWindowManager : IWindowManager
 {
-    private readonly IEnumerable<IPresenterViewModel> _presenterViewModels;
-    private readonly List<Window> _windows;
-
-    public SimpleMetroWindowManager()
-    {
-        _windows = new List<Window>();
-    }
+    private readonly List<Window> _windows = new();
 
     public void Create(IPresenterViewModel viewModel)
     {

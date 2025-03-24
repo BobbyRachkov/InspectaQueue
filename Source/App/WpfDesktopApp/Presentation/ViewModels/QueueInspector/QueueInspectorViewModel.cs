@@ -1,10 +1,14 @@
-﻿using Rachkov.InspectaQueue.Abstractions;
+﻿using Rachkov.InspectaQueue.Abstractions.Messaging.Interfaces;
+using Rachkov.InspectaQueue.Abstractions.Messaging.Models;
+using Rachkov.InspectaQueue.Abstractions.Notifications.Errors;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.WindowManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector.EventArgs;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector.Extensions;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector.Models;
+using Rachkov.InspectaQueue.WpfDesktopApp.Services.Messaging;
+using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProgressNotification;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
@@ -12,12 +16,17 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspe
 
 public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTopmost
 {
+    private const double FirstMessageDelayMilliseconds = 2000;
+    private const double RemainingMessagesDelayMilliseconds = 0.7;
+
     private readonly IQueueProvider _queueProvider;
-    private readonly IWindowManager _windowManager;
-    private readonly Task? _listenerTask;
     private readonly CancellationTokenSource _cts = new();
     private bool _topmost;
     private bool? _formatJson;
+    private readonly MessageReceiver _messageReceiver;
+    private readonly ProgressNotificationService _progressNotificationService;
+    private long _sequence;
+    private bool _isFirstMessage = true;
 
     public QueueInspectorViewModel(
         string? nameSuffix,
@@ -28,20 +37,45 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
     {
         Name = string.IsNullOrWhiteSpace(nameSuffix) ? "Queue Inspector" : $"Queue Inspector | {nameSuffix}";
         _queueProvider = queueProvider;
-        _windowManager = windowManager;
-        Entries = new();
+
+        _messageReceiver = new MessageReceiver(queueProvider.Settings.HideMessagesAfter + 1, _cts.Token);
+        _progressNotificationService = new ProgressNotificationService();
+
         //GenerateFakeData();
-        queueProvider.Connect();
+        queueProvider.Connect(_messageReceiver, _progressNotificationService);
 
-        _listenerTask = Task.Factory.StartNew(
-            () => ListenForMessages(_cts.Token),
-            TaskCreationOptions.LongRunning);
+        _messageReceiver.MessageDispatched += MessageReceived;
+        _progressNotificationService.MessageDispatched += OnReceivingProgressNotification;
 
-        OnClosing += (_, _) => _queueProvider.Disconnect();
+        OnClosing += (_, _) =>
+        {
+            _cts.Cancel();
+            _queueProvider.DisconnectSubscriber();
+        };
 
         EnsureValidMessageOverflowThreshold();
 
         DisconnectCommand = new RelayCommand(() => windowManager.Close(this));
+    }
+
+    private void OnReceivingProgressNotification(object? sender, Abstractions.Notifications.ProgressStatus.IProgressNotification e)
+    {
+        ProgressStatusViewModel.UpdateReceiving(e);
+    }
+
+    private void MessageReceived(object? sender, IInboundMessage message)
+    {
+        var delay = _isFirstMessage ? FirstMessageDelayMilliseconds : RemainingMessagesDelayMilliseconds;
+        Task.Delay(TimeSpan.FromMilliseconds(delay)).ContinueWith((t) =>
+        {
+            _isFirstMessage = false;
+            OnUiThread(() =>
+            {
+                var entry = new QueueEntryViewModel(_sequence++, message);
+                ProgressStatusViewModel.IsMasterLoadingIndicatorOn = false;
+                AddMessage(entry);
+            });
+        }).Wait();
     }
 
     private void EnsureValidMessageOverflowThreshold()
@@ -70,7 +104,8 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
         }
     }
 
-    public ObservableCollection<QueueEntryViewModel> Entries { get; }
+    public ProgressStatusViewModel ProgressStatusViewModel { get; } = new();
+    public ObservableCollection<QueueEntryViewModel> Entries { get; } = [];
 
     public ICommand DisconnectCommand { get; }
 
@@ -96,30 +131,16 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
         {
             for (int i = 0; i < 500; i++)
             {
-                AddMessage(new(i, new MessageFrame
+                AddMessage(new(i, new InboundMessageFrame
                 {
                     Content =
                         $"{{\r\n          \"PropertyName\": \"IssuerUrl\",\r\n          \"Type\": \"System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e\",\r\n          \"Value\": \"sdfsdf\"\r\n        }}",
-                    Id = i
+                    Id = i.ToString()
 
                 }));
                 await Task.Delay(500);
             }
         });
-    }
-
-    private async Task ListenForMessages(CancellationToken cancellationToken)
-    {
-        var sequence = 0;
-        while (await _queueProvider.Messages.WaitToReadAsync(cancellationToken))
-        {
-            while (_queueProvider.Messages.TryRead(out var message))
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                var entry = new QueueEntryViewModel(sequence++, message);
-                AddMessage(entry);
-            }
-        }
     }
 
     private void AddMessage(QueueEntryViewModel entry, int index = 0)
@@ -163,6 +184,13 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
 
     public void Dispose()
     {
-        _listenerTask?.Dispose();
+        while (Entries.Count != 0)
+        {
+            RemoveMessage(Entries[0]);
+        }
+
+        _messageReceiver.MessageDispatched -= MessageReceived;
+        _progressNotificationService.MessageDispatched -= OnReceivingProgressNotification;
+        _queueProvider.DisposeAsync();
     }
 }

@@ -1,4 +1,4 @@
-﻿using Rachkov.InspectaQueue.Abstractions;
+﻿using Rachkov.InspectaQueue.Abstractions.Messaging.Interfaces;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models;
 
@@ -18,7 +18,7 @@ public class Provider
 
     public string ComparableName => GetComparableName(Type);
 
-    public string DisplayName => $"{_providerInstance.Settings.Name}";
+    public string DisplayName => $"{_providerInstance.Details.Name}";
 
     public IReadOnlyDictionary<string, IQueueProvider> Versions => VersionsInternal;
 
