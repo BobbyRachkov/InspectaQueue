@@ -175,10 +175,13 @@ public class MenuViewModel : ViewModel
 
         Process.Start(psi);
 
-        if (promptResult != UpdateDialogResult.InstallOnClose)
+        if (promptResult == UpdateDialogResult.InstallOnClose)
         {
-            Environment.Exit(0);
+            return UpdateResult.Updated;
         }
+
+        await DialogManager.ShowProgressDialog("Update in progress", "The app will restart soon...", false, true);
+        Environment.Exit(0);
 
         return UpdateResult.Updated;
     }
