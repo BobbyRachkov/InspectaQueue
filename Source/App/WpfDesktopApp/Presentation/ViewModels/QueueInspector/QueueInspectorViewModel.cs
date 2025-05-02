@@ -10,6 +10,7 @@ using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.Messaging;
 using Rachkov.InspectaQueue.WpfDesktopApp.Services.ProgressNotification;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Windows.Input;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector;
@@ -20,8 +21,11 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
     private const double RemainingMessagesDelayMilliseconds = 0.7;
 
     private readonly IQueueProvider _queueProvider;
+    private readonly ICanPublish? _publisher;
     private readonly CancellationTokenSource _cts = new();
     private bool _topmost;
+    private string _publishKey;
+    private string _publishPayload;
     private bool? _formatJson;
     private readonly MessageReceiver _messageReceiver;
     private readonly ProgressNotificationService _progressNotificationService;
@@ -55,7 +59,10 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
 
         EnsureValidMessageOverflowThreshold();
 
+        _publisher = queueProvider as ICanPublish;
+
         DisconnectCommand = new RelayCommand(() => windowManager.Close(this));
+        PublishCommand = new RelayCommand(Publish);
     }
 
     private void OnReceivingProgressNotification(object? sender, Abstractions.Notifications.ProgressStatus.IProgressNotification e)
@@ -103,11 +110,33 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
             OnPropertyChanged();
         }
     }
+    public string PublishKey
+    {
+        get => _publishKey;
+        set
+        {
+            _publishKey = value;
+            OnPropertyChanged();
+        }
+    }
+    public string PublishPayload
+    {
+        get => _publishPayload;
+        set
+        {
+            _publishPayload = value;
+            OnPropertyChanged();
+        }
+    }
+
+    [MemberNotNullWhen(true, nameof(_publisher))]
+    public bool CanPublish => _publisher is not null;
 
     public ProgressStatusViewModel ProgressStatusViewModel { get; } = new();
     public ObservableCollection<QueueEntryViewModel> Entries { get; } = [];
 
     public ICommand DisconnectCommand { get; }
+    public ICommand PublishCommand { get; }
 
     public bool? FormatJson
     {
@@ -179,6 +208,16 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
             });
             FeatureStatusUpdated -= entry.OnFeatureStatusUpdated;
         }
+
+    }
+
+    private void Publish()
+    {
+        if (_publisher is null)
+        {
+            return;
+        }
+
 
     }
 

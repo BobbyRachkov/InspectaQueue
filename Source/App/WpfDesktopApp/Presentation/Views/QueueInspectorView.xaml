@@ -7,13 +7,21 @@
              xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
              xmlns:queueInspector="clr-namespace:Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector"
              xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             xmlns:converters="clr-namespace:Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Converters"
              d:DataContext="{d:DesignInstance Type=queueInspector:QueueInspectorViewModel}"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <converters:BooleanToVisibilityConverter x:Key="CollapsedBooleanToVisibilityConverter" FalseValue="Collapsed"/>
+            </ResourceDictionary>
+        </UserControl.Resources>
+            <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="25"/>
         </Grid.RowDefinitions>
 
@@ -118,7 +126,50 @@
             VerticalAlignment="Center" 
             Foreground="White" 
             Width="100"/>
-        <StatusBar Grid.Row="2" VerticalContentAlignment="Center">
+        <Expander 
+            IsExpanded="False"
+            Header="Publish"
+            Grid.Row="2"
+            Visibility="{Binding CanPublish, Converter={StaticResource CollapsedBooleanToVisibilityConverter}}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="55"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Label 
+                    Grid.Column="0"
+                    Grid.Row="0">Key:</Label>
+                <TextBox
+                    Text="{Binding PublishKey}"
+                    AcceptsTab="False"
+                    MaxLines="1"
+                    Margin="2"
+                    Grid.Column="1"
+                    Grid.Row="0" />
+                <Label 
+                    Grid.Column="0"
+                    Grid.Row="1">Payload:</Label>
+                <TextBox
+                    Text="{Binding PublishPayload}"
+                    AcceptsReturn="True"
+                    Margin="2"
+                    Grid.Column="1"
+                    Grid.RowSpan="2"
+                    Grid.Row="1" />
+                <Button
+                    Margin="2"
+                    Grid.Column="0"
+                    Grid.Row="2" >
+                    Send
+                </Button>
+            </Grid>
+        </Expander>
+        <StatusBar Grid.Row="3" VerticalContentAlignment="Center">
             <StatusBarItem>@Bobi Rachkov</StatusBarItem>
             <StatusBarItem>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">

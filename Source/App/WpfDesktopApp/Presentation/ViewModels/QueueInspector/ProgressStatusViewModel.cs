@@ -81,8 +81,16 @@ public class ProgressStatusViewModel : ViewModel
 
     public void UpdateReceiving(IProgressNotification notification)
     {
-        DispatchedMessages = notification.Processed;
-        ReceivedMessages = notification.Received;
+        if (notification.Processed is not null)
+        {
+            DispatchedMessages = notification.Processed.Value;
+        }
+
+        if (notification.Received is not null)
+        {
+            ReceivedMessages = notification.Received.Value;
+        }
+
         StatusMessage = notification.ConnectionStatusMessage ?? string.Empty;
         ReceivingStatus = notification.Status;
     }
