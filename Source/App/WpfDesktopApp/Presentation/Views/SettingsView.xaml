@@ -49,7 +49,7 @@
         <Grid
             Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="250"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
@@ -92,16 +92,31 @@
                     </Button>
                 </StackPanel>
                 <ListView
+                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                     Grid.Row="1"
-                    DisplayMemberPath="Name"
                 Margin="5"
                 SelectedItem="{Binding SelectedSource}"
                 ItemsSource="{Binding Sources}">
-                    <!--<ListBox.ItemTemplate>
+                    <ListBox.ItemTemplate>
                         <DataTemplate>
                             <Grid>
-                                <Label Content="{Binding Name}"/>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="25"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="50"/>
+                                </Grid.ColumnDefinitions>
+                                <Image
+                                    Grid.Column="0"
+                                    Stretch="Uniform"
+                                    RenderOptions.BitmapScalingMode="Fant"
+                                    Height="25"
+                                    Width="25"
+                                    Source="{Binding QueueType.IconSource}"/>
+                                <Label 
+                                    Grid.Column="1"
+                                    Content="{Binding Name}"/>
                                 <StackPanel
+                                    Grid.Column="2"
                                     Visibility="{Binding Path=IsSelected,
                                     RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}},
                                     Converter={StaticResource BooleanToVisibilityConverter}}"
@@ -111,9 +126,12 @@
                                     <Button
                                         VerticalAlignment="Center"
                                         Width="15"
+                                        Height="15"
                                         Padding="0"
-                                        BorderThickness="1 1 0.5 1"
-                                        Command="{Binding RemoveSourceCommand}">
+                                        Margin="0 0 -0.7 0"
+                                        BorderThickness="1 1 1 1"
+                                        Command="{Binding Path=DataContext.MoveSourceUpCommand, 
+                                        RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}">
                                         <iconPacks:PackIconFontAwesome 
                                             Kind="ChevronUpSolid"
                                             Height="5"
@@ -121,18 +139,23 @@
                                     </Button>
 
                                     <Button
-                                        Height="7"
-                                        Width="25"
-                                        BorderThickness="0.5 1 1 1"
-                                        Command="{Binding RemoveSourceCommand}">
+                                        VerticalAlignment="Center"
+                                        Width="15"
+                                        Height="15"
+                                        Padding="0"
+                                        Margin="0 0 0 0"
+                                        BorderThickness="1 1 1 1"
+                                        Command="{Binding Path=DataContext.MoveSourceDownCommand, 
+                                        RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}">
                                         <iconPacks:PackIconFontAwesome 
                                             Kind="ChevronDownSolid"
+                                            Height="5"
                                             Style="{StaticResource ActionsStyle}"/>
                                     </Button>
                                 </StackPanel>
                             </Grid>
                         </DataTemplate>
-                    </ListBox.ItemTemplate>-->
+                    </ListBox.ItemTemplate>
                 </ListView>
                 <Grid
                 Grid.Row="2">

@@ -90,6 +90,13 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
 
         OnClosing += (_, _) => _configStoreService.StoreSources(Sources);
         ActionButtonCommand = new RelayCommand(x => _ = PerformAction(x as ActionButtonCommand?));
+
+        MoveSourceUpCommand = new RelayCommand(
+            () => MoveSource(-1),
+            () => SelectedSource is not null && Sources.IndexOf(SelectedSource) != 0);
+        MoveSourceDownCommand = new RelayCommand(
+            () => MoveSource(1),
+            () => SelectedSource is not null && Sources.IndexOf(SelectedSource) != Sources.Count - 1);
     }
 
 
@@ -99,6 +106,8 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
     public ICommand DuplicateSourceCommand { get; }
     public ICommand RemoveSourceCommand { get; }
     public ICommand ActionButtonCommand { get; }
+    public ICommand MoveSourceUpCommand { get; }
+    public ICommand MoveSourceDownCommand { get; }
 
     public MenuViewModel MenuViewModel { get; }
     public DialogManager? DialogManager
@@ -367,5 +376,24 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         {
             MessageBox.Show("Settings copied to clipboard", "Export", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
         }
+    }
+
+    private void MoveSource(int offset)
+    {
+        if (SelectedSource is null)
+        {
+            return;
+        }
+
+        var selectedIndex = Sources.IndexOf(SelectedSource);
+        var item = SelectedSource;
+        var modifiedIndex = selectedIndex + offset;
+
+        if (modifiedIndex < 0 || modifiedIndex >= Sources.Count)
+        {
+            return;
+        }
+
+        Sources.Move(selectedIndex, modifiedIndex);
     }
 }
