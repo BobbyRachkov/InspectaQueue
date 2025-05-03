@@ -220,6 +220,7 @@ public class PulsarProvider : IQueueProvider, ICanPublish
     {
         if (_client is null)
         {
+            await progressNotificationService.SendProgressUpdateNotification(new ProgressNotification(Constants.StatusMessage.Failed, Status.Failed));
             return;
         }
 

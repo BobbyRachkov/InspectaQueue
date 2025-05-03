@@ -8,8 +8,7 @@ public class ProgressStatusViewModel : ViewModel
     private long _dispatchedMessages;
     private long _receivedMessages;
     private string _statusMessage = "Initializing...";
-    private Status _receivingStatus = Status.InProgress;
-    private bool _isMasterLoadingIndicatorOn = true;
+    private Status _status = Status.InProgress;
 
     public long DispatchedMessages
     {
@@ -44,42 +43,27 @@ public class ProgressStatusViewModel : ViewModel
         }
     }
 
-    public Status ReceivingStatus
+    public Status Status
     {
-        get => _receivingStatus;
+        get => _status;
         set
         {
-            if (value == _receivingStatus) return;
-            _receivingStatus = value;
-
-            if (value is Status.Failed)
-            {
-                IsMasterLoadingIndicatorOn = false;
-            }
+            if (value == _status) return;
+            _status = value;
 
             OnPropertyChanged();
-            OnPropertyChanged(nameof(IsReceivingOk));
-            OnPropertyChanged(nameof(IsReceivingInProgress));
-            OnPropertyChanged(nameof(IsReceivingFailed));
+            OnPropertyChanged(nameof(IsOk));
+            OnPropertyChanged(nameof(IsInProgress));
+            OnPropertyChanged(nameof(IsFailed));
         }
     }
 
-    public bool IsReceivingOk => _receivingStatus == Status.Ok;
-    public bool IsReceivingInProgress => _receivingStatus == Status.InProgress;
-    public bool IsReceivingFailed => _receivingStatus == Status.Failed;
+    public bool IsOk => _status == Status.Ok;
+    public bool IsInProgress => _status == Status.InProgress;
+    public bool IsFailed => _status == Status.Failed;
 
-    public bool IsMasterLoadingIndicatorOn
-    {
-        get => _isMasterLoadingIndicatorOn;
-        set
-        {
-            if (value == _isMasterLoadingIndicatorOn) return;
-            _isMasterLoadingIndicatorOn = value;
-            OnPropertyChanged();
-        }
-    }
 
-    public void UpdateReceiving(IProgressNotification notification)
+    public void Update(IProgressNotification notification)
     {
         if (notification.Processed is not null)
         {
@@ -92,6 +76,6 @@ public class ProgressStatusViewModel : ViewModel
         }
 
         StatusMessage = notification.ConnectionStatusMessage ?? string.Empty;
-        ReceivingStatus = notification.Status;
+        Status = notification.Status;
     }
 }

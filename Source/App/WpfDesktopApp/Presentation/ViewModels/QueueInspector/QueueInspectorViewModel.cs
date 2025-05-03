@@ -1,6 +1,7 @@
 ﻿using Rachkov.InspectaQueue.Abstractions.Messaging.Interfaces;
 using Rachkov.InspectaQueue.Abstractions.Messaging.Models;
 using Rachkov.InspectaQueue.Abstractions.Notifications.Errors;
+using Rachkov.InspectaQueue.Abstractions.Notifications.ProgressStatus;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.WindowManager;
@@ -26,11 +27,19 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
     private bool _topmost;
     private string _publishKey;
     private string _publishPayload;
+    private bool _isPublishingConnected;
     private bool? _formatJson;
     private readonly MessageReceiver _messageReceiver;
-    private readonly ProgressNotificationService _progressNotificationService;
-    private long _sequence;
+    private readonly MessageProvider _messageProvider;
+    private readonly ProgressNotificationService _receivingProgressNotificationService;
+    private readonly ProgressNotificationService _publishingProgressNotificationService;
     private bool _isFirstMessage = true;
+    private bool _isMasterLoadingIndicatorOn = true;
+    private ProgressStatusViewModel? _publishStatusViewModel;
+    private bool _isPublishPanelOpened;
+    private long _sequence;
+    private bool _clearKeyFieldOnPublish = true;
+    private bool _clearPayloadFieldOnPublish = true;
 
     public QueueInspectorViewModel(
         string? nameSuffix,
@@ -43,13 +52,17 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
         _queueProvider = queueProvider;
 
         _messageReceiver = new MessageReceiver(queueProvider.Settings.HideMessagesAfter + 1, _cts.Token);
-        _progressNotificationService = new ProgressNotificationService();
+        _receivingProgressNotificationService = new ProgressNotificationService();
 
         //GenerateFakeData();
-        queueProvider.Connect(_messageReceiver, _progressNotificationService);
+        queueProvider.Connect(_messageReceiver, _receivingProgressNotificationService);
 
         _messageReceiver.MessageDispatched += MessageReceived;
-        _progressNotificationService.MessageDispatched += OnReceivingProgressNotification;
+        _receivingProgressNotificationService.MessageDispatched += OnReceivingProgressNotification;
+
+        _messageProvider = new MessageProvider(_cts.Token);
+        _publishingProgressNotificationService = new ProgressNotificationService();
+        _publishingProgressNotificationService.MessageDispatched += OnPublishingProgressNotification;
 
         OnClosing += (_, _) =>
         {
@@ -65,11 +78,6 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
         PublishCommand = new RelayCommand(Publish);
     }
 
-    private void OnReceivingProgressNotification(object? sender, Abstractions.Notifications.ProgressStatus.IProgressNotification e)
-    {
-        ProgressStatusViewModel.UpdateReceiving(e);
-    }
-
     private void MessageReceived(object? sender, IInboundMessage message)
     {
         var delay = _isFirstMessage ? FirstMessageDelayMilliseconds : RemainingMessagesDelayMilliseconds;
@@ -79,7 +87,7 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
             OnUiThread(() =>
             {
                 var entry = new QueueEntryViewModel(_sequence++, message);
-                ProgressStatusViewModel.IsMasterLoadingIndicatorOn = false;
+                IsMasterLoadingIndicatorOn = false;
                 AddMessage(entry);
             });
         }).Wait();
@@ -110,6 +118,7 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
             OnPropertyChanged();
         }
     }
+
     public string PublishKey
     {
         get => _publishKey;
@@ -119,6 +128,7 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
             OnPropertyChanged();
         }
     }
+
     public string PublishPayload
     {
         get => _publishPayload;
@@ -129,13 +139,79 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
         }
     }
 
+    public bool ClearKeyFieldOnPublish
+    {
+        get => _clearKeyFieldOnPublish;
+        set
+        {
+            if (value == _clearKeyFieldOnPublish) return;
+            _clearKeyFieldOnPublish = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool ClearPayloadFieldOnPublish
+    {
+        get => _clearPayloadFieldOnPublish;
+        set
+        {
+            if (value == _clearPayloadFieldOnPublish) return;
+            _clearPayloadFieldOnPublish = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool IsPublishPanelOpened
+    {
+        get => _isPublishPanelOpened;
+        set
+        {
+            _isPublishPanelOpened = value;
+            OnPropertyChanged();
+            PublishPanelStateChanged();
+        }
+    }
+
+    private void PublishPanelStateChanged()
+    {
+        if (_isPublishingConnected || !IsPublishPanelOpened)
+        {
+            return;
+        }
+
+        _publisher?.ConnectPublisher(_messageProvider, _publishingProgressNotificationService);
+    }
+
     [MemberNotNullWhen(true, nameof(_publisher))]
     public bool CanPublish => _publisher is not null;
 
-    public ProgressStatusViewModel ProgressStatusViewModel { get; } = new();
+    public bool IsMasterLoadingIndicatorOn
+    {
+        get => _isMasterLoadingIndicatorOn;
+        set
+        {
+            if (value == _isMasterLoadingIndicatorOn) return;
+            _isMasterLoadingIndicatorOn = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public ProgressStatusViewModel ReceivingStatusViewModel { get; } = new();
+
+    public ProgressStatusViewModel? PublishStatusViewModel
+    {
+        get => _publishStatusViewModel;
+        set
+        {
+            _publishStatusViewModel = value;
+            OnPropertyChanged();
+        }
+    }
+
     public ObservableCollection<QueueEntryViewModel> Entries { get; } = [];
 
     public ICommand DisconnectCommand { get; }
+
     public ICommand PublishCommand { get; }
 
     public bool? FormatJson
@@ -218,7 +294,26 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
             return;
         }
 
+        _messageProvider.Send(new OutboundMessageFrame
+        {
+            Key = PublishKey,
+            Content = PublishPayload
+        });
 
+        if (PublishStatusViewModel is not null)
+        {
+            PublishStatusViewModel.ReceivedMessages++;
+        }
+
+        if (ClearKeyFieldOnPublish)
+        {
+            PublishKey = string.Empty;
+        }
+
+        if (ClearPayloadFieldOnPublish)
+        {
+            PublishPayload = string.Empty;
+        }
     }
 
     public void Dispose()
@@ -229,7 +324,23 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
         }
 
         _messageReceiver.MessageDispatched -= MessageReceived;
-        _progressNotificationService.MessageDispatched -= OnReceivingProgressNotification;
+        _receivingProgressNotificationService.MessageDispatched -= OnReceivingProgressNotification;
         _queueProvider.DisposeAsync();
+    }
+
+    private void OnPublishingProgressNotification(object? sender, Abstractions.Notifications.ProgressStatus.IProgressNotification e)
+    {
+        PublishStatusViewModel ??= new();
+        PublishStatusViewModel.Update(e);
+    }
+
+    private void OnReceivingProgressNotification(object? sender, Abstractions.Notifications.ProgressStatus.IProgressNotification e)
+    {
+        ReceivingStatusViewModel.Update(e);
+
+        if (ReceivingStatusViewModel.Status is Status.Failed)
+        {
+            IsMasterLoadingIndicatorOn = false;
+        }
     }
 }

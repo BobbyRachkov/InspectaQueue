@@ -122,15 +122,53 @@
             EllipseDiameterScale="0.7"
             Grid.Row="1"
             IsLarge="True"
-            IsActive="{Binding ProgressStatusViewModel.IsMasterLoadingIndicatorOn}"
+            IsActive="{Binding IsMasterLoadingIndicatorOn}"
             VerticalAlignment="Center" 
             Foreground="White" 
             Width="100"/>
         <Expander 
-            IsExpanded="False"
-            Header="Publish"
+            IsExpanded="{Binding IsPublishPanelOpened}"
             Grid.Row="2"
             Visibility="{Binding CanPublish, Converter={StaticResource CollapsedBooleanToVisibilityConverter}}">
+            <Expander.Header>
+                <StackPanel Orientation="Horizontal">
+                    <Label
+                        Padding="0"
+                        Margin="0,0,21,0">PUBLISH</Label>
+                    <StackPanel
+                        Height="18"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Left" 
+                        VerticalAlignment="Center"
+                        Visibility="{Binding PublishStatusViewModel,Converter={StaticResource CollapsedBooleanToVisibilityConverter}}">
+                        <TextBlock Text="Publishing status: "/>
+
+                        <iconPacks:PackIconFontAwesome 
+                            Visibility="{Binding PublishStatusViewModel.IsOk,Converter={StaticResource BooleanToVisibilityConverter}}"
+                            VerticalAlignment="Center" 
+                            Kind="CircleCheckSolid" 
+                            Foreground="Green" 
+                            Width="17" />
+                        <iconPacks:PackIconFontAwesome 
+                            Visibility="{Binding PublishStatusViewModel.IsFailed,Converter={StaticResource BooleanToVisibilityConverter}}"
+                            VerticalAlignment="Center" 
+                            Kind="CircleXmarkSolid" 
+                            Foreground="Red" 
+                            Width="17"/>
+                        <mah:ProgressRing 
+                            Visibility="{Binding PublishStatusViewModel.IsInProgress,Converter={StaticResource BooleanToVisibilityConverter}}"
+                            VerticalAlignment="Center" 
+                            Foreground="SkyBlue" 
+                            Width="10"/>
+                        <TextBlock Text=" "/>
+                        <TextBlock Text="{Binding PublishStatusViewModel.StatusMessage}"/>
+                        <TextBlock Text="    Queued: "/>
+                        <TextBlock Text="{Binding PublishStatusViewModel.ReceivedMessages}"/>
+                        <TextBlock Text="    Sent: "/>
+                        <TextBlock Text="{Binding PublishStatusViewModel.DispatchedMessages}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Expander.Header>
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
@@ -147,6 +185,8 @@
                 <TextBox
                     Text="{Binding PublishKey}"
                     AcceptsTab="False"
+                    KeyDown="TextBox_OnKeyDown"
+                    KeyUp="TextBox_OnKeyUp"
                     MaxLines="1"
                     Margin="2"
                     Grid.Column="1"
@@ -155,18 +195,37 @@
                     Grid.Column="0"
                     Grid.Row="1">Payload:</Label>
                 <TextBox
+                    KeyDown="TextBox_OnKeyDown"
+                    KeyUp="TextBox_OnKeyUp"
+                    TextWrapping="Wrap"
+                    MinLines="2"
                     Text="{Binding PublishPayload}"
                     AcceptsReturn="True"
+                    AcceptsTab="True"
                     Margin="2"
                     Grid.Column="1"
-                    Grid.RowSpan="2"
                     Grid.Row="1" />
                 <Button
+                    Command="{Binding PublishCommand}"
+                    x:Name="SendButton"
+                    ToolTip="LShift + Enter to send"
                     Margin="2"
                     Grid.Column="0"
                     Grid.Row="2" >
                     Send
                 </Button>
+                <StackPanel
+                    Orientation="Horizontal"
+                    Grid.Column="1"
+                    Grid.Row="2">
+                    <CheckBox
+                        IsChecked="{Binding ClearKeyFieldOnPublish}"
+                        Margin="20,0"
+                        VerticalAlignment="Center">Clear key field on send</CheckBox>
+                    <CheckBox
+                        IsChecked="{Binding ClearPayloadFieldOnPublish}"
+                        VerticalAlignment="Center">Clear payload field on send</CheckBox>
+                </StackPanel>
             </Grid>
         </Expander>
         <StatusBar Grid.Row="3" VerticalContentAlignment="Center">
@@ -176,28 +235,28 @@
                     <TextBlock Text=" Receiving status: "/>
 
                     <iconPacks:PackIconFontAwesome 
-                        Visibility="{Binding ProgressStatusViewModel.IsReceivingOk,Converter={StaticResource BooleanToVisibilityConverter}}"
+                        Visibility="{Binding ReceivingStatusViewModel.IsOk,Converter={StaticResource BooleanToVisibilityConverter}}"
                         VerticalAlignment="Center" 
                         Kind="CircleCheckSolid" 
                         Foreground="Green" 
                         Width="17" />
                     <iconPacks:PackIconFontAwesome 
-                        Visibility="{Binding ProgressStatusViewModel.IsReceivingFailed,Converter={StaticResource BooleanToVisibilityConverter}}"
+                        Visibility="{Binding ReceivingStatusViewModel.IsFailed,Converter={StaticResource BooleanToVisibilityConverter}}"
                         VerticalAlignment="Center" 
                         Kind="CircleXmarkSolid" 
                         Foreground="Red" 
                         Width="17"/>
                     <mah:ProgressRing 
-                        Visibility="{Binding ProgressStatusViewModel.IsReceivingInProgress,Converter={StaticResource BooleanToVisibilityConverter}}"
+                        Visibility="{Binding ReceivingStatusViewModel.IsInProgress,Converter={StaticResource BooleanToVisibilityConverter}}"
                         VerticalAlignment="Center" 
                         Foreground="SkyBlue" 
                         Width="10"/>
                     <TextBlock Text=" "/>
-                    <TextBlock Text="{Binding ProgressStatusViewModel.StatusMessage}"/>
+                    <TextBlock Text="{Binding ReceivingStatusViewModel.StatusMessage}"/>
                     <TextBlock Text="    Received: "/>
-                    <TextBlock Text="{Binding ProgressStatusViewModel.ReceivedMessages}"/>
+                    <TextBlock Text="{Binding ReceivingStatusViewModel.ReceivedMessages}"/>
                     <TextBlock Text="    After filtering: "/>
-                    <TextBlock Text="{Binding ProgressStatusViewModel.DispatchedMessages}"/>
+                    <TextBlock Text="{Binding ReceivingStatusViewModel.DispatchedMessages}"/>
                     <TextBlock Text="    Displayed: "/>
                     <TextBlock Text="{Binding Entries.Count}"/>
                 </StackPanel>
