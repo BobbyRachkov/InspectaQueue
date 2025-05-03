@@ -1,4 +1,5 @@
 ﻿using Rachkov.InspectaQueue.Abstractions.Messaging.Interfaces;
+using Rachkov.InspectaQueue.Abstractions.Messaging.Models;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Services.ProviderManager.Models;
 
@@ -11,6 +12,8 @@ public class Provider
     {
         _providerInstance = provider;
     }
+
+    public QueueType QueueType => _providerInstance.Details.Type;
 
     public Type Type => _providerInstance.GetType();
 

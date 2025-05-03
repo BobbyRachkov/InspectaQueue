@@ -7,4 +7,5 @@ public class ProviderVersionViewModel(KeyValuePair<string, IQueueProvider> versi
     public IQueueProvider Instance { get; } = version.Value;
 
     public string Name => version.Key;
+    public bool CanPublish => version.Value is ICanPublish;
 }

@@ -5,7 +5,7 @@ public enum QueueType
     Unknown,
     Other,
     Pulsar,
-    RabbitMQ,
     Kafka,
+    RabbitMQ,
     Ably
 }

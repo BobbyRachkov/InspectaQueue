@@ -10,6 +10,7 @@
              xmlns:models="clr-namespace:Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.Settings.Models"
              d:DataContext="{d:DesignInstance Type=settings:SettingsViewModel}"
              mc:Ignorable="d" 
+             MinWidth="800"
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <ResourceDictionary>
@@ -151,29 +152,138 @@
                 Panel.ZIndex="100"
                 Visibility="{Binding IsAddNewSourceWorkflowEnabled,Converter={StaticResource BooleanToVisibilityConverter}}"
                 Name="CreateNewSource">
-                    <StackPanel
-                    VerticalAlignment="Center"
-                    HorizontalAlignment="Center"
-                    Orientation="Vertical">
-                        <StackPanel Orientation="Horizontal">
-                            <ComboBox
-                                Width="200"
-                                DisplayMemberPath="Name"
-                                Margin="0 0 10 0"
-                                SelectedItem="{Binding SelectedProvider}"
-                                ItemsSource="{Binding AvailableProviders}"/>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" MinWidth="200" MaxWidth="300"/>
+                        <ColumnDefinition Width="1.5*"/>
+                        <ColumnDefinition Width="200"/>
+                    </Grid.ColumnDefinitions>
+                    <ListView
+                        Grid.Column="0"
+                        Margin="0"
+                        SelectedItem="{Binding SelectedQueueType}"
+                        ItemsSource="{Binding AvailableQueueTypes}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel
+                                    Orientation="Horizontal">
+                                    <Border
+                                        Width="50"
+                                        Height="50"
+                                        Margin="3"
+                                        Padding="3">
+                                        <Image
+                                            Stretch="Uniform"
+                                            RenderOptions.BitmapScalingMode="Fant"
+                                            Source="{Binding IconSource}"/>
+                                    </Border>
+                                    <Label 
+                                        FontSize="15"
+                                        VerticalAlignment="Center"
+                                        Content="{Binding Name}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListView>
+                    <ListView
+                        ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                        Grid.Column="1"
+                        SelectedItem="{Binding SelectedProvider}"
+                        ItemsSource="{Binding AvailableProviders}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel
+                                    Margin="0 2 0 5"
+                                    Orientation="Vertical">
+                                    <Label 
+                                        FontSize="15"
+                                        VerticalAlignment="Center"
+                                        Content="{Binding Name}"/>
+                                    <TextBlock
+                                        Margin="5 1 0 0"
+                                        TextWrapping="Wrap"
+                                        Text="{Binding Description}"/>
+                                    <DockPanel Margin="0 6 0 0">
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            DockPanel.Dock="Left"
+                                            Margin="5 0 0 0"
+                                            TextWrapping="Wrap"
+                                            FontStyle="Italic"
+                                            Text="By"/>
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            DockPanel.Dock="Left"
+                                            Margin="3 0 0 0"
+                                            TextWrapping="Wrap"
+                                            FontStyle="Italic"
+                                            Text="{Binding Vendor}"/>
+                                        <StackPanel
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Center"
+                                            Visibility="{Binding CanPublish,Converter={StaticResource BooleanToVisibilityConverter}}"
+                                            Orientation="Horizontal"
+                                            DockPanel.Dock="Right">
+                                            <iconPacks:PackIconFontAwesome 
+                                                VerticalAlignment="Center" 
+                                                Kind="CircleCheckSolid" 
+                                                Foreground="Green" 
+                                                Width="13" />
+                                            <Label>Publisher</Label>
+                                        </StackPanel>
+                                    </DockPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListView>
+                    <Grid
+                        Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="300"/>
+                        </Grid.RowDefinitions>
 
-                            <ComboBox
-                                Width="100"
-                                DisplayMemberPath="Name"
-                                SelectedItem="{Binding SelectedVersion}"
-                                ItemsSource="{Binding AvailableVersions}"/>
-                        </StackPanel>
+                        <ListView
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             Grid.Row="0"
+                             Width="150"
+                             VerticalAlignment="Bottom"
+                             SelectedItem="{Binding SelectedVersion}"
+                             ItemsSource="{Binding AvailableVersions}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid
+                                         Margin="0 2 0 5">
+                                        <Label 
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center"
+                                            FontSize="15"
+                                            Content="{Binding Name}"/>
+                                        <StackPanel
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Center"
+                                            Visibility="{Binding CanPublish,Converter={StaticResource BooleanToVisibilityConverter}}"
+                                            Orientation="Horizontal">
+                                            <iconPacks:PackIconFontAwesome 
+                                                VerticalAlignment="Center" 
+                                                Kind="CircleCheckSolid" 
+                                                Foreground="Green" 
+                                                Width="13" />
+                                            <Label>Publisher</Label>
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListView>
                         <Button
-                        Command="{Binding CreateNewSourceCommand}"
-                        Margin="0 10"
-                        Content="Create"/>
-                    </StackPanel>
+                            Grid.Row="1"
+                            Command="{Binding CreateNewSourceCommand}"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Top"
+                            Width="150"
+                            Height="50"
+                            Margin="0 10"
+                            Content="Create"/>
+                    </Grid>
                 </Grid>
                 <ContentControl
                 Content="{Binding SelectedSource}"/>
