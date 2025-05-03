@@ -300,8 +300,6 @@ public class PulsarProvider : IQueueProvider, ICanPublish
 
     #endregion
 
-
-
     public async ValueTask DisposeAsync()
     {
         Debug.WriteLine($"==========> Disposing: {InstanceId}");

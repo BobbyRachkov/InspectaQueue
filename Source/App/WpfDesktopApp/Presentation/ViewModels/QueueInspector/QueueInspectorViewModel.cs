@@ -24,22 +24,26 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
     private readonly IQueueProvider _queueProvider;
     private readonly ICanPublish? _publisher;
     private readonly CancellationTokenSource _cts = new();
+
     private bool _topmost;
-    private string _publishKey;
-    private string _publishPayload;
-    private bool _isPublishingConnected;
     private bool? _formatJson;
+
     private readonly MessageReceiver _messageReceiver;
     private readonly MessageProvider _messageProvider;
     private readonly ProgressNotificationService _receivingProgressNotificationService;
     private readonly ProgressNotificationService _publishingProgressNotificationService;
+
     private bool _isFirstMessage = true;
     private bool _isMasterLoadingIndicatorOn = true;
-    private ProgressStatusViewModel? _publishStatusViewModel;
-    private bool _isPublishPanelOpened;
     private long _sequence;
+
+    private string _publishKey = string.Empty;
+    private string _publishPayload = string.Empty;
     private bool _clearKeyFieldOnPublish = true;
     private bool _clearPayloadFieldOnPublish = true;
+    private bool _isPublishingConnected;
+    private bool _isPublishPanelOpened;
+    private ProgressStatusViewModel? _publishStatusViewModel;
 
     public QueueInspectorViewModel(
         string? nameSuffix,
@@ -50,19 +54,21 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
     {
         Name = string.IsNullOrWhiteSpace(nameSuffix) ? "Queue Inspector" : $"Queue Inspector | {nameSuffix}";
         _queueProvider = queueProvider;
+        //GenerateFakeData();
 
         _messageReceiver = new MessageReceiver(queueProvider.Settings.HideMessagesAfter + 1, _cts.Token);
-        _receivingProgressNotificationService = new ProgressNotificationService();
+        _messageProvider = new MessageProvider(_cts.Token);
 
-        //GenerateFakeData();
-        queueProvider.Connect(_messageReceiver, _receivingProgressNotificationService);
+        _receivingProgressNotificationService = new ProgressNotificationService();
+        _publishingProgressNotificationService = new ProgressNotificationService();
+
+        _receivingProgressNotificationService.MessageDispatched += OnReceivingProgressNotification;
+        _publishingProgressNotificationService.MessageDispatched += OnPublishingProgressNotification;
 
         _messageReceiver.MessageDispatched += MessageReceived;
-        _receivingProgressNotificationService.MessageDispatched += OnReceivingProgressNotification;
+        queueProvider.Connect(_messageReceiver, _receivingProgressNotificationService);
 
-        _messageProvider = new MessageProvider(_cts.Token);
-        _publishingProgressNotificationService = new ProgressNotificationService();
-        _publishingProgressNotificationService.MessageDispatched += OnPublishingProgressNotification;
+        _publisher = queueProvider as ICanPublish;
 
         OnClosing += (_, _) =>
         {
@@ -72,10 +78,25 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
 
         EnsureValidMessageOverflowThreshold();
 
-        _publisher = queueProvider as ICanPublish;
-
         DisconnectCommand = new RelayCommand(() => windowManager.Close(this));
         PublishCommand = new RelayCommand(Publish);
+    }
+
+    #region Receiving
+
+    public ProgressStatusViewModel ReceivingStatusViewModel { get; } = new();
+
+    public ObservableCollection<QueueEntryViewModel> Entries { get; } = [];
+
+    public bool IsMasterLoadingIndicatorOn
+    {
+        get => _isMasterLoadingIndicatorOn;
+        set
+        {
+            if (value == _isMasterLoadingIndicatorOn) return;
+            _isMasterLoadingIndicatorOn = value;
+            OnPropertyChanged();
+        }
     }
 
     private void MessageReceived(object? sender, IInboundMessage message)
@@ -105,19 +126,61 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
         }
     }
 
-    public event EventHandler<FeatureStatusUpdatedEventArgs> FeatureStatusUpdated;
-
-    public override string Name { get; }
-
-    public bool Topmost
+    private void AddMessage(QueueEntryViewModel entry, int index = 0)
     {
-        get => _topmost;
-        set
+        entry.FormatJson(FormatJson.ToJsonFormatting());
+        lock (Entries)
         {
-            _topmost = value;
-            OnPropertyChanged();
+            OnUiThread(() =>
+            {
+                Entries.Insert(index, entry);
+            });
+            FeatureStatusUpdated += entry.OnFeatureStatusUpdated;
+        }
+
+        RemoveOverflowingMessages();
+    }
+
+    private void RemoveOverflowingMessages()
+    {
+        lock (Entries)
+        {
+            while (Entries.Count > _queueProvider.Settings.HideMessagesAfter)
+            {
+                RemoveMessage(Entries[^1]);
+            }
         }
     }
+
+    private void RemoveMessage(QueueEntryViewModel entry)
+    {
+        lock (Entries)
+        {
+            OnUiThread(() =>
+            {
+                Entries.Remove(entry);
+            });
+            FeatureStatusUpdated -= entry.OnFeatureStatusUpdated;
+        }
+
+    }
+
+    private void OnReceivingProgressNotification(object? sender, Abstractions.Notifications.ProgressStatus.IProgressNotification e)
+    {
+        ReceivingStatusViewModel.Update(e);
+
+        if (ReceivingStatusViewModel.Status is Status.Failed)
+        {
+            IsMasterLoadingIndicatorOn = false;
+        }
+    }
+
+    #endregion
+
+    #region Publishing
+
+    [MemberNotNullWhen(true, nameof(_publisher))]
+    public bool CanPublish => _publisher is not null;
 
     public string PublishKey
     {
@@ -172,32 +235,6 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
         }
     }
 
-    private void PublishPanelStateChanged()
-    {
-        if (_isPublishingConnected || !IsPublishPanelOpened)
-        {
-            return;
-        }
-
-        _publisher?.ConnectPublisher(_messageProvider, _publishingProgressNotificationService);
-    }
-
-    [MemberNotNullWhen(true, nameof(_publisher))]
-    public bool CanPublish => _publisher is not null;
-
-    public bool IsMasterLoadingIndicatorOn
-    {
-        get => _isMasterLoadingIndicatorOn;
-        set
-        {
-            if (value == _isMasterLoadingIndicatorOn) return;
-            _isMasterLoadingIndicatorOn = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public ProgressStatusViewModel ReceivingStatusViewModel { get; } = new();
-
     public ProgressStatusViewModel? PublishStatusViewModel
     {
         get => _publishStatusViewModel;
@@ -208,83 +245,17 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
         }
     }
 
-    public ObservableCollection<QueueEntryViewModel> Entries { get; } = [];
-
-    public ICommand DisconnectCommand { get; }
-
     public ICommand PublishCommand { get; }
 
-    public bool? FormatJson
+    private void PublishPanelStateChanged()
     {
-        get => _formatJson;
-        set
+        if (_isPublishingConnected || !IsPublishPanelOpened)
         {
-            _formatJson = value;
-            OnPropertyChanged();
-            FeatureStatusUpdated.Invoke(this, new FormatJsonEventArgs
-            {
-                Feature = Feature.FormatJson,
-                State = true,
-                Formatting = value.ToJsonFormatting()
-            });
-        }
-    }
-
-    private void GenerateFakeData()
-    {
-        Task.Run(async () =>
-        {
-            for (int i = 0; i < 500; i++)
-            {
-                AddMessage(new(i, new InboundMessageFrame
-                {
-                    Content =
-                        $"{{\r\n          \"PropertyName\": \"IssuerUrl\",\r\n          \"Type\": \"System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e\",\r\n          \"Value\": \"sdfsdf\"\r\n        }}",
-                    Id = i.ToString()
-
-                }));
-                await Task.Delay(500);
-            }
-        });
-    }
-
-    private void AddMessage(QueueEntryViewModel entry, int index = 0)
-    {
-        entry.FormatJson(FormatJson.ToJsonFormatting());
-        lock (Entries)
-        {
-            OnUiThread(() =>
-            {
-                Entries.Insert(index, entry);
-            });
-            FeatureStatusUpdated += entry.OnFeatureStatusUpdated;
+            return;
         }
 
-        RemoveOverflowingMessages();
-    }
-
-    private void RemoveOverflowingMessages()
-    {
-        lock (Entries)
-        {
-            while (Entries.Count > _queueProvider.Settings.HideMessagesAfter)
-            {
-                RemoveMessage(Entries[^1]);
-            }
-        }
-    }
-
-    private void RemoveMessage(QueueEntryViewModel entry)
-    {
-        lock (Entries)
-        {
-            OnUiThread(() =>
-            {
-                Entries.Remove(entry);
-            });
-            FeatureStatusUpdated -= entry.OnFeatureStatusUpdated;
-        }
-
+        _publisher?.ConnectPublisher(_messageProvider, _publishingProgressNotificationService);
+        _isPublishingConnected = true;
     }
 
     private void Publish()
@@ -316,6 +287,66 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
         }
     }
 
+    private void OnPublishingProgressNotification(object? sender, Abstractions.Notifications.ProgressStatus.IProgressNotification e)
+    {
+        PublishStatusViewModel ??= new();
+        PublishStatusViewModel.Update(e);
+    }
+
+    #endregion
+
+    #region Common
+
+    public event EventHandler<FeatureStatusUpdatedEventArgs>? FeatureStatusUpdated;
+
+    public override string Name { get; }
+
+    public bool Topmost
+    {
+        get => _topmost;
+        set
+        {
+            _topmost = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public ICommand DisconnectCommand { get; }
+
+    public bool? FormatJson
+    {
+        get => _formatJson;
+        set
+        {
+            _formatJson = value;
+            OnPropertyChanged();
+            FeatureStatusUpdated?.Invoke(this, new FormatJsonEventArgs
+            {
+                Feature = Feature.FormatJson,
+                State = true,
+                Formatting = value.ToJsonFormatting()
+            });
+        }
+    }
+
+    private void GenerateFakeData()
+    {
+        Task.Run(async () =>
+        {
+            for (int i = 0; i < 500; i++)
+            {
+                AddMessage(new(i, new InboundMessageFrame
+                {
+                    Content =
+                        $"{{\r\n          \"PropertyName\": \"IssuerUrl\",\r\n          \"Type\": \"System.String, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e\",\r\n          \"Value\": \"sdfsdf\"\r\n        }}",
+                    Id = i.ToString()
+
+                }));
+                await Task.Delay(500);
+            }
+        });
+    }
+
     public void Dispose()
     {
         while (Entries.Count != 0)
@@ -325,22 +356,9 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
 
         _messageReceiver.MessageDispatched -= MessageReceived;
         _receivingProgressNotificationService.MessageDispatched -= OnReceivingProgressNotification;
+        _publishingProgressNotificationService.MessageDispatched -= OnPublishingProgressNotification;
         _queueProvider.DisposeAsync();
     }
 
-    private void OnPublishingProgressNotification(object? sender, Abstractions.Notifications.ProgressStatus.IProgressNotification e)
-    {
-        PublishStatusViewModel ??= new();
-        PublishStatusViewModel.Update(e);
-    }
-
-    private void OnReceivingProgressNotification(object? sender, Abstractions.Notifications.ProgressStatus.IProgressNotification e)
-    {
-        ReceivingStatusViewModel.Update(e);
-
-        if (ReceivingStatusViewModel.Status is Status.Failed)
-        {
-            IsMasterLoadingIndicatorOn = false;
-        }
-    }
+    #endregion
 }
