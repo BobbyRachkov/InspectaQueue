@@ -5,12 +5,12 @@ public interface IProgressNotification
     /// <summary>
     /// Count of the messages that this service has received from external source (queue or user)
     /// </summary>
-    public long Received { get; }
+    public long? Received { get; }
 
     /// <summary>
     /// Count of messages are passed down after filtering/processing
     /// </summary>
-    public long Processed { get; }
+    public long? Processed { get; }
 
     /// <summary>
     /// Connection status text that will be displayed in the UI

@@ -1,6 +1,7 @@
 ﻿using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views
 {
@@ -20,6 +21,27 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views
             if (DataContext is QueueInspectorViewModel queueInspectorViewModel)
             {
 
+            }
+        }
+
+        private void TextBox_OnKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key is Key.LeftShift && sender is TextBox tb)
+            {
+                tb.AcceptsReturn = false;
+            }
+
+            if (e.Key is Key.Enter && Keyboard.IsKeyDown(Key.LeftShift))
+            {
+                SendButton.Command.Execute(null);
+            }
+        }
+
+        private void TextBox_OnKeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key is Key.LeftShift && sender is TextBox tb)
+            {
+                tb.AcceptsReturn = true;
             }
         }
     }

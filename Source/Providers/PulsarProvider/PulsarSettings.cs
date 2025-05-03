@@ -21,6 +21,9 @@ public class PulsarSettings : IQueueProviderSettings
     [Exposed(DisplayName = "Subscription name")]
     public string SubscriptionName { get; set; } = string.Empty;
 
+    [Exposed(DisplayName = "Producer name (optional)")]
+    public string ProducerName { get; set; } = string.Empty;
+
     [Exposed(DisplayName = "Subscription type")]
     public SubscriptionType SubscriptionType { get; set; } = SubscriptionType.Exclusive;
 

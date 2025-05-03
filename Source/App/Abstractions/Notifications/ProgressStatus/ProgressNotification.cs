@@ -2,8 +2,8 @@
 
 public record ProgressNotification : IProgressNotification
 {
-    public long Received { get; init; }
-    public long Processed { get; init; }
+    public long? Received { get; init; }
+    public long? Processed { get; init; }
     public string? ConnectionStatusMessage { get; init; }
     public Status Status { get; init; }
 
@@ -20,6 +20,11 @@ public record ProgressNotification : IProgressNotification
     public ProgressNotification(long received, long processed, string connectionStatusMessage, Status status) : this(connectionStatusMessage, status)
     {
         Received = received;
+        Processed = processed;
+    }
+
+    public ProgressNotification(long processed, string connectionStatusMessage, Status status) : this(connectionStatusMessage, status)
+    {
         Processed = processed;
     }
 }
