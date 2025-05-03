@@ -39,7 +39,7 @@ public record QueueTypeViewModel
             QueueType.Kafka => "../../Resources/icon-apache-kafka.png",
             QueueType.RabbitMQ => "../../Resources/icon-rabbitmq.png",
             QueueType.Ably => "../../Resources/icon-ably.png",
-            _ => "../../Resources/icon-apache-kafka.png"
+            _ => "../../Resources/icon-unknown-mq.png"
         };
     }
 }
