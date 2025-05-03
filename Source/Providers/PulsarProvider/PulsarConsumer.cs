@@ -10,12 +10,12 @@ using System.Text;
 
 namespace Rachkov.InspectaQueue.Providers.Pulsar;
 
-public class PulsarProvider : IQueueProvider, ICanPublish
+public class PulsarConsumer : IQueueProvider, ICanPublish
 {
     private readonly IErrorReporter _errorReporter;
     private Task? _readerTask;
     private CancellationTokenSource? _cancellationTokenSource;
-    private readonly PulsarSettings _settings;
+    private readonly PulsarConsumerSettings _settings;
     private PulsarClient? _client;
     private IConsumer<byte[]>? _consumer;
     private IProducer<byte[]>? _publisher;
@@ -24,14 +24,14 @@ public class PulsarProvider : IQueueProvider, ICanPublish
     private IProgressNotificationService? _publisherProgressNotificationService;
     private long _lastPublishedMessage;
 
-    public PulsarProvider(IErrorReporter errorReporter)
+    public PulsarConsumer(IErrorReporter errorReporter)
     {
         _errorReporter = errorReporter;
         Debug.WriteLine($"==========> Constructing: {InstanceId}");
-        _settings = new PulsarSettings();
+        _settings = new PulsarConsumerSettings();
     }
 
-    ~PulsarProvider()
+    ~PulsarConsumer()
     {
         Debug.WriteLine($"==========> Destructing: {InstanceId}");
     }
@@ -40,8 +40,8 @@ public class PulsarProvider : IQueueProvider, ICanPublish
 
     public IProviderDetails Details { get; } = new ProviderDetails
     {
-        Name = "Pulsar Consumer/Publisher",
-        Description = "Consumer with subscription name and cursor.",
+        Name = "Pulsar Consumer",
+        Description = "Consumer with subscription name, cursor and publishing capabilities.",
         Type = QueueType.Pulsar,
         PackageVendorName = "InspectaQueue"
     };
