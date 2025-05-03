@@ -134,7 +134,7 @@
                 <StackPanel Orientation="Horizontal">
                     <Label
                         Padding="0"
-                        Margin="0,0,21,0">PUBLISH</Label>
+                        Margin="0,0,20,0">PUBLISH</Label>
                     <StackPanel
                         Height="18"
                         Orientation="Horizontal"
