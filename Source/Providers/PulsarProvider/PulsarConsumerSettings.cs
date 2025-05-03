@@ -4,7 +4,7 @@ using Rachkov.InspectaQueue.Providers.Pulsar.Models;
 
 namespace Rachkov.InspectaQueue.Providers.Pulsar;
 
-public class PulsarSettings : IQueueProviderSettings
+public class PulsarConsumerSettings : IQueueProviderSettings
 {
     [Exposed(DisplayName = "Issuer URL")]
     public string IssuerUrl { get; set; } = string.Empty;
