@@ -10,7 +10,7 @@ using System.Text;
 
 namespace Rachkov.InspectaQueue.Providers.Pulsar;
 
-public class PulsarProvider : IQueueProvider
+public class PulsarProvider : IQueueProvider, ICanPublish
 {
     private readonly IErrorReporter _errorReporter;
     private Task? _readerTask;
@@ -18,6 +18,11 @@ public class PulsarProvider : IQueueProvider
     private readonly PulsarSettings _settings;
     private PulsarClient? _client;
     private IConsumer<byte[]>? _consumer;
+    private IProducer<byte[]>? _publisher;
+
+    private IMessageProvider? _messagesForPublishingProvider;
+    private IProgressNotificationService? _publisherProgressNotificationService;
+    private long _lastPublishedMessage;
 
     public PulsarProvider(IErrorReporter errorReporter)
     {
@@ -35,13 +40,15 @@ public class PulsarProvider : IQueueProvider
 
     public IProviderDetails Details { get; } = new ProviderDetails
     {
-        Name = "Pulsar Consumer",
-        Description = "Consumer with subscription name and cursor",
+        Name = "Pulsar Consumer/Publisher",
+        Description = "Consumer with subscription name and cursor.",
         Type = QueueType.Pulsar,
         PackageVendorName = "InspectaQueue"
     };
 
     public IQueueProviderSettings Settings => _settings;
+
+    #region Consumer
 
     public Task Connect(IMessageReceiver messageReceiver, IProgressNotificationService progressNotificationService)
     {
@@ -79,7 +86,7 @@ public class PulsarProvider : IQueueProvider
     {
         try
         {
-            await progressNotificationService.SendProgressUpdateNotification(new ProgressNotification("Connecting...", Status.InProgress));
+            await progressNotificationService.SendProgressUpdateNotification(new ProgressNotification(Constants.StatusMessage.Connecting, Status.InProgress));
 
             _client = await new PulsarClientBuilder()
                 .ServiceUrl(_settings.ServiceUrl)
@@ -110,18 +117,17 @@ public class PulsarProvider : IQueueProvider
                 });
             }
 
-            await progressNotificationService.SendProgressUpdateNotification(new ProgressNotification("Failed", Status.Failed));
+            await progressNotificationService.SendProgressUpdateNotification(new ProgressNotification(Constants.StatusMessage.Failed, Status.Failed));
 
             await DisposeConsumerAndClient();
 
             return;
         }
 
-        await progressNotificationService.SendProgressUpdateNotification(new ProgressNotification("Connected", Status.Ok));
+        await progressNotificationService.SendProgressUpdateNotification(new ProgressNotification(Constants.StatusMessage.Connected, Status.Ok));
 
         var filterByKeyEnabled = !string.IsNullOrEmpty(_settings.FilterByKey);
         long messagesReceived = 0, messagesProcessed = 0;
-        string receivingMessage = "Receiving";
 
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -135,7 +141,7 @@ public class PulsarProvider : IQueueProvider
                     await progressNotificationService.SendProgressUpdateNotification(new ProgressNotification(
                         messagesReceived,
                         messagesProcessed,
-                        receivingMessage,
+                        Constants.StatusMessage.Connected,
                         Status.Ok));
 
                     if (_settings.AcknowledgeOnReceive)
@@ -168,7 +174,7 @@ public class PulsarProvider : IQueueProvider
                 await progressNotificationService.SendProgressUpdateNotification(new ProgressNotification(
                     messagesReceived,
                     messagesProcessed,
-                    receivingMessage,
+                    Constants.StatusMessage.Connected,
                     Status.Ok));
             }
             catch (Exception e)
@@ -185,7 +191,7 @@ public class PulsarProvider : IQueueProvider
                     await progressNotificationService.SendProgressUpdateNotification(new ProgressNotification(
                         messagesReceived,
                         messagesProcessed,
-                        "Failed",
+                        Constants.StatusMessage.Failed,
                         Status.Failed));
                 }
             }
@@ -194,7 +200,7 @@ public class PulsarProvider : IQueueProvider
         await progressNotificationService.SendProgressUpdateNotification(new ProgressNotification(
             messagesReceived,
             messagesProcessed,
-            "Disconnecting",
+            Constants.StatusMessage.Disconnecting,
             Status.InProgress));
 
         await DisposeConsumerAndClient();
@@ -202,13 +208,102 @@ public class PulsarProvider : IQueueProvider
         await progressNotificationService.SendProgressUpdateNotification(new ProgressNotification(
             messagesReceived,
             messagesProcessed,
-            "Disconnected",
+            Constants.StatusMessage.Disconnected,
             Status.Ok));
     }
+
+    #endregion
+
+    #region Publisher
+
+    public async Task ConnectPublisher(IMessageProvider messageProvider, IProgressNotificationService progressNotificationService)
+    {
+        _publisherProgressNotificationService = progressNotificationService;
+        _messagesForPublishingProvider = messageProvider;
+
+        if (_client is null)
+        {
+            await _publisherProgressNotificationService.SendProgressUpdateNotification(new ProgressNotification(Constants.StatusMessage.Failed, Status.Failed));
+            return;
+        }
+
+        await _publisherProgressNotificationService.SendProgressUpdateNotification(new ProgressNotification(Constants.StatusMessage.Connecting, Status.InProgress));
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(_settings.ProducerName))
+            {
+                _publisher = await _client.NewProducer()
+                    .Topic(_settings.TopicName)
+                    .CreateAsync();
+            }
+            else
+            {
+                _publisher = await _client.NewProducer()
+                    .Topic(_settings.TopicName)
+                    .ProducerName(_settings.ProducerName)
+                    .CreateAsync();
+            }
+        }
+        catch (Exception e)
+        {
+            if (e is not OperationCanceledException)
+            {
+                _errorReporter.RaiseError(new()
+                {
+                    Text = "Error while initializing Pulsar publisher",
+                    Source = this,
+                    Exception = e
+                });
+            }
+
+            await _publisherProgressNotificationService.SendProgressUpdateNotification(new ProgressNotification(Constants.StatusMessage.Failed, Status.Failed));
+
+            await DisconnectPublisher();
+
+            return;
+        }
+
+        messageProvider.MessageDispatched += PublishMessage;
+
+        await _publisherProgressNotificationService.SendProgressUpdateNotification(new ProgressNotification(Constants.StatusMessage.Connected, Status.Ok));
+    }
+
+    private void PublishMessage(object? sender, IMessage e)
+    {
+        if (_publisher is null || _publisherProgressNotificationService is null)
+        {
+            return;
+        }
+
+        var data = Encoding.UTF8.GetBytes(e.Content);
+        var message = _publisher.NewMessage(data, e.Key);
+
+        _publisher.SendAsync(message).Wait();
+
+        _lastPublishedMessage++;
+        _publisherProgressNotificationService.SendProgressUpdateNotification(
+            new ProgressNotification(_lastPublishedMessage, Constants.StatusMessage.Connected, Status.Ok))
+            .Wait();
+    }
+
+    public async Task DisconnectPublisher()
+    {
+        if (_messagesForPublishingProvider is null)
+        {
+            return;
+        }
+
+        _messagesForPublishingProvider.MessageDispatched -= PublishMessage;
+        await DisposePublisher();
+    }
+
+    #endregion
 
     public async ValueTask DisposeAsync()
     {
         Debug.WriteLine($"==========> Disposing: {InstanceId}");
+        await DisposePublisher();
         await DisconnectSubscriber();
     }
 
@@ -227,6 +322,14 @@ public class PulsarProvider : IQueueProvider
         if (_client is not null)
         {
             await _client.CloseAsync();
+        }
+    }
+
+    private async Task DisposePublisher()
+    {
+        if (_publisher is not null)
+        {
+            await _publisher.DisposeAsync();
         }
     }
 }
