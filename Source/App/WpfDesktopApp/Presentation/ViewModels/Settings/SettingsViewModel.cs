@@ -218,7 +218,7 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
 
     private void ConnectToQueue()
     {
-        if (SelectedSource is null || SelectedQueueType is null || SelectedVersion is null)
+        if (SelectedSource is null)
         {
             return;
         }
@@ -234,7 +234,8 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
 
     private void CreateSource()
     {
-        if (SelectedProvider is null
+        if (SelectedQueueType is null
+            || SelectedProvider is null
             || SelectedVersion is null)
         {
             return;
