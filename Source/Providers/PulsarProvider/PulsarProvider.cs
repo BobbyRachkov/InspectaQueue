@@ -218,23 +218,32 @@ public class PulsarProvider : IQueueProvider, ICanPublish
 
     public async Task ConnectPublisher(IMessageProvider messageProvider, IProgressNotificationService progressNotificationService)
     {
-        if (_client is null)
-        {
-            await progressNotificationService.SendProgressUpdateNotification(new ProgressNotification(Constants.StatusMessage.Failed, Status.Failed));
-            return;
-        }
-
         _publisherProgressNotificationService = progressNotificationService;
         _messagesForPublishingProvider = messageProvider;
 
-        await progressNotificationService.SendProgressUpdateNotification(new ProgressNotification(Constants.StatusMessage.Connecting, Status.InProgress));
+        if (_client is null)
+        {
+            await _publisherProgressNotificationService.SendProgressUpdateNotification(new ProgressNotification(Constants.StatusMessage.Failed, Status.Failed));
+            return;
+        }
+
+        await _publisherProgressNotificationService.SendProgressUpdateNotification(new ProgressNotification(Constants.StatusMessage.Connecting, Status.InProgress));
 
         try
         {
-            _publisher = await _client.NewProducer()
-                .Topic(_settings.TopicName)
-                .ProducerName(_settings.ProducerName)
-                .CreateAsync();
+            if (string.IsNullOrWhiteSpace(_settings.ProducerName))
+            {
+                _publisher = await _client.NewProducer()
+                    .Topic(_settings.TopicName)
+                    .CreateAsync();
+            }
+            else
+            {
+                _publisher = await _client.NewProducer()
+                    .Topic(_settings.TopicName)
+                    .ProducerName(_settings.ProducerName)
+                    .CreateAsync();
+            }
         }
         catch (Exception e)
         {
@@ -248,16 +257,16 @@ public class PulsarProvider : IQueueProvider, ICanPublish
                 });
             }
 
-            await progressNotificationService.SendProgressUpdateNotification(new ProgressNotification(Constants.StatusMessage.Failed, Status.Failed));
+            await _publisherProgressNotificationService.SendProgressUpdateNotification(new ProgressNotification(Constants.StatusMessage.Failed, Status.Failed));
 
-            await DisposeConsumerAndClient();
+            await DisconnectPublisher();
 
             return;
         }
 
         messageProvider.MessageDispatched += PublishMessage;
 
-        await progressNotificationService.SendProgressUpdateNotification(new ProgressNotification(Constants.StatusMessage.Connected, Status.Ok));
+        await _publisherProgressNotificationService.SendProgressUpdateNotification(new ProgressNotification(Constants.StatusMessage.Connected, Status.Ok));
     }
 
     private void PublishMessage(object? sender, IMessage e)
