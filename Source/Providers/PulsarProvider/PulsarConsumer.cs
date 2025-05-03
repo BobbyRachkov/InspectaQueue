@@ -40,8 +40,8 @@ public class PulsarConsumer : IQueueProvider, ICanPublish
 
     public IProviderDetails Details { get; } = new ProviderDetails
     {
-        Name = "Pulsar Consumer/Publisher",
-        Description = "Consumer with subscription name and cursor.",
+        Name = "Pulsar Consumer",
+        Description = "Consumer with subscription name, cursor and publishing capabilities.",
         Type = QueueType.Pulsar,
         PackageVendorName = "InspectaQueue"
     };
