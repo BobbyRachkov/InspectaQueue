@@ -15,9 +15,9 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <converters:BooleanToVisibilityConverter x:Key="CollapsedBooleanToVisibilityConverter" FalseValue="Collapsed"/>
-            </ResourceDictionary>
-        </UserControl.Resources>
-            <Grid>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -40,7 +40,7 @@
                     <Button Command="{Binding DisconnectCommand}">Disconnect</Button>
                 </StackPanel>
             </Grid>
-        </Expander><!--Visibility="{Binding ProgressStatusViewModel.IsReceivingInProgress,Converter={StaticResource BooleanToVisibilityConverter}}"-->
+        </Expander>
         <DataGrid x:Name="MetroDataGrid"
                   ScrollViewer.CanContentScroll="False"
                   Grid.Row="1"
@@ -199,14 +199,14 @@
                     KeyUp="TextBox_OnKeyUp"
                     TextWrapping="Wrap"
                     MinLines="2"
-                    Text="{Binding PublishPayload}"
+                    Text="{Binding PublishPayload,UpdateSourceTrigger=PropertyChanged}"
                     AcceptsReturn="True"
                     AcceptsTab="True"
                     Margin="2"
                     Grid.Column="1"
                     Grid.Row="1" />
                 <Button
-                    Command="{Binding PublishCommand}"
+                    Command="{Binding PublishCommand,UpdateSourceTrigger=PropertyChanged}"
                     x:Name="SendButton"
                     ToolTip="LShift + Enter to send"
                     Margin="2"
