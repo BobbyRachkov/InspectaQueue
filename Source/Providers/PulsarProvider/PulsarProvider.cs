@@ -283,7 +283,7 @@ public class PulsarProvider : IQueueProvider, ICanPublish
 
         _lastPublishedMessage++;
         _publisherProgressNotificationService.SendProgressUpdateNotification(
-            new ProgressNotification(_lastPublishedMessage, Constants.StatusMessage.Publishing, Status.Ok))
+            new ProgressNotification(_lastPublishedMessage, Constants.StatusMessage.Connected, Status.Ok))
             .Wait();
     }
 
