@@ -43,6 +43,8 @@ public class QueueEntryViewModel : ViewModel
         }
     }
 
+    public IInboundMessage MessageInstance => _inboundMessage;
+
     public bool IsAcknowledged => _inboundMessage.AcknowledgedStatus is AcknowledgeStatus.Acknowledged;
     public bool IsNegativeAcknowledged => _inboundMessage.AcknowledgedStatus is AcknowledgeStatus.NegativeAcknowledged;
 

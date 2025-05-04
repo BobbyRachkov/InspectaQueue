@@ -2,6 +2,7 @@
 using Rachkov.InspectaQueue.Abstractions.Messaging.Models;
 using Rachkov.InspectaQueue.Abstractions.Notifications.Errors;
 using Rachkov.InspectaQueue.Abstractions.Notifications.ProgressStatus;
+using Rachkov.InspectaQueue.WpfDesktopApp.Extensions;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.ErrorManager;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure.WindowManager;
@@ -23,6 +24,7 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
 
     private readonly IQueueProvider _queueProvider;
     private readonly ICanPublish? _publisher;
+    private readonly ICanAcknowledge? _messageAcknowledger;
     private readonly CancellationTokenSource _cts = new();
 
     private bool _topmost;
@@ -44,6 +46,7 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
     private bool _isPublishingConnected;
     private bool _isPublishPanelOpened;
     private ProgressStatusViewModel? _publishStatusViewModel;
+    private IList<QueueEntryViewModel> _selectedEntries = [];
 
     public QueueInspectorViewModel(
         string? nameSuffix,
@@ -69,6 +72,7 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
         queueProvider.Connect(_messageReceiver, _receivingProgressNotificationService);
 
         _publisher = queueProvider as ICanPublish;
+        _messageAcknowledger = queueProvider as ICanAcknowledge;
 
         OnClosing += (_, _) =>
         {
@@ -80,13 +84,37 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
 
         DisconnectCommand = new RelayCommand(() => windowManager.Close(this));
         PublishCommand = new RelayCommand(Publish);
+        AcknowledgeCommand = new RelayCommand(
+            parameter =>
+            {
+                if (parameter is int index)
+                {
+                    _ = AcknowledgeSelectedEntries(index == 0);
+                }
+            }, () => CanAcknowledge && SelectedEntries.Count > 0);
     }
 
     #region Receiving
 
+    public ICommand AcknowledgeCommand { get; }
+
+    [MemberNotNullWhen(true, nameof(_messageAcknowledger))]
+    public bool CanAcknowledge => _messageAcknowledger is not null;
+
     public ProgressStatusViewModel ReceivingStatusViewModel { get; } = new();
 
     public ObservableCollection<QueueEntryViewModel> Entries { get; } = [];
+
+    public IList<QueueEntryViewModel> SelectedEntries
+    {
+        get => _selectedEntries;
+        set
+        {
+            if (Equals(value, _selectedEntries)) return;
+            _selectedEntries = value;
+            OnPropertyChanged();
+        }
+    }
 
     public bool IsMasterLoadingIndicatorOn
     {
@@ -173,6 +201,31 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
         {
             IsMasterLoadingIndicatorOn = false;
         }
+    }
+
+    private async Task AcknowledgeSelectedEntries(bool isPositive)
+    {
+        if (!CanAcknowledge)
+        {
+            return;
+        }
+
+        var entriesToAcknowledge = SelectedEntries.Select(x => x.MessageInstance).ToArray();
+
+        if (isPositive)
+        {
+            await _messageAcknowledger.TryAcknowledge(entriesToAcknowledge);
+        }
+        else
+        {
+
+            await _messageAcknowledger.TryNegativeAcknowledge(entriesToAcknowledge);
+        }
+
+        OnUiThread(() =>
+        {
+            SelectedEntries.ForEach(x => x.RaiseAcknowledgeStatusChanged());
+        });
     }
 
     #endregion

@@ -29,8 +29,46 @@
             IsExpanded="True"
             Margin="5">
             <Grid>
-                <CheckBox
-                    IsChecked="{Binding FormatJson}">Format if valid JSON</CheckBox>
+                <StackPanel
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal">
+                    <CheckBox
+                        IsChecked="{Binding FormatJson}">Format if valid JSON</CheckBox>
+                    <Button
+                        Style="{StaticResource MahApps.Styles.Button.Split.Arrow}"
+                        Margin="20 0">
+                        Acknowledge
+                    </Button>
+                    <mah:SplitButton 
+                        Command="{Binding  AcknowledgeCommand}"
+                        CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=SelectedIndex}"
+                        Visibility="Visible"
+                        SelectedIndex="0"
+                        Margin="5"
+                        Orientation="Horizontal">
+                        <mah:SplitButton.Icon>
+                            <Grid>
+                                <iconPacks:PackIconFontAwesome 
+                                    Visibility="{Binding RelativeSource={RelativeSource FindAncestor,AncestorType=mah:SplitButton}, Path=SelectedItem.Tag,Converter={StaticResource BooleanToVisibilityConverter}}"
+                                    VerticalAlignment="Center" 
+                                    Kind="CircleCheckSolid" 
+                                    Foreground="Green" 
+                                    Width="17" />
+                                <iconPacks:PackIconFontAwesome 
+                                    Visibility="{Binding RelativeSource={RelativeSource FindAncestor,AncestorType=mah:SplitButton}, Path=SelectedItem.Tag,Converter={StaticResource BooleanToVisibilityConverter}}"
+                                    VerticalAlignment="Center" 
+                                    Kind="CircleXmarkSolid" 
+                                    Foreground="Red" 
+                                    Width="17"/>
+                            </Grid>
+                        </mah:SplitButton.Icon>
+                        <mah:SplitButton.Items>
+                            <ContentPresenter Content="Acknowledge" Tag="True"/>
+                            <ContentPresenter Content="Negative Acknowledge" Tag="False"/>
+                        </mah:SplitButton.Items>
+                    </mah:SplitButton>
+                </StackPanel>
+
                 <StackPanel
                     HorizontalAlignment="Right"
                     Orientation="Horizontal">
@@ -53,7 +91,8 @@
                   SelectionUnit="FullRow"
                   ColumnHeaderHeight="30" 
                   IsReadOnly="True"
-                  SelectionMode="Single">
+                  SelectionMode="Extended"
+                  SelectionChanged="OnSelectedEntriesChanged">
             <DataGrid.Columns>
                 <DataGridTextColumn 
                     Binding="{Binding MessageInternalId}"
