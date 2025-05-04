@@ -135,8 +135,7 @@ public class PulsarReader : IQueueProvider
                     JsonRepresentation = messageString,
                     Message = message,
                     Key = message.Key,
-                    Id = message.MessageId.EntryId.ToString(),
-                    IsAcknowledged = false
+                    Id = message.MessageId.EntryId.ToString()
                 };
 
                 await messageReceiver.SendMessageAsync(frame);
