@@ -102,6 +102,28 @@
                     Binding="{Binding MessageId}" 
                     Header="Id" 
                     Width="Auto"/>
+                <DataGridTemplateColumn 
+                    Visibility="{Binding CanAcknowledge, Converter={StaticResource BooleanToVisibilityConverter}}"
+                    Header="Ack" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <iconPacks:PackIconFontAwesome 
+                                    Visibility="{Binding IsAcknowledged,Converter={StaticResource BooleanToVisibilityConverter}}"
+                                    VerticalAlignment="Center" 
+                                    Kind="CircleCheckSolid" 
+                                    Foreground="Green" 
+                                    Width="17" />
+                                <iconPacks:PackIconFontAwesome 
+                                    Visibility="{Binding IsNegativeAcknowledged,Converter={StaticResource BooleanToVisibilityConverter}}"
+                                    VerticalAlignment="Center" 
+                                    Kind="CircleXmarkSolid" 
+                                    Foreground="Red" 
+                                    Width="17"/>
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn 
                     Binding="{Binding MessageKey}" 
                     Header="Key"
@@ -111,8 +133,9 @@
                     Header="Content"
                     Width="700"/>
                 <!--<DataGridTextColumn 
-                    Binding="{Binding RawMessageText }" 
-                    Header="Content1" >
+                    Visibility="{Binding CanAcknowledge, Converter={StaticResource BooleanToVisibilityConverter}}"
+                    Binding="{Binding  }" 
+                    Header="Ack" >
                     <DataGridTextColumn.HeaderTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Vertical">
