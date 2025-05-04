@@ -1,4 +1,5 @@
 ﻿using Rachkov.InspectaQueue.Abstractions.Messaging.Interfaces;
+using Rachkov.InspectaQueue.Abstractions.Messaging.Models;
 using Rachkov.InspectaQueue.WpfDesktopApp.Infrastructure;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector.EventArgs;
 using Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector.Extensions;
@@ -42,6 +43,9 @@ public class QueueEntryViewModel : ViewModel
         }
     }
 
+    public bool IsAcknowledged => _inboundMessage.AcknowledgedStatus is AcknowledgeStatus.Acknowledged;
+    public bool IsNegativeAcknowledged => _inboundMessage.AcknowledgedStatus is AcknowledgeStatus.NegativeAcknowledged;
+
     public void OnFeatureStatusUpdated(object? sender, FeatureStatusUpdatedEventArgs args)
     {
         switch (args.Feature)
@@ -66,5 +70,11 @@ public class QueueEntryViewModel : ViewModel
             JsonFormatting.Compact => RawMessageText.CompactJson(),
             _ => DisplayableMessageText
         };
+    }
+
+    public void RaiseAcknowledgeStatusChanged()
+    {
+        OnPropertyChanged(nameof(IsAcknowledged));
+        OnPropertyChanged(nameof(IsNegativeAcknowledged));
     }
 }
