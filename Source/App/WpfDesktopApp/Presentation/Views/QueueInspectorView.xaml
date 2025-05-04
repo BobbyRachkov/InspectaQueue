@@ -107,7 +107,9 @@
                     Header="Ack" >
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Grid>
+                            <Grid 
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Center">
                                 <iconPacks:PackIconFontAwesome 
                                     Visibility="{Binding IsAcknowledged,Converter={StaticResource BooleanToVisibilityConverter}}"
                                     VerticalAlignment="Center" 
