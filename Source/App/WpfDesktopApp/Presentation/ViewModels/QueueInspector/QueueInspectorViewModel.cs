@@ -55,7 +55,9 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
         IWindowManager windowManager)
         : base(errorManager)
     {
-        Name = string.IsNullOrWhiteSpace(nameSuffix) ? "Queue Inspector" : $"Queue Inspector | {nameSuffix}";
+        Name = string.IsNullOrWhiteSpace(nameSuffix)
+            ? $"Queue Inspector | {queueProvider.Details.Type}"
+            : $"Queue Inspector | {queueProvider.Details.Type} | {nameSuffix}";
         _queueProvider = queueProvider;
         //GenerateFakeData();
 

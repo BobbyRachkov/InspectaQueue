@@ -15,6 +15,8 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <converters:BooleanToVisibilityConverter x:Key="CollapsedBooleanToVisibilityConverter" FalseValue="Collapsed"/>
+            <converters:IntegerToVisibilityConverter x:Key="IntegerToVisibilityConverter0" FalseValue="Collapsed" Threshold="1" Invert="True"/>
+            <converters:IntegerToVisibilityConverter x:Key="IntegerToVisibilityConverter1" FalseValue="Collapsed" Threshold="1" Invert="False"/>
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid>
@@ -34,37 +36,34 @@
                     Orientation="Horizontal">
                     <CheckBox
                         IsChecked="{Binding FormatJson}">Format if valid JSON</CheckBox>
-                    <Button
-                        Style="{StaticResource MahApps.Styles.Button.Split.Arrow}"
-                        Margin="20 0">
-                        Acknowledge
-                    </Button>
                     <mah:SplitButton 
                         Command="{Binding  AcknowledgeCommand}"
                         CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=SelectedIndex}"
-                        Visibility="Visible"
+                        Visibility="{Binding CanAcknowledge, Converter={StaticResource BooleanToVisibilityConverter}}"
                         SelectedIndex="0"
-                        Margin="5"
+                        Margin="20 0"
                         Orientation="Horizontal">
                         <mah:SplitButton.Icon>
                             <Grid>
                                 <iconPacks:PackIconFontAwesome 
-                                    Visibility="{Binding RelativeSource={RelativeSource FindAncestor,AncestorType=mah:SplitButton}, Path=SelectedItem.Tag,Converter={StaticResource BooleanToVisibilityConverter}}"
+                                    Visibility="{Binding RelativeSource={RelativeSource FindAncestor,AncestorType=mah:SplitButton}, Path=SelectedIndex,Converter={StaticResource IntegerToVisibilityConverter0}}"
                                     VerticalAlignment="Center" 
                                     Kind="CircleCheckSolid" 
                                     Foreground="Green" 
-                                    Width="17" />
+                                    Margin="3 0"
+                                    Width="15" />
                                 <iconPacks:PackIconFontAwesome 
-                                    Visibility="{Binding RelativeSource={RelativeSource FindAncestor,AncestorType=mah:SplitButton}, Path=SelectedItem.Tag,Converter={StaticResource BooleanToVisibilityConverter}}"
+                                    Visibility="{Binding RelativeSource={RelativeSource FindAncestor,AncestorType=mah:SplitButton}, Path=SelectedIndex,Converter={StaticResource IntegerToVisibilityConverter1}}"
                                     VerticalAlignment="Center" 
                                     Kind="CircleXmarkSolid" 
                                     Foreground="Red" 
-                                    Width="17"/>
+                                    Margin="3 0"
+                                    Width="15"/>
                             </Grid>
                         </mah:SplitButton.Icon>
                         <mah:SplitButton.Items>
-                            <ContentPresenter Content="Acknowledge" Tag="True"/>
-                            <ContentPresenter Content="Negative Acknowledge" Tag="False"/>
+                            <ContentPresenter Content="Acknowledge"/>
+                            <ContentPresenter Content="Negative Acknowledge"/>
                         </mah:SplitButton.Items>
                     </mah:SplitButton>
                 </StackPanel>
