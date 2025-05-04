@@ -11,4 +11,5 @@ public class ProviderViewModel(Provider associatedProvider)
     public string Description => AssociatedProvider.Versions.FirstOrDefault().Value?.Details.Description ?? string.Empty;
     public string Vendor => AssociatedProvider.Versions.FirstOrDefault().Value?.Details.PackageVendorName ?? string.Empty;
     public bool CanPublish => AssociatedProvider.Versions.Any(x => x.Value is ICanPublish);
+    public bool CanAcknowledge => AssociatedProvider.Versions.Any(x => x.Value is ICanAcknowledge);
 }

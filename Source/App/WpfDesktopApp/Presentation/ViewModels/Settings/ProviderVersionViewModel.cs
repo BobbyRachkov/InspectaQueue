@@ -8,4 +8,5 @@ public class ProviderVersionViewModel(KeyValuePair<string, IQueueProvider> versi
 
     public string Name => version.Key;
     public bool CanPublish => version.Value is ICanPublish;
+    public bool CanAcknowledge => version.Value is ICanAcknowledge;
 }

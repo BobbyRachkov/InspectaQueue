@@ -54,11 +54,6 @@ public class PulsarReader : IQueueProvider
         }
     }
 
-    public Task<bool> TryAcknowledge(IInboundMessage message)
-    {
-        return Task.FromResult(true);
-    }
-
     private async Task ReadAsync(
         IMessageReceiver messageReceiver,
         IProgressNotificationService progressNotificationService,
@@ -135,8 +130,7 @@ public class PulsarReader : IQueueProvider
                     JsonRepresentation = messageString,
                     Message = message,
                     Key = message.Key,
-                    Id = message.MessageId.EntryId.ToString(),
-                    IsAcknowledged = false
+                    Id = message.MessageId.EntryId.ToString()
                 };
 
                 await messageReceiver.SendMessageAsync(frame);
