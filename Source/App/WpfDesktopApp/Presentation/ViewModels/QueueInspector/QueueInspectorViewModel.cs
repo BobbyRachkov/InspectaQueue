@@ -212,7 +212,10 @@ public class QueueInspectorViewModel : PresenterViewModel, IDisposable, ICanBeTo
             return;
         }
 
-        var entriesToAcknowledge = SelectedEntries.Select(x => x.MessageInstance).ToArray();
+        var entriesToAcknowledge = SelectedEntries
+            .Select(x => x.MessageInstance)
+            .Reverse()
+            .ToArray();
 
         if (isPositive)
         {
