@@ -54,11 +54,6 @@ public class PulsarReader : IQueueProvider
         }
     }
 
-    public Task<bool> TryAcknowledge(IInboundMessage message)
-    {
-        return Task.FromResult(true);
-    }
-
     private async Task ReadAsync(
         IMessageReceiver messageReceiver,
         IProgressNotificationService progressNotificationService,

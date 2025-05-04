@@ -17,9 +17,6 @@ public class PulsarReaderSettings : IQueueProviderSettings
     [Exposed(DisplayName = "Topic name")]
     public string TopicName { get; set; } = string.Empty;
 
-    [Exposed(DisplayName = "Producer name (optional)")]
-    public string ProducerName { get; set; } = string.Empty;
-
     [Exposed(DisplayName = "Authentication file path")]
     [FilePath(AllowedExtensions = "JSON files|*.json")]
     public string FilePath { get; set; } = string.Empty;
