@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.QueueInspectorView"
+<UserControl x:Class="Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views.QueueInspectorView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -8,13 +8,18 @@
              xmlns:queueInspector="clr-namespace:Rachkov.InspectaQueue.WpfDesktopApp.Presentation.ViewModels.QueueInspector"
              xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
              xmlns:converters="clr-namespace:Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Converters"
+             xmlns:helpers="clr-namespace:Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Helpers"
              d:DataContext="{d:DesignInstance Type=queueInspector:QueueInspectorViewModel}"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
 
     <UserControl.Resources>
         <ResourceDictionary>
+            <helpers:BindingProxy x:Key="Proxy" Data="{Binding CanAcknowledge}"/>
             <converters:BooleanToVisibilityConverter x:Key="CollapsedBooleanToVisibilityConverter" FalseValue="Collapsed"/>
+            <converters:BooleanToVisibilityConverter x:Key="HiddenBooleanToVisibilityConverter" FalseValue="Hidden"/>
+            <converters:IntegerToVisibilityConverter x:Key="IntegerToVisibilityConverter0" FalseValue="Collapsed" Threshold="1" Invert="True"/>
+            <converters:IntegerToVisibilityConverter x:Key="IntegerToVisibilityConverter1" FalseValue="Collapsed" Threshold="1" Invert="False"/>
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid>
@@ -29,8 +34,43 @@
             IsExpanded="True"
             Margin="5">
             <Grid>
-                <CheckBox
-                    IsChecked="{Binding FormatJson}">Format if valid JSON</CheckBox>
+                <StackPanel
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal">
+                    <CheckBox
+                        IsChecked="{Binding FormatJson}">Format if valid JSON</CheckBox>
+                    <mah:SplitButton 
+                        Command="{Binding  AcknowledgeCommand}"
+                        CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=SelectedIndex}"
+                        Visibility="{Binding DataContext.CanAcknowledge, RelativeSource={RelativeSource AncestorType={x:Type UserControl}},Converter={StaticResource HiddenBooleanToVisibilityConverter}}"
+                        SelectedIndex="0"
+                        Margin="20 0"
+                        Orientation="Horizontal">
+                        <mah:SplitButton.Icon>
+                            <Grid>
+                                <iconPacks:PackIconFontAwesome 
+                                    Visibility="{Binding RelativeSource={RelativeSource AncestorType={x:Type mah:SplitButton}}, Path=SelectedIndex,Converter={StaticResource IntegerToVisibilityConverter1}}"
+                                    VerticalAlignment="Center" 
+                                    Kind="CircleXmarkSolid" 
+                                    Foreground="Red" 
+                                    Margin="3 0"
+                                    Width="15"/>
+                                <iconPacks:PackIconFontAwesome 
+                                    Visibility="{Binding RelativeSource={RelativeSource AncestorType={x:Type mah:SplitButton}}, Path=SelectedIndex,Converter={StaticResource IntegerToVisibilityConverter0}}"
+                                    VerticalAlignment="Center" 
+                                    Kind="CircleCheckSolid" 
+                                    Foreground="Green" 
+                                    Margin="3 0"
+                                    Width="15" />
+                            </Grid>
+                        </mah:SplitButton.Icon>
+                        <mah:SplitButton.Items>
+                            <ContentPresenter Content="Acknowledge"/>
+                            <ContentPresenter Content="Negative Acknowledge"/>
+                        </mah:SplitButton.Items>
+                    </mah:SplitButton>
+                </StackPanel>
+
                 <StackPanel
                     HorizontalAlignment="Right"
                     Orientation="Horizontal">
@@ -53,7 +93,8 @@
                   SelectionUnit="FullRow"
                   ColumnHeaderHeight="30" 
                   IsReadOnly="True"
-                  SelectionMode="Single">
+                  SelectionMode="Extended"
+                  SelectionChanged="OnSelectedEntriesChanged">
             <DataGrid.Columns>
                 <DataGridTextColumn 
                     Binding="{Binding MessageInternalId}"
@@ -64,6 +105,30 @@
                     Binding="{Binding MessageId}" 
                     Header="Id" 
                     Width="Auto"/>
+                <DataGridTemplateColumn 
+                    Visibility="{Binding Source={StaticResource Proxy}, Path=Data, Converter={StaticResource HiddenBooleanToVisibilityConverter}}"
+                    Header="Ack" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid 
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Center">
+                                <iconPacks:PackIconFontAwesome 
+                                    Visibility="{Binding IsAcknowledged,Converter={StaticResource BooleanToVisibilityConverter}}"
+                                    VerticalAlignment="Center" 
+                                    Kind="CircleCheckSolid" 
+                                    Foreground="Green" 
+                                    Width="17" />
+                                <iconPacks:PackIconFontAwesome 
+                                    Visibility="{Binding IsNegativeAcknowledged,Converter={StaticResource BooleanToVisibilityConverter}}"
+                                    VerticalAlignment="Center" 
+                                    Kind="CircleXmarkSolid" 
+                                    Foreground="Red" 
+                                    Width="17"/>
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn 
                     Binding="{Binding MessageKey}" 
                     Header="Key"
@@ -73,8 +138,9 @@
                     Header="Content"
                     Width="700"/>
                 <!--<DataGridTextColumn 
-                    Binding="{Binding RawMessageText }" 
-                    Header="Content" >
+                    Visibility="{Binding CanAcknowledge, Converter={StaticResource BooleanToVisibilityConverter}}"
+                    Binding="{Binding  }" 
+                    Header="Ack" >
                     <DataGridTextColumn.HeaderTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Vertical">

@@ -89,6 +89,11 @@
                 FontSize="13"
                 VerticalAlignment="Center"
                 Content="Provider:"/>
+            <Image 
+                Stretch="Uniform"
+                RenderOptions.BitmapScalingMode="Fant"
+                Height="20"
+                Source="{Binding QueueType.IconSource}"/>
             <Label
                 Foreground="LightGray"
                 FontSize="13"
