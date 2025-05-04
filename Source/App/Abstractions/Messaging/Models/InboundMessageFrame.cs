@@ -14,5 +14,5 @@ public record InboundMessageFrame : IInboundMessage
 
     public string? JsonRepresentation { get; init; }
 
-    public bool IsAcknowledged { get; set; }
+    public AcknowledgeStatus AcknowledgedStatus { get; set; } = AcknowledgeStatus.None;
 }

@@ -10,12 +10,12 @@ using System.Text;
 
 namespace Rachkov.InspectaQueue.Providers.Pulsar;
 
-public class PulsarProvider : IQueueProvider, ICanPublish
+public class PulsarConsumer : IQueueProvider, ICanPublish, ICanAcknowledge
 {
     private readonly IErrorReporter _errorReporter;
     private Task? _readerTask;
     private CancellationTokenSource? _cancellationTokenSource;
-    private readonly PulsarSettings _settings;
+    private readonly PulsarConsumerSettings _settings;
     private PulsarClient? _client;
     private IConsumer<byte[]>? _consumer;
     private IProducer<byte[]>? _publisher;
@@ -24,14 +24,14 @@ public class PulsarProvider : IQueueProvider, ICanPublish
     private IProgressNotificationService? _publisherProgressNotificationService;
     private long _lastPublishedMessage;
 
-    public PulsarProvider(IErrorReporter errorReporter)
+    public PulsarConsumer(IErrorReporter errorReporter)
     {
         _errorReporter = errorReporter;
         Debug.WriteLine($"==========> Constructing: {InstanceId}");
-        _settings = new PulsarSettings();
+        _settings = new PulsarConsumerSettings();
     }
 
-    ~PulsarProvider()
+    ~PulsarConsumer()
     {
         Debug.WriteLine($"==========> Destructing: {InstanceId}");
     }
@@ -40,8 +40,8 @@ public class PulsarProvider : IQueueProvider, ICanPublish
 
     public IProviderDetails Details { get; } = new ProviderDetails
     {
-        Name = "Pulsar Consumer/Publisher",
-        Description = "Consumer with subscription name and cursor.",
+        Name = "Pulsar Consumer",
+        Description = "Consumer with subscription name, cursor and publishing capabilities.",
         Type = QueueType.Pulsar,
         PackageVendorName = "InspectaQueue"
     };
@@ -64,19 +64,6 @@ public class PulsarProvider : IQueueProvider, ICanPublish
         {
             await _cancellationTokenSource.CancelAsync();
         }
-    }
-
-    public async Task<bool> TryAcknowledge(IInboundMessage message)
-    {
-        if (message.Message is not Message<byte[]> messageObject
-            || _consumer is null)
-        {
-            return false;
-        }
-
-        await _consumer.AcknowledgeAsync(messageObject.MessageId);
-        message.IsAcknowledged = true;
-        return true;
     }
 
     private async Task ReadAsync(
@@ -159,7 +146,7 @@ public class PulsarProvider : IQueueProvider, ICanPublish
                     JsonRepresentation = messageString,
                     Message = message,
                     Key = message.Key,
-                    Id = message.MessageId.EntryId.ToString()
+                    Id = message.MessageId.EntryId.ToString(),
                 };
 
                 await messageReceiver.SendMessageAsync(frame);
@@ -168,7 +155,7 @@ public class PulsarProvider : IQueueProvider, ICanPublish
                 if (_settings.AcknowledgeOnReceive)
                 {
                     await _consumer.AcknowledgeAsync(message.MessageId);
-                    frame.IsAcknowledged = true;
+                    frame.AcknowledgedStatus = AcknowledgeStatus.Acknowledged;
                 }
 
                 await progressNotificationService.SendProgressUpdateNotification(new ProgressNotification(
@@ -210,6 +197,45 @@ public class PulsarProvider : IQueueProvider, ICanPublish
             messagesProcessed,
             Constants.StatusMessage.Disconnected,
             Status.Ok));
+    }
+
+    public async Task<bool> TryAcknowledge(IEnumerable<IInboundMessage> messages)
+    {
+        var hasUnacknowledged = false;
+
+        foreach (var inboundMessage in messages)
+        {
+            if (inboundMessage.Message is not Message<byte[]> messageObject
+                || _consumer is null)
+            {
+                hasUnacknowledged = true;
+                continue;
+            }
+
+            await _consumer.AcknowledgeAsync(messageObject.MessageId);
+            inboundMessage.AcknowledgedStatus = AcknowledgeStatus.Acknowledged;
+        }
+
+        return !hasUnacknowledged;
+    }
+
+    public async Task<bool> TryNegativeAcknowledge(IEnumerable<IInboundMessage> messages)
+    {
+        var hasUnacknowledged = false;
+
+        foreach (var inboundMessage in messages)
+        {
+            if (inboundMessage.Message is not Message<byte[]> messageObject
+                || _consumer is null)
+            {
+                continue;
+            }
+
+            await _consumer.NegativeAcknowledge(messageObject.MessageId);
+            inboundMessage.AcknowledgedStatus = AcknowledgeStatus.NegativeAcknowledged;
+        }
+
+        return !hasUnacknowledged;
     }
 
     #endregion

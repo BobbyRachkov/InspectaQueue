@@ -23,10 +23,10 @@ public class IntegerToVisibilityConverter : IValueConverter
         {
             return Visibility.Visible;
         }
-        
+
         if (Invert)
         {
-            return intValue < Threshold ? FalseValue : Visibility.Visible;
+            return intValue < Threshold ? Visibility.Visible : FalseValue;
         }
 
         return intValue < Threshold ? FalseValue : Visibility.Visible;

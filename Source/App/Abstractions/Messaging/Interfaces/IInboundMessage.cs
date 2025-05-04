@@ -1,4 +1,6 @@
-﻿namespace Rachkov.InspectaQueue.Abstractions.Messaging.Interfaces;
+﻿using Rachkov.InspectaQueue.Abstractions.Messaging.Models;
+
+namespace Rachkov.InspectaQueue.Abstractions.Messaging.Interfaces;
 
 public interface IInboundMessage : IMessage
 {
@@ -8,5 +10,5 @@ public interface IInboundMessage : IMessage
 
     string? JsonRepresentation { get; init; }
 
-    bool IsAcknowledged { get; set; }
+    AcknowledgeStatus AcknowledgedStatus { get; set; }
 }

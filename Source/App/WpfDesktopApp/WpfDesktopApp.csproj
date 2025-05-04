@@ -23,6 +23,37 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\icon-ably.png" />
+    <None Remove="Resources\icon-apache-kafka.png" />
+    <None Remove="Resources\icon-apache-pulsar.png" />
+    <None Remove="Resources\icon-apache-pulsar.svg" />
+    <None Remove="Resources\icon-other-mq.png" />
+    <None Remove="Resources\icon-rabbitmq.png" />
+    <None Remove="Resources\icon-unknown-mq.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\icon-ably.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\icon-apache-kafka.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\icon-apache-pulsar.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\icon-apache-pulsar.svg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\icon-other-mq.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\icon-rabbitmq.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\icon-unknown-mq.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Resources\iq.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>

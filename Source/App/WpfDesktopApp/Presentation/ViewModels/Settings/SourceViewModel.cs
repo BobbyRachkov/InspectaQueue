@@ -37,6 +37,8 @@ public class SourceViewModel : ViewModel
             .OrderByDescending(x => new Version(x.Key))
             .ToDictionary();
 
+        QueueType = new QueueTypeViewModel(provider.Details.Type);
+
         SelectedProviderVersion = AvailableProviderVersions.First(x => x.Value == ProviderInstance);
         ProviderDisplayVersion = SelectedProviderVersion.Key;
 
@@ -56,9 +58,7 @@ public class SourceViewModel : ViewModel
     public ICommand ChangeVersionCommand { get; }
     public Type ProviderType => _provider.GetType();
     public IQueueProvider ProviderInstance => _provider;
-
     public string ProviderDisplayName => $"{ProviderType.FullName}";
-
     public string ProviderDisplayVersion
     {
         get => _providerDisplayVersion;
@@ -72,6 +72,8 @@ public class SourceViewModel : ViewModel
     public IReadOnlyDictionary<string, IQueueProvider> AvailableProviderVersions { get; }
     public KeyValuePair<string, IQueueProvider> SelectedProviderVersion { get; set; }
     public bool IsNewerVersionAvailable => SelectedProviderVersion.Key != AvailableProviderVersions.First().Key;
+
+    public QueueTypeViewModel QueueType { get; }
 
     public ISettingViewModel[] Settings
     {

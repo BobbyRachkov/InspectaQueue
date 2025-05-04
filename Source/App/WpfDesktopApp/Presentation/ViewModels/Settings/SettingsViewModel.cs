@@ -33,6 +33,9 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
     private SourceViewModel? _selectedSource;
     private DialogManager? _dialogManager;
     private bool _hasChackedForUpdate = false;
+    private QueueTypeViewModel? _selectedQueueType;
+    private ProviderViewModel[] _availableProviders;
+    private ProviderVersionViewModel[] _availableVersions;
     public override string Name => "Queue Settings";
 
     public SettingsViewModel(
@@ -55,12 +58,13 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         _settingImportExportService = settingImportExportService;
         _settingsManager = settingsManager;
 
-        AvailableProviders = providerManager.GetProviders().Select(x => new ProviderViewModel(x)).ToArray();
-
-        if (AvailableProviders.Any())
-        {
-            SelectedProvider = AvailableProviders.First();
-        }
+        AvailableQueueTypes = providerManager
+            .GetProviders()
+            .Select(x => x.QueueType)
+            .Distinct()
+            .Order()
+            .Select(x => new QueueTypeViewModel(x))
+            .ToArray();
 
         Sources = sourceReader.ReadSources(StoreSources).ToObservableCollection();
 
@@ -70,7 +74,10 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         }
 
         ConnectToSourceCommand = new RelayCommand(ConnectToQueue);
-        CreateNewSourceCommand = new RelayCommand(CreateSource, () => SelectedProvider is not null);
+        CreateNewSourceCommand = new RelayCommand(CreateSource, () =>
+            SelectedQueueType is not null
+            && SelectedProvider is not null
+            && SelectedVersion is not null);
         AddNewSourceCommand = new RelayCommand(() =>
         {
             SelectedSource = null;
@@ -83,6 +90,13 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
 
         OnClosing += (_, _) => _configStoreService.StoreSources(Sources);
         ActionButtonCommand = new RelayCommand(x => _ = PerformAction(x as ActionButtonCommand?));
+
+        MoveSourceUpCommand = new RelayCommand(
+            () => MoveSource(-1),
+            () => SelectedSource is not null && Sources.IndexOf(SelectedSource) != 0);
+        MoveSourceDownCommand = new RelayCommand(
+            () => MoveSource(1),
+            () => SelectedSource is not null && Sources.IndexOf(SelectedSource) != Sources.Count - 1);
     }
 
 
@@ -92,9 +106,10 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
     public ICommand DuplicateSourceCommand { get; }
     public ICommand RemoveSourceCommand { get; }
     public ICommand ActionButtonCommand { get; }
+    public ICommand MoveSourceUpCommand { get; }
+    public ICommand MoveSourceDownCommand { get; }
 
     public MenuViewModel MenuViewModel { get; }
-
     public DialogManager? DialogManager
     {
         get => _dialogManager;
@@ -105,10 +120,34 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         }
     }
 
-    public ObservableCollection<SourceViewModel> Sources { get; private set; }
+    public QueueTypeViewModel[] AvailableQueueTypes { get; }
+    public QueueTypeViewModel? SelectedQueueType
+    {
+        get => _selectedQueueType;
+        set
+        {
+            _selectedQueueType = value;
+            OnPropertyChanged();
 
-    public ProviderViewModel[] AvailableProviders { get; }
-
+            AvailableProviders = _providerManager
+                .GetProviders()
+                .Where(x => x.QueueType == value!.Type)
+                .Select(x => new ProviderViewModel(x))
+                .ToArray();
+            AvailableVersions = [];
+            SelectedVersion = null;
+        }
+    }
+    public ProviderViewModel[] AvailableProviders
+    {
+        get => _availableProviders;
+        set
+        {
+            if (Equals(value, _availableProviders)) return;
+            _availableProviders = value;
+            OnPropertyChanged();
+        }
+    }
     public ProviderViewModel? SelectedProvider
     {
         get => _selectedProvider;
@@ -123,15 +162,22 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
                     value.AssociatedProvider
                         .Versions
                         .Select(x => new ProviderVersionViewModel(x))
-                        .OrderByDescending(x => x.Name)
+                        .OrderBy(x => x.Name)
                         .ToArray();
-                SelectedVersion = AvailableVersions.First();
+                SelectedVersion = AvailableVersions.Last();
             }
         }
     }
-
-    public ProviderVersionViewModel[] AvailableVersions { get; set; }
-
+    public ProviderVersionViewModel[] AvailableVersions
+    {
+        get => _availableVersions;
+        set
+        {
+            if (Equals(value, _availableVersions)) return;
+            _availableVersions = value;
+            OnPropertyChanged();
+        }
+    }
     public ProviderVersionViewModel? SelectedVersion
     {
         get => _selectedVersion;
@@ -142,6 +188,7 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         }
     }
 
+    public ObservableCollection<SourceViewModel> Sources { get; private set; }
     public SourceViewModel? SelectedSource
     {
         get => _selectedSource;
@@ -187,7 +234,8 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
 
     private void CreateSource()
     {
-        if (SelectedProvider is null
+        if (SelectedQueueType is null
+            || SelectedProvider is null
             || SelectedVersion is null)
         {
             return;
@@ -329,5 +377,24 @@ public class SettingsViewModel : PresenterViewModel, ICanManageDialogs
         {
             MessageBox.Show("Settings copied to clipboard", "Export", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.OK);
         }
+    }
+
+    private void MoveSource(int offset)
+    {
+        if (SelectedSource is null)
+        {
+            return;
+        }
+
+        var selectedIndex = Sources.IndexOf(SelectedSource);
+        var item = SelectedSource;
+        var modifiedIndex = selectedIndex + offset;
+
+        if (modifiedIndex < 0 || modifiedIndex >= Sources.Count)
+        {
+            return;
+        }
+
+        Sources.Move(selectedIndex, modifiedIndex);
     }
 }

@@ -10,6 +10,8 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views
     /// </summary>
     public partial class QueueInspectorView : UserControl
     {
+        private QueueInspectorViewModel? _dataContext;
+
         public QueueInspectorView()
         {
             InitializeComponent();
@@ -20,7 +22,7 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views
         {
             if (DataContext is QueueInspectorViewModel queueInspectorViewModel)
             {
-
+                _dataContext = queueInspectorViewModel;
             }
         }
 
@@ -42,6 +44,14 @@ namespace Rachkov.InspectaQueue.WpfDesktopApp.Presentation.Views
             if (e.Key is Key.LeftShift && sender is TextBox tb)
             {
                 tb.AcceptsReturn = true;
+            }
+        }
+
+        private void OnSelectedEntriesChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (sender is DataGrid dataGrid && _dataContext is not null)
+            {
+                _dataContext.SelectedEntries = dataGrid.SelectedItems.Cast<QueueEntryViewModel>().ToList();
             }
         }
     }
