@@ -1,4 +1,4 @@
-using Confluent.SchemaRegistry; 
+using Confluent.SchemaRegistry;
 using Confluent.SchemaRegistry.Serdes; // Required for Avro Deserializer
 using Newtonsoft.Json; // Required for converting Avro object to JSON
 using Pulsar.Client.Api;
@@ -35,7 +35,12 @@ public class PulsarAvroConsumer : IQueueProvider
     {
         Debug.WriteLine($"==========> Destructing Avro Consumer: {InstanceId}");
         // Ensure cleanup happens
-        DisconnectSubscriber().Wait(); 
+        DisconnectSubscriber().Wait();
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        throw new NotImplementedException();
     }
 
     public Guid InstanceId { get; } = Guid.NewGuid();
@@ -118,7 +123,7 @@ public class PulsarAvroConsumer : IQueueProvider
             }
             else
             {
-                 await progressNotificationService.SendProgressUpdateNotification(new ProgressNotification("Schema Registry URL not configured. Will display raw bytes.", Status.Warning));
+                await progressNotificationService.SendProgressUpdateNotification(new ProgressNotification("Schema Registry URL not configured. Will display raw bytes.", Status.Warning));
             }
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -156,7 +161,7 @@ public class PulsarAvroConsumer : IQueueProvider
                     await progressNotificationService.SendProgressUpdateNotification(new ProgressNotification(messagesReceived, messagesProcessed, Constants.StatusMessage.Connected, Status.Ok));
                     if (_settings.AcknowledgeOnReceive)
                     {
-                         await _consumer.AcknowledgeAsync(message.MessageId);
+                        await _consumer.AcknowledgeAsync(message.MessageId);
                     }
                     continue;
                 }
@@ -170,27 +175,30 @@ public class PulsarAvroConsumer : IQueueProvider
                         var avroObject = await _avroDeserializer.DeserializeAsync(message.Data, message.Data is null, deserializationContext);
                         // Convert Avro object to JSON for display
                         messageContent = JsonConvert.SerializeObject(avroObject, Formatting.Indented);
-                        jsonRepresentation = messageContent; 
+                        jsonRepresentation = messageContent;
                     }
                     catch (Exception avroEx)
                     {
-                         _errorReporter.RaiseError(new() { Text = $"Avro deserialization failed for message {message.MessageId}: {avroEx.Message}", Source = this, Exception = avroEx });
-                         messageContent = "<< AVRO DESERIALIZATION FAILED >>\n" + Convert.ToBase64String(message.Data);
-                         jsonRepresentation = "{\"error\": \"Avro deserialization failed\"}";
-                         deserializationError = true;
-                         // Decide if you want to stop processing or just flag the message
+                        _errorReporter.RaiseError(new() { Text = $"Avro deserialization failed for message {message.MessageId}: {avroEx.Message}", Source = this, Exception = avroEx });
+                        messageContent = "<< AVRO DESERIALIZATION FAILED >>\n" + Convert.ToBase64String(message.Data);
+                        jsonRepresentation = "{\"error\": \"Avro deserialization failed\"}";
+                        deserializationError = true;
+                        // Decide if you want to stop processing or just flag the message
                     }
                 }
                 else
                 {
                     // Fallback to UTF8 string or Base64 if not Avro or not configured
-                     try { 
+                    try
+                    {
                         messageContent = Encoding.UTF8.GetString(message.Data);
                         jsonRepresentation = messageContent; // Assume it might be JSON
-                     } catch { 
+                    }
+                    catch
+                    {
                         messageContent = Convert.ToBase64String(message.Data); // If not valid UTF8
                         jsonRepresentation = "{\"data_base64\": \"" + messageContent + "\"}";
-                     } 
+                    }
                 }
 
                 var frame = new InboundMessageFrame
@@ -221,19 +229,19 @@ public class PulsarAvroConsumer : IQueueProvider
                     _errorReporter.RaiseError(new() { Text = "Error while reading message", Source = this, Exception = e });
                     await progressNotificationService.SendProgressUpdateNotification(new ProgressNotification(messagesReceived, messagesProcessed, Constants.StatusMessage.Failed, Status.Failed));
                 }
-                 // Consider breaking the loop on critical errors
-                 if (e is OperationCanceledException) break;
+                // Consider breaking the loop on critical errors
+                if (e is OperationCanceledException) break;
             }
         }
 
         await progressNotificationService.SendProgressUpdateNotification(new ProgressNotification(messagesReceived, messagesProcessed, Constants.StatusMessage.Disconnected, Status.Ok));
         await DisposeConsumerAndClient();
 
-         if (_cancellationTokenSource is not null)
-         {
-             _cancellationTokenSource.Dispose();
-             _cancellationTokenSource = null;
-         }
+        if (_cancellationTokenSource is not null)
+        {
+            _cancellationTokenSource.Dispose();
+            _cancellationTokenSource = null;
+        }
     }
 
     private async Task DisposeConsumerAndClient()
@@ -264,10 +272,10 @@ public class PulsarAvroConsumer : IQueueProvider
             }
         }
 
-         // Dispose Schema Registry Client if it was created
+        // Dispose Schema Registry Client if it was created
         (_schemaRegistryClient as IDisposable)?.Dispose();
-         _schemaRegistryClient = null;
-         _avroDeserializer = null; // No explicit dispose needed for deserializer itself typically
+        _schemaRegistryClient = null;
+        _avroDeserializer = null; // No explicit dispose needed for deserializer itself typically
     }
 
     #endregion
