@@ -24,14 +24,9 @@ public class PulsarAvroConsumer : IQueueProvider, ICanAcknowledge
     private readonly PulsarAvroConsumerSettings _settings;
     private PulsarClient? _client;
     private IConsumer<byte[]>? _consumer;
-    private IProducer<byte[]>? _publisher;
 
-    private IMessageProvider? _messagesForPublishingProvider;
-    private IProgressNotificationService? _publisherProgressNotificationService;
-    private long _lastPublishedMessage;
-
-    private static readonly HttpClient _httpClient = new();
-    private static readonly ConcurrentDictionary<string, SchemaEntry> _schemaCache = new();
+    private static readonly HttpClient HttpClient = new();
+    private static readonly ConcurrentDictionary<string, SchemaEntry> SchemaCache = new();
 
     public PulsarAvroConsumer(IErrorReporter errorReporter)
     {
@@ -219,7 +214,7 @@ public class PulsarAvroConsumer : IQueueProvider, ICanAcknowledge
 
         try
         {
-            if (!_schemaCache.TryGetValue(_settings.SchemaCacheKey, out var schemaEntry))
+            if (!SchemaCache.TryGetValue(_settings.SchemaCacheKey, out var schemaEntry))
             {
                 var schemaInfo = await FetchSchema(message);
                 if (schemaInfo is null) return (Encoding.UTF8.GetString(message.Data), Encoding.UTF8.GetString(message.Data));
@@ -235,7 +230,7 @@ public class PulsarAvroConsumer : IQueueProvider, ICanAcknowledge
                         return deserializeDelegate(ref reader);
                     }
                 };
-                _schemaCache[_settings.SchemaCacheKey] = schemaEntry;
+                SchemaCache[_settings.SchemaCacheKey] = schemaEntry;
             }
 
             // Strip schema version from payload before deserializing
@@ -259,7 +254,7 @@ public class PulsarAvroConsumer : IQueueProvider, ICanAcknowledge
 
         try
         {
-            return await _httpClient.GetFromJsonAsync<PulsarSchemaResponse>(url);
+            return await HttpClient.GetFromJsonAsync<PulsarSchemaResponse>(url);
         }
         catch (Exception ex)
         {
@@ -330,7 +325,6 @@ public class PulsarAvroConsumer : IQueueProvider, ICanAcknowledge
     public async ValueTask DisposeAsync()
     {
         Debug.WriteLine($"==========> Disposing: {InstanceId}");
-        await DisposePublisher();
         await DisconnectSubscriber();
     }
 
@@ -349,14 +343,6 @@ public class PulsarAvroConsumer : IQueueProvider, ICanAcknowledge
         if (_client is not null)
         {
             await _client.CloseAsync();
-        }
-    }
-
-    private async Task DisposePublisher()
-    {
-        if (_publisher is not null)
-        {
-            await _publisher.DisposeAsync();
         }
     }
 }
