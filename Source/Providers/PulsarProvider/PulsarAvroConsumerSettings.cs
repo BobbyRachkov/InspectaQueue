@@ -34,6 +34,9 @@ public class PulsarAvroConsumerSettings : IQueueProviderSettings
     [Exposed(DisplayName = "Schema Registry URL")]
     public string SchemaRegistryUrl { get; set; } = string.Empty; // Added for Avro
 
+    [Exposed(DisplayName = "Schema Cache key")]
+    public string SchemaCacheKey { get; set; } = string.Empty;
+
     [Exposed(
         DisplayName = "Max messages to show",
         ToolTip = "Hides the messages after the desired threshold is reached")]
